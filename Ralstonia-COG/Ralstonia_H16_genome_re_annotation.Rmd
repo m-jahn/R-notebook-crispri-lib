@@ -1,0 +1,121 @@
+---
+title: "Ralstonia H16 genome re-annotation"
+output: html_notebook
+---
+
+<!-- Link [R Markdown](http://rmarkdown.rstudio.com) -->
+
+# An attempt to re-annotate COG groups
+
+
+### Problem definition 
+
+A massive problem with the original COG annotation based on eggNOF prediction
+is that proteins are assigned to apparently 'wrong' groups.
+Grouping/clustering is always subjective and never perfect, however, highly
+functionally related proteins should end up in similar groups. The prime 
+example are the two Rubisco subunits, cbbS and ccbL, that end up in different
+groups, Energy production and Coenzyme transport. THis script aims to
+improve the unclear situation by two measures:
+
+1. Reassign obviously falsely classified proteins to other existing groups
+   Example: move cbbL from Coenzyme to other group
+   
+2. Divide large groups into sub-groups that are more meaningful for Ralstonia
+   Example: Energy production into carbon-fixation/1-carbon metabolism
+   and electron transport (hydrogenases, formate-dehydrogenases, ...)
+   
+3. Investigate candidates in Function unknown/NA and assign to groups
+
+### Task 1: move falsely annotated proteins
+
+Load required packages and original genome annotation.
+The original _Ralstonia eutropha_ database is based on the 
+[uniprot reference genome](https://www.uniprot.org/uniprot/?query=proteome:UP000008210) 
+of _Ralstonia eutropha_ H16 a.k.a. _Cupriavidus necator_ H16.
+
+```{r}
+# packages
+library(tidyverse)
+library(lattice)
+library(latticeExtra)
+library(Rtools)
+
+# data frame
+df <- read_csv("Ralstonia_H16_genome_annotation_20190614.csv")
+```
+
+One of the most striking problems is mis-annotation of Calvin cycle proteins (_cbb_ operon).
+We can have a look the distribution of COG terms for the _cbb_ operons. There are two _cbb_
+operons, one on the plasmid ('PHGxxxx') and one on chromosome 2 ('H16_Bxxxx') with
+around 12 genes each.
+
+```{r}
+# overview of cbb genes
+df %>% filter(grepl("cbb", gene_name)) %>% select(gene_name, COG_Process)
+
+# and plot
+df %>% filter(grepl("cbb", gene_name)) %>% pull(COG_Process) %>% 
+   table %>% enframe %>% arrange(desc(value)) %>%
+   barchart(value ~ substr(name, 1, 16) %>% factor(., unique(.)), ., horizontal = FALSE,
+      par.settings = custom.lattice, border = NA,
+      scales = list(x = list(rot = 30))
+   )
+
+```
+
+Several genes/proteins of the Calvin cycle functionally overlap with other pathways.
+For example, there are 2 copies of FBP (fructose-1,6-bisphosphatase) and 
+fructose-bisphosphate aldolase in the _cbb_ operons. Both enzymes are also important in
+gluconeogenesis and therefore another branch of carbohydrate metabolism. 
+However, the _R. eutropha_ genome contains more copies of these enzymes (iso-enzymes?) 
+that can carry out the reaction.
+
+The same is true for enzymes of the Calvin cycle that share pathway membership
+with the reductive branch of the pentose phosphate pathway (PPP), like transketolase (tkt).
+Also those have counterparts/iso-enzymes at other genomic locations. On the risk of
+not judging each single protein correctly, we can allocate those to existing COG group
+'Carbohydrate transport and metabolism'
+
+```{r}
+# reassign cbb genes to carbohydrate metabolism, following KEGG
+# explicitly exclude regulator cbbR
+
+df <- df %>% mutate_cond(
+  grepl("cbb[^R]", gene_name), 
+  COG_ID = "G",
+  COG_System = "Metabolism",
+  COG_Process = "Carbohydrate transport and metabolism"
+)
+```
+
+Other groups with falsely assigned proteins could be "Post-translational modification",
+"Coenzyme transport and metabolism", and "Nucleotide transport and metabolism".
+To be more systematic, we can look at the KEGG pathway assignments for the genes in
+each of these categories.
+
+
+```{r}
+# overview of cbb genes
+df %>% filter(grepl("cbb", gene_name)) %>% select(gene_name, COG_Process)
+
+# and plot
+df %>% filter(grepl("Coenz|Nucleo|Post", COG_Process)) %>% 
+   group_by(COG_Process, Pathway) %>% 
+   summarize(n_genes = length(Pathway)) %>%
+   arrange(COG_Process, desc(n_genes)) %>%
+      
+   barchart(n_genes ~ Pathway %>% factor(., unique(.)) %>% as.numeric | COG_Process, ., 
+      horizontal = FALSE, border = NA,
+      par.settings = custom.lattice,
+      scales = list(x = list(rot = 30))
+   )
+
+```
+
+
+
+
+
+
+
