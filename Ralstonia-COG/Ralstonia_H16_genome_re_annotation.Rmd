@@ -78,10 +78,10 @@ not judging each single protein correctly, we can allocate those to existing COG
 'Carbohydrate transport and metabolism'
 
 ```{r}
-# reassign cbb genes to carbohydrate metabolism, following KEGG
+# reassign cbb genes to carbohydrate metabolism, following KEGG;
 # explicitly exclude regulator cbbR
 
-df <- df %>% mutate_cond(
+df_new <- df %>% mutate_cond(
   grepl("cbb[^R]", gene_name), 
   COG_ID = "G",
   COG_System = "Metabolism",
@@ -96,11 +96,8 @@ each of these categories.
 
 
 ```{r}
-# overview of cbb genes
-df %>% filter(grepl("cbb", gene_name)) %>% select(gene_name, COG_Process)
-
 # and plot
-df %>% filter(grepl("Coenz|Nucleo|Post", COG_Process)) %>% 
+df_new %>% filter(grepl("Coenz|Nucleo|Post", COG_Process)) %>% 
    group_by(COG_Process, Pathway) %>% 
    summarize(n_genes = length(Pathway)) %>%
    arrange(COG_Process, desc(n_genes)) %>%
@@ -114,19 +111,92 @@ df %>% filter(grepl("Coenz|Nucleo|Post", COG_Process)) %>%
 ```
 
 We can see that there is relatively little overlap between pathways of the three
-selected, broader COG groups. That's good, because it's a hint that COG categories
-contain distinct groups of genes.
+selected, broader COG groups. That's good because it means that COG categories
+contain distinct groups of genes. A closer look nevertheless reveals that some of the genes
+in 'Coenzyme' group clearly belong to other groups ('pyruvate metabolism' 
+matches better to 'carbohydrate', 'ribosome biogenesis' to 'translation', and so on).
+
+We can construct rules to re-assign genes to COG groups by matching corresponding 
+(fine-grained) KEGG pathways to the (coarse) COG counterparts in cases that are clear.
+
 
 ```{r}
-# A closer look at the genes in Coenzyme group
-
-
+# string together a series of conditional mutations
+#
+df_new <- df_new %>%
+   
+   # -- ribosome to translation --
+   mutate_cond(
+      grepl("ribosome", Pathway), 
+      COG_ID = "J",
+      COG_System = "Information storage and processing",
+      COG_Process = "Translation, ribosomal structure and biogenesis"
+   ) %>%
+   
+   # -- pyruvate/glycolysis to carbohydrate --
+   mutate_cond(
+      grepl("Pyruvate|Glycolysis", Pathway) & grepl("Coenz|Nucleo", COG_Process), 
+      COG_ID = "G",
+      COG_System = "Metabolism",
+      COG_Process = "Carbohydrate transport and metabolism"
+   ) %>%
+   
+   # -- tRNA synthesis to translation --
+   mutate_cond(
+      grepl("Transfer RNA", Pathway) & grepl("Function unknown", COG_Process), 
+      COG_ID = "J",
+      COG_System = "Information storage and processing",
+      COG_Process = "Translation, ribosomal structure and biogenesis"
+   ) %>%
+   
+   # -- TCA to energy --
+   mutate_cond(
+      grepl("TCA", Pathway), 
+      COG_ID = "C",
+      COG_System = "Metabolism",
+      COG_Process = "Energy production and conversion"
+   )
 
 ```
 
 
 
+### Task 2: Divide large groups into sub-groups
 
+The prime example is the large COG group 'Energy production' which contains a lot 
+and very different metabolic pathways. This could be divided into TCA cycle, 
+electron transport chain, H2-hydrogenases and formate-dehydrogenases (autotrophy), 
+and oxidative phosphorylation/ATP synthase.
+
+```{r}
+
+df_new <- df_new %>% 
+   
+   # -- new group oxidative phosphorylation --
+   mutate_cond(
+      grepl("Oxidative phosphorylation", Pathway), 
+      COG_ID = "X",
+      COG_System = "Metabolism",
+      COG_Process = "Oxidative phosphorylation"
+   ) %>%
+   
+   # -- new group autotrophic energy generation --
+   mutate_cond(
+      grepl("hox|fdh|fdo|fds", Pathway), 
+      COG_ID = "A",
+      COG_System = "Metabolism",
+      COG_Process = "Autotrophic energy generation"
+   )
+
+```
+   
+
+### Task 3: Assign new groups to 'Function unknown'/'NA' genes
+
+_Ralstonia_-specific candidates could be hyp/hox genes, nitrate respiration genes,
+special transporters, PHAand storage compounds, and many more. While some of the genes
+lack a COG annotation, they are annotated by more specific KEGG pathways or GO terms
+which can be used to assign them to COG groups.
 
 
 
