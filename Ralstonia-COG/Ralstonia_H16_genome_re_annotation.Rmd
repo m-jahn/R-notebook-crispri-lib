@@ -7,16 +7,32 @@ output: html_notebook
 
 # An attempt to re-annotate COG groups
 
+The _Ralstonia eutropha_ H16 genome was annotated using the EMBL-maintained tool 
+[eggNOG](http://eggnogdb.embl.de/#/app/home). It annotates all genes/proteins 
+based on sequence similarity and groups them into homology groups (Cluster of 
+Orthologous Groups, COG). Other annotations used for _Ralstonia_ are mainly 
+derived from _uniprot_ or _KEGG_. It is important to mention that KEGG Brite 
+annotation is not unambiguous like COG, but one gene can be mapped to multiple 
+functions/pathways. This behavior is more realistic, but here, KEGG annotation 
+was flattened to the most frequent pathway annotation per gene only. Other sources 
+used for re-assignment of genes to groups were _eggNOG_ and  _uniprot_ functional 
+annotation and mainly the following sources from literature:
+
+- Cramm R, _Genomic view of energy metabolism in Ralstonia eutropha H16_,
+  Journal of Molecular Microbiology and Biotechnology, 2008.
+- Lu et al., _Ralstonia eutropha H16 as a Platform for the Production of Biofuels,_
+  _Biodegradable Plastics, and Fine Chemicals from Diverse Carbon Resources_, 
+  Biotechnology for Biofuel Production and Optimization, 2016.
 
 ### Problem definition 
 
-A massive problem with the original COG annotation based on eggNOF prediction
+A massive problem with the original COG annotation based on eggNOG prediction
 is that proteins are assigned to apparently 'wrong' groups.
 Grouping/clustering is always subjective and never perfect, however, highly
 functionally related proteins should end up in similar groups. The prime 
 example are the two Rubisco subunits, cbbS and ccbL, that end up in different
-groups, Energy production and Coenzyme transport. THis script aims to
-improve the unclear situation by two measures:
+groups, Energy production and Coenzyme transport. This script aims to
+mitigate this problem by a set of re-organizing steps:
 
 1. Reassign obviously falsely classified proteins to other existing groups
    Example: move cbbL from Coenzyme to other group
@@ -81,30 +97,38 @@ not judging each single protein correctly, we can allocate those to existing COG
 # reassign cbb genes to carbohydrate metabolism, following KEGG;
 # explicitly exclude regulator cbbR
 
-df_new <- df %>% mutate_cond(
-  grepl("cbb[^R]", gene_name), 
-  COG_ID = "G",
-  COG_System = "Metabolism",
-  COG_Process = "Carbohydrate transport and metabolism"
-)
+df_new <- df %>% 
+   
+   # first combine NA and FU
+   mutate(COG_Process = replace_na(COG_Process, "Function unknown")) %>%
+   
+   mutate_cond(
+      grepl("cbb[^R]", gene_name), 
+      COG_ID = "G",
+      COG_System = "Metabolism",
+      COG_Process = "Carbohydrate transport and metabolism"
+   )
 ```
 
-Other groups with falsely assigned proteins could be "Post-translational modification",
-"Coenzyme transport and metabolism", and "Nucleotide transport and metabolism".
+Other groups with falsely assigned proteins seem to be "Post-translational modification", 
+"Coenzyme transport and metabolism", and "Nucleotide transport and metabolism". 
+These groups comprise a particulary diverse set of genes which becomes clear from manual inspection. 
 To be more systematic, we can look at the KEGG pathway assignments for the genes in
 each of these categories.
 
 
 ```{r}
-# and plot
+# filter and summarize table by counting genes per KEGG pathway
 df_new %>% filter(grepl("Coenz|Nucleo|Post", COG_Process)) %>% 
    group_by(COG_Process, Pathway) %>% 
    summarize(n_genes = length(Pathway)) %>%
    arrange(COG_Process, desc(n_genes)) %>%
-      
+   filter(Pathway != "Hypothetical") %>%
+   
+   # and plot result
    barchart(n_genes ~ Pathway %>% factor(., unique(.))| COG_Process, ., 
       horizontal = FALSE, border = NA, par.settings = custom.lattice, 
-      xlab = "KEGG pathway", ylim = c(0, 40), layout = c(1, 3),
+      xlab = "KEGG pathway [ordered by no of member]", layout = c(1, 3),
       scales = list(alternating = FALSE, x = list(at = 1:10*10))
    )
 
@@ -164,9 +188,17 @@ df_new <- df_new %>%
 ### Task 2: Divide large groups into sub-groups
 
 The prime example is the large COG group 'Energy production' which contains a lot 
-and very different metabolic pathways. This could be divided into TCA cycle, 
-electron transport chain, H2-hydrogenases and formate-dehydrogenases (autotrophy), 
-and oxidative phosphorylation/ATP synthase.
+and very different metabolic pathways. This could for example be divided into TCA cycle, 
+electron transport chain/oxidative phosphorylation/ATP synthase, and 
+H2-hydrogenases/formate-dehydrogenases/carbon monoxide dehydrogenases (autotrophy).
+The new COG categories also get a unique one-letter identifier (```COG_ID```). 
+
+There is functional overlap between some of these assignments, so that they should be taken with
+a pinch of salt. For example, Succinate dehydrogenase (Cytochrome b subunit) (_sdhC_, _H16_A263_)
+is a membrane protein catalyzing oxidation of succinate and transfer of electrons to
+a universal quinone acceptor. It thus plays a role in oxidative phosphorylation and 
+electron transport, but also in the TCA cycle.
+
 
 ```{r}
 
@@ -174,7 +206,10 @@ df_new <- df_new %>%
    
    # -- new group oxidative phosphorylation --
    mutate_cond(
-      grepl("Oxidative phosphorylation", Pathway), 
+      grepl("Oxidative phosphorylation", Pathway) | 
+         grepl("nuo|nar[GHIJ]|nir|nor|nos|H16_B2315|H16_A0344|H16_A0346", gene_name) |
+         grepl("[Cc]ytochr|quinol oxidase|[Qq]uino.*(oxido)?reductase|NADH.*(flavin|dehydro|reduct)", protein_name) & 
+         !grepl("Post-trans", COG_Process), 
       COG_ID = "X",
       COG_System = "Metabolism",
       COG_Process = "Oxidative phosphorylation"
@@ -182,7 +217,9 @@ df_new <- df_new %>%
    
    # -- new group autotrophic energy generation --
    mutate_cond(
-      grepl("hox|fdh|fdo|fds", Pathway), 
+      grepl("hox|fdh|fdo|fds|fdw", gene_name) |
+         grepl("hup[SL]|hya|hyf", eggNOG_name) | 
+         grepl("[Ff]ormate (de)?hydro|[Cc]arbon monox", protein_name), 
       COG_ID = "A",
       COG_System = "Metabolism",
       COG_Process = "Autotrophic energy generation"
@@ -191,12 +228,46 @@ df_new <- df_new %>%
 ```
    
 
-### Task 3: Assign new groups to 'Function unknown'/'NA' genes
+### Task 3: Assign new groups to 'Function unknown'/'NA' annotated genes
+
+The final step is to take a look at the COG category 'Function unknown' or 'NA'.
+It's a large group where the eggNOG algorithm failed to assign a COG category,
+but other resources are available and can be used to pull out known genes and 
+assign them to COG functional categories.
 
 _Ralstonia_-specific candidates could be hyp/hox genes, nitrate respiration genes,
-special transporters, PHAand storage compounds, and many more. While some of the genes
-lack a COG annotation, they are annotated by more specific KEGG pathways or GO terms
-which can be used to assign them to COG groups.
+special transporters, PHA and other storage compounds, and many more. While some 
+of the genes lack a COG annotation, they are annotated by more specific KEGG pathways 
+or GO terms which can be used to assign them to COG groups.
+
+```{r}
+# let's have a look on KEGG Pathways within genes annotated as 'Function unknown'
+df_new %>% 
+   
+   # summarize KEGG Pathways again
+   filter(COG_Process == "Function unknown") %>%
+   group_by(Pathway) %>%
+   summarize(n_genes = length(Pathway)) %>%
+   arrange(desc(n_genes)) %>%
+   
+   # remove 'hypothetical' and low-abundant pathways
+   filter(Pathway != "Hypothetical" & Pathway != "Function unknown" 
+      & n_genes > 10) %>%
+   
+   # and plot result
+   barchart(n_genes ~ Pathway %>% factor(., unique(.)), ., 
+      horizontal = FALSE, border = NA, par.settings = custom.lattice, 
+      xlab = "KEGG pathway", 
+      scales = list(alternating = FALSE, x = list(rot = 30))
+   )
+
+```
+
+Around 400 genes have KEGG pathway annotation, and by far the most of those
+are related to environmental interaction: transporters, sectretion systems, 
+quorum sensing, chemotaxis, defense. These can be assigned to 
+
+
 
 
 
