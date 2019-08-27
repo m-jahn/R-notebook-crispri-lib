@@ -201,7 +201,8 @@ electron transport, but also in the TCA cycle.
 
 
 ```{r}
-
+# add some finer-grained 'COG' groups
+#
 df_new <- df_new %>% 
    
    # -- new group oxidative phosphorylation --
