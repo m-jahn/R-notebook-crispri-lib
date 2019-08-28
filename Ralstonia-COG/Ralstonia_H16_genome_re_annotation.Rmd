@@ -269,6 +269,25 @@ are related to environmental interaction: transporters, sectretion systems,
 quorum sensing, chemotaxis, defense. These can be assigned to 
 
 
+```{r}
+df_new %>%
+  
+  # group by Pathway
+  group_by(Pathway) %>%
+  
+  # fill up missing values with the most abundant COG term within the 
+  # KEGG Pathway annotation. In other words fill in COG terms derived from similar neighbors
+  mutate_cond(!Pathway %in% c("Function unknown", "General function prediction only", "Hypothetical"), 
+    COG_Process = replace(COG_Process, COG_Process == "Function unknown", 
+      table(COG_Process) %>% sort %>% names %>% {.[1]}
+    )
+  ) %>%
+
+  group_by(COG_Process) %>% summarise(n_genes = length(COG_ID)) %>% print(n=Inf)
+  
+```
+
+
 
 
 
