@@ -98,10 +98,7 @@ not judging each single protein correctly, we can allocate those to existing COG
 # explicitly exclude regulator cbbR
 
 df_new <- df %>% 
-   
-   # first combine NA and FU
-   mutate(COG_Process = replace_na(COG_Process, "Function unknown")) %>%
-   
+
    mutate_cond(
       grepl("cbb[^R]", gene_name), 
       COG_ID = "G",
@@ -202,7 +199,6 @@ electron transport, but also in the TCA cycle.
 
 ```{r}
 # add some finer-grained 'COG' groups
-#
 df_new <- df_new %>% 
    
    # -- new group oxidative phosphorylation --
@@ -252,40 +248,132 @@ df_new %>%
    arrange(desc(n_genes)) %>%
    
    # remove 'hypothetical' and low-abundant pathways
-   filter(Pathway != "Hypothetical" & Pathway != "Function unknown" 
-      & n_genes > 10) %>%
+   filter(Pathway != "Hypothetical" & Pathway != "Function unknown", n_genes >= 5) %>% 
+   #pull(n_genes) %>% sum
    
    # and plot result
    barchart(n_genes ~ Pathway %>% factor(., unique(.)), ., 
       horizontal = FALSE, border = NA, par.settings = custom.lattice, 
-      xlab = "KEGG pathway", 
+      xlab = "KEGG pathway (>= 5 genes)", 
       scales = list(alternating = FALSE, x = list(rot = 30))
    )
 
 ```
 
-Around 400 genes have KEGG pathway annotation, and by far the most of those
+Around 300 genes have KEGG pathway annotation, and by far the most of those 
 are related to environmental interaction: transporters, sectretion systems, 
-quorum sensing, chemotaxis, defense. These can be assigned to 
-
+quorum sensing, chemotaxis, defense. These can be assigned to the corresponding 
+COG groups. Again, there are several simplifications in place. Not all 'transport'
+related genes are in charge of inorganic ion transport yet are assigned to this 
+group. The transported substrate is often not known, and could among others 
+comprise inorganic ions, small metabolites, toxins and xenobiotics, signaling 
+molecules, and peptides.
 
 ```{r}
-df_new %>%
-  
-  # group by Pathway
-  group_by(Pathway) %>%
-  
-  # fill up missing values with the most abundant COG term within the 
-  # KEGG Pathway annotation. In other words fill in COG terms derived from similar neighbors
-  mutate_cond(!Pathway %in% c("Function unknown", "General function prediction only", "Hypothetical"), 
-    COG_Process = replace(COG_Process, COG_Process == "Function unknown", 
-      table(COG_Process) %>% sort %>% names %>% {.[1]}
-    )
-  ) %>%
+df_new <- df_new %>% 
+   
+   # -- move transport-related genes --
+   mutate_cond(
+      COG_Process == "Function unknown" & 
+         grepl("[Tt]ransport", Pathway) | 
+         grepl("[Tt]ransport", eggNOG_description), 
+      COG_ID = "P",
+      COG_System = "Metabolism",
+      COG_Process = "Inorganic ion transport and metabolism"
+   ) %>%
+   
+   # -- move secretion-related genes --
+   mutate_cond(
+      COG_Process == "Function unknown" & 
+         grepl("[Ss]ecret", Pathway) | 
+         grepl("[Ss]ecret", eggNOG_description), 
+      COG_ID = "U",
+      COG_System = "Cellular processes and signaling",
+      COG_Process = "Intracellular trafficking, secretion, and vesicular transport"
+   ) %>%
+   
+   # -- move genes related to defense/TA systems/cell cycle/division --
+   mutate_cond(
+      COG_Process == "Function unknown" & 
+         grepl("defense|Quorum|Chromoso", Pathway) | 
+         grepl("toxi[cn]", eggNOG_description), 
+      COG_ID = "D",
+      COG_System = "Cellular processes and signaling",
+      COG_Process = "Cell cycle control, cell division, chromosome partitioning"
+   )
+```
 
-  group_by(COG_Process) %>% summarise(n_genes = length(COG_ID)) %>% print(n=Inf)
+There are still many KEGG categories annotated with realtively few members. 
+For those we can devise a more automated procedure to assisgn COG groups. We use 
+a function that selects that most abundant COG terms for a given KEGG pathway 
+and assign this term instead of "Function unknown". There is a risk of false 
+assignment but the number and mass fraction of these proteins is low, compared to
+the known and well annotated proteome.
+
+```{r, results = 'hide'}
+# function to fill in missing COG terms with the most abundant COG term within the 
+# KEGG Pathway. In other words fill in COG terms derived from similar neighbors.
+replace_NA_terms <- function(x) {
+   # determine most abundant COG terms annotated for pathway
+   terms = table(x) %>% sort(decreasing = TRUE); 
+   terms %>% set_names(substr(names(.), 1, 10)) %>% print
+   replace(x, x == "Function unknown", names(terms)[1])
+}
+
+# execute the function on annotation data frame
+df_new <- df_new %>%
+   
+   # group by Pathway
+   group_by(Pathway) %>%
+  
+   # exclude meaningless KEGG pathways
+   mutate_cond(!Pathway %in% c("Function unknown", "General function prediction only", "Hypothetical"), 
+      COG_Process = replace_NA_terms(COG_Process)
+   )
   
 ```
+
+### Summary and evaluation
+
+Finally the changes that were made in COG annotation have to be summarized and 
+compared to the original annotation obtained from eggNOG. We combine the two 
+```data.frame```s and plot them as comparison of genes per COG group. We
+can also calculate the change in gene number per group, and finally the resulting
+new table is saved as ```*.csv```.
+
+```{r}
+# construct a summary table
+df_summary <- bind_rows(
+   df %>% group_by(COG_Process) %>% 
+      summarize(n_genes = length(COG_ID)) %>% 
+      mutate(type = "original"),
+   df_new %>% group_by(COG_Process) %>% 
+      summarize(n_genes = length(COG_ID)) %>% 
+      mutate(type = "improved")
+)
+
+# plot improved versus original COG classification
+barchart(n_genes ~ COG_Process %>% substr(1, 25) %>% factor(., unique(.)), 
+   df_summary %>% arrange(desc(n_genes)), groups = type,
+   horizontal = FALSE, border = NA, par.settings = custom.lattice, 
+   xlab = "COG Process", ylab = "n_genes",
+   scales = list(alternating = FALSE, x = list(rot = 30)),
+   panel = function(x, y, ... ){
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barchart(x, y, ...)
+   }
+)
+
+# how many genes have changed?
+df_summary %>% spread(type, n_genes) %>% 
+   mutate(changed = improved - original) %>%
+   select(COG_Process, changed)
+
+# save the revised table
+write_csv(df_new, "Ralstonia_H16_genome_re_annotation.csv")
+
+```
+
 
 
 
