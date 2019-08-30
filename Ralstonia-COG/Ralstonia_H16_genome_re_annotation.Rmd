@@ -223,7 +223,22 @@ df_new <- df_new %>%
    )
 
 ```
+
+There is one group, ```Chromatin structure and dynamics```, that has extremely
+few member genes as it is apparently important in eukaryotic cells but not 
+prokaryotic ones. We will therefore merge it with group ```Cell cycle control, cell division, ...```.
+
+```{r}
+df_new <- df_new %>% 
    
+   mutate_cond(grepl("Chromatin struct", COG_Process), 
+      COG_ID = "D",
+      COG_System = "Cellular processes and signaling",
+      COG_Process = "Cell cycle control, cell division, chromosome partitioning"
+   )
+
+```
+
 
 ### Task 3: Assign new groups to 'Function unknown'/'NA' annotated genes
 
@@ -354,7 +369,7 @@ df_summary <- bind_rows(
 
 # plot improved versus original COG classification
 barchart(n_genes ~ COG_Process %>% substr(1, 25) %>% factor(., unique(.)), 
-   df_summary %>% arrange(desc(n_genes)), groups = type,
+   df_summary %>% arrange(desc(n_genes)), groups = type, origin = 0,
    horizontal = FALSE, border = NA, par.settings = custom.lattice, 
    xlab = "COG Process", ylab = "n_genes",
    scales = list(alternating = FALSE, x = list(rot = 30)),
@@ -366,6 +381,7 @@ barchart(n_genes ~ COG_Process %>% substr(1, 25) %>% factor(., unique(.)),
 
 # how many genes have changed?
 df_summary %>% spread(type, n_genes) %>% 
+   mutate_at(vars(2:3), function(x) replace_na(x, 0)) %>%
    mutate(changed = improved - original) %>%
    select(COG_Process, changed)
 
