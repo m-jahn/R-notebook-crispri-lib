@@ -139,6 +139,8 @@ matches better to 'carbohydrate', 'ribosome biogenesis' to 'translation', and so
 
 We can construct rules to re-assign genes to COG groups by matching corresponding 
 (fine-grained) KEGG pathways to the (coarse) COG counterparts in cases that are clear.
+It is also reasonable to re-assign all genes related to PHA/PHB metabolism to the
+'Lipds transport and metabolism' group.
 
 
 ```{r}
@@ -176,6 +178,14 @@ df_new <- df_new %>%
       COG_ID = "C",
       COG_System = "Metabolism",
       COG_Process = "Energy production and conversion"
+   ) %>%
+   
+   # -- PHA/PHB genes to lipids --
+   mutate_cond(
+      grepl("[Pp]ha[ABCPYZ]", gene_name), 
+      COG_ID = "I",
+      COG_System = "Metabolism",
+      COG_Process = "Lipid transport and metabolism"
    )
 
 ```
@@ -308,10 +318,10 @@ df_new <- df_new %>%
    ) %>%
    
    # -- move genes related to defense/TA systems/cell cycle/division --
-   mutate_cond(
-      COG_Process == "Function unknown" & 
+   mutate_cond(grepl("Defense", COG_Process) | (
+         COG_Process == "Function unknown" & 
          grepl("defense|Quorum|Chromoso", Pathway) | 
-         grepl("toxi[cn]", eggNOG_description), 
+         grepl("toxi[cn]", eggNOG_description)), 
       COG_ID = "D",
       COG_System = "Cellular processes and signaling",
       COG_Process = "Cell cycle control, cell division, chromosome partitioning"
@@ -376,6 +386,7 @@ barchart(n_genes ~ COG_Process %>% substr(1, 25) %>% factor(., unique(.)),
    panel = function(x, y, ... ){
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.barchart(x, y, ...)
+      panel.key(c("re-assigned", "original"), pch = 15)
    }
 )
 
