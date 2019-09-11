@@ -1,2 +1,5 @@
 .Rhistory
 .Rdata
+sgRNA_library/figures/*
+sgRNA_library/raw_data/*
+sgRNA_library/processed_data/*

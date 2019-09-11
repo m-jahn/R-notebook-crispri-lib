@@ -1,0 +1,485 @@
+---
+title: "CRISPRi library data processing pipeline"
+output: html_notebook
+---
+
+
+## Description
+
+The purpose of this R markdown notebook is to provide a trackable, reproducible,
+and comprehensive documentation of data processing steps for experiments carried 
+out using a CRISPRi sgRNA library in the  cyanobacterium _Synechocystis_ sp. PCC6803.
+
+This is the first pipeline of two, focusing on loading and processing the obtained
+highly parallel sequencing data from growth competiion experiments. The experimental 
+details will be published in a corresponding paper. The complete data set consists
+of several independent experiments sequenced at different time points that are
+merged into one complete data frame eventually. The first steps of this pipeline
+are reading the (preprocessed) data tables for low light (L100), high light (L300),
+LD (light-dark-cycle, a.k.a. day-night-cycle), sodium lactate tolerance (LAC), 
+and a sodium chloride control (NACL). This is followed by adding some statistical 
+metrics and a basic quality control regarding read counts, and number of identified genes.
+
+
+```{r, results = 'hide'}
+# LOAD PACKAGES
+
+library(lattice)
+library(latticeExtra)
+library(DESeq2)
+library(tidyverse)
+library(Rtools)
+library(DescTools)
+```
+
+
+## Step 1: Preprocessing of data
+
+Preprocessed data in the form of reads per gene were converted to fraction of 
+total reads by dividing each read number by total number of reads, per condition 
+and replicate. 
+
+```{r, results = 'hide'}
+df_raw <- list(
+  L100 = read_tsv("../raw_data/190428_countings_long_format_MERGED_LL.tab"),
+  L300 = read_tsv("../raw_data/190428_countings_long_format_MERGED_HL.tab"),
+  LD = read_tsv("../raw_data/190217_countings_long_format_MERGED_DN.tab"),
+  LAC = read_tsv("../raw_data/190430_countings_long_format_lactate_tolerance.tab"),
+  NACL = read_tsv("../raw_data/190508_countings_long_format_NaCl_control.tab")
+  ) %>% bind_rows(.id = "condition") %>%
+  
+  # add class and rename some columns
+  dplyr::rename(replicate = sample) %>%
+  
+  # make separate group for antisense RNA loci
+  mutate(type = ifelse(grepl("^Entry", sgRNA), "ncRNA", "gene")) %>%
+  
+  # change timepoint to numeric value
+  mutate(timepoint = as.numeric(gsub("[hd]", "", timepoint))) %>%
+  mutate(timepoint = plyr::mapvalues(timepoint, c(24,48), c(1,2))) %>%
+  
+  # change some replicate indices from 5-8 to 1-4
+  mutate(replicate = plyr::mapvalues(replicate, 5:8, 1:4)) %>%
+  
+  # grouping for condition, time, induction
+  group_by(type, condition, timepoint, induction, replicate) %>%
+  
+  # and add read fraction for each combination (cond, time, ind, repl)
+  mutate(read.fraction = readcount/sum(readcount))
+```
+
+The correct calculation of read fraction is controlled by the following steps, 
+including summarizing unique sgRNAs and mean read count per condition.
+
+```{r}
+# check individual sgRNAs per sample, should be around 7000 (2 per gene)
+summarise(df_raw, length = length(read.fraction)) %>% head
+# check that every condition sums to 1
+summarise(df_raw, sumFC = sum(read.fraction)) %>% head
+# altogether are 149 samples (6xL300, 4xL100, 6xLD, 3xNACL, 3xLAC, most of them +/- induction, 4 repl)
+# (times 2 for differentiation between gene and ncRNA loci)
+sum(df_raw$read.fraction)
+# check also mean raw read count per sample
+summarise(df_raw, readcount = median(readcount)) %>% head
+```
+
+One particular control condition, the lactate-tolerance sample for time point zero, 
+induced (```LAC_0d_induced```), was not sequenced individually as it is identical
+with the non-induced counter part of the same condition (```LAC_0d_uninduced```). 
+For calculation of fold change metric, the missing condition was simply copied 
+from the present control.
+
+```{r}
+df_raw <- filter(df_raw, condition == "LAC" & timepoint == 0 & induction == "u") %>%
+  ungroup %>% mutate(induction = "i") %>%
+  bind_rows(., df_raw)
+```
+
+A preliminary analysis of raw read counts for all different conditions, timepoints, 
+and replicates was conducted. For the sake of simplicity, the time points 12 and
+and 30 days (sodium chloride control, condition ```NACL```) were mapped to 
+16 and 32 days to correspond to time points of all other samples. This does not
+influence calculation of generation time or fitness score, and was done only to
+display the data.
+
+```{r}
+plot_median_read_count <- df_raw %>% 
+  
+  # focus on genes
+  filter(type == "gene") %>%
+  
+  # first group by all possible conditions
+  group_by(condition, timepoint, induction, replicate) %>%
+  
+  # determine read count
+  summarise(median_read_count = median(readcount)) %>% ungroup %>%
+  mutate(timepoint = plyr::mapvalues(timepoint, c(12, 30), c(16, 32))) %>%
+  
+  # and plot
+  xyplot(median_read_count ~ factor(timepoint) | induction * condition, .,
+    as.table = TRUE, par.settings = custom.lattice, 
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      if (panel.number() %in% 1:9) {
+        panel.barplot(x, y, ewidth = 0.3, ...)
+      }
+    }
+  )
+
+# plot also number of individual sgRNAs per sample
+plot_unique_sgRNA <- df_raw %>% 
+  
+  # focus on genes
+  filter(type == "gene") %>%
+  
+  # first group by all possible conditions
+  group_by(condition, timepoint, induction, replicate) %>%
+  
+  # determine read count
+  summarise(unique_sgRNAs = length(readcount)) %>% ungroup %>%
+  mutate(timepoint = plyr::mapvalues(timepoint, c(12, 30), c(16, 32))) %>%
+
+  xyplot(unique_sgRNAs ~ factor(timepoint) | induction *  condition, .,
+    pch = 19, type = c("p"),
+    as.table = TRUE, par.settings = custom.lattice, 
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      if (panel.number() %in% 1:9) {
+        panel.barplot(x, y, ewidth = 0.3, ...)
+      }
+    }
+  )
+
+print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
+print(plot_unique_sgRNA, split = c(2,1,2,1))
+```
+
+```{r, results='hide', include=FALSE}
+svg("../figures/supplemental/CRISPRi_library_read_counts.svg", width = 10, height = 7)
+print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
+print(plot_unique_sgRNA, split = c(2,1,2,1))
+dev.off()
+```
+
+
+## Step 2: DESEQ2 analysis for fold change and significance testing
+
+To obtain fold changes between conditions and a significance metric, the R package
+DESeq2 was used. DESeq2 uses a negative binomial distribution of read counts to make more
+accurate estimation of fold change and significance per gene. DESeq2 reference:
+
+Love, M.I., Huber, W., Anders, S. (2014) Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15:550. https://doi.org/10.1186/s13059-014-0550-8
+
+#### 1. Read count matrix
+
+The data frame was reshaped for DESeq2 into a 'counts matrix' with genes as rows 
+and samples (conditions) as columns.
+
+```{r}
+counts <- select(df_raw, condition, induction, timepoint, replicate, sgRNA, readcount) %>%
+  
+  # paste metadata columns together
+  unite(condition, condition, induction, timepoint, replicate) %>%
+  
+  # spread condition over columns and sgRNAs over rows
+  spread(condition, readcount) %>%
+  
+  # remove sgRNA column, replace NA with 0
+  mutate_at(vars(-1), function(x) coalesce(x, 0)) %>%
+  
+  # add row_names from column 
+  column_to_rownames("sgRNA")
+
+head(counts)
+```
+  
+
+#### 2. Meta data
+
+A meta data frame with experimental annotation is created. This is used to carry 
+out the actual DESeq2 analysis by 'contrasting' (comparing) selected conditions 
+to each other.
+
+
+```{r}
+# The meta data frame with experiment annotation
+Samples <- data.frame(
+  all_conditions = colnames(counts),
+  # Order must be same as Reads columns!
+  row.names = colnames(counts) 
+  ) %>%
+  
+  # split the metadata into single variables
+  separate(all_conditions, into = c("condition", "induction", "timepoint", "replicate")) %>%
+  
+  # make combinations of condition, induction and time to form super-groups,
+  # then test each time point against each other within the group
+  unite(group, condition, induction, timepoint, remove = FALSE)
+
+head(Samples)
+```
+
+#### 3. Perform DESeq2 analysis
+
+It is possible to use complex experimental designs and specify those
+using a formula interphase. However, the manual recommends
+to merge combinations of different factors into super-groups
+and then do pairwise comparison of the groups one is interested in.
+
+**WARNING: This step is computation-intense and can take several hours**
+
+```{r, eval=FALSE}
+DES_result <- DESeqDataSetFromMatrix(
+  countData = counts,
+  colData = Samples,
+  design = ~ group) %>%
+  DESeq
+
+
+# Have alook at the combinations that were tested
+resultsNames(DES_result)[1:10]
+```
+
+Next, results from DESeq2 models are extracted. The data set includes
+5 conditions x 2 inductions x 3/4/6 timepoints = 38 combinatiions in total.
+The syntax to call DESeq2's ```results(...)``` function is to use one pair of 
+contrasts ```contrast("variable", "level1", "level2")```. To automate this, 
+a list of condition and reference pairs is set up. As mentioned before, DESEq2 
+has more advanced ways of constructing contrasts but the syntax is more difficult.
+
+```{r, results='hide', eval=FALSE}
+# list of contrasts/combinations
+combinations <- list(
+  testCond = Samples$group %>% unique %>% 
+    grep(pattern = "_(1|2|4|8|16|32|12|30)", value = TRUE),
+  refCond = rep(Samples$group %>% unique %>% 
+    grep(pattern = "_0", value = TRUE), c(2,2,5,5,2,2,5,5,2))
+)
+
+
+# loop through all possible combinations
+DES_result_table = lapply(1:length(combinations$testCond),
+  
+  function (i) {
+    results(DES_result, 
+      contrast = c("group", combinations$testCond[[i]], combinations$refCond[[i]])) %>%
+    as.data.frame %>% 
+    mutate(
+      sgRNA = rownames(.), 
+      group = combinations$testCond[[i]]
+    ) %>% as_tibble %>%
+    separate(group, into = c("condition", "induction", "timepoint")) %>%
+    mutate(timepoint = as.numeric(timepoint))
+  }
+  
+) %>% bind_rows
+```
+
+----------
+Alternatively, it is possible to load a precumputed DESeq2 results table. This avoids
+re-running the entire DESeq2 analysis only for another part of the pipeline has
+changed.
+
+```{r, results='hide', eval=FALSE}
+# load precomputed DESeq2 result in form of Rdata object
+load("../processed_data/CRISPRi_library_DESeq_result_table.Rdata")
+```
+
+
+## Step 3: Merge with DESeq2 results and summarize data
+
+The following steps condense the raw data frame by averaging replicates,
+merging the data frame with the result from DESeq2 analysis, and adding different
+statistical metrics.
+
+```{r}
+# change the grouping to condition, timepoint, induction, sgRNA
+df <- group_by(df_raw, condition, timepoint, induction, sgRNA) %>% 
+  
+  # summarise replicates by mean and stdev
+  summarise(
+    read.fraction.mean = mean(read.fraction, na.rm = TRUE),
+    read.fraction.stdev = sd(read.fraction, na.rm = TRUE)) %>%
+  
+  # new grouping for condition, induction, sgRNA BUT NOT timepoint
+  group_by(condition, induction, sgRNA) %>%
+  
+  # determine FC over time by comparing each sgRNA at each condition
+  mutate(FC = read.fraction.mean / read.fraction.mean[1])
+  
+# test if mean FC == 1 for all 0d time points and != 1 for all others
+df %>% group_by(condition, timepoint, induction) %>%
+  summarise(meanFC = mean(FC, na.rm = TRUE)) %>% head
+
+# merge the dataframe with the result from DESeq2
+# this is not trivial because sgRNA and condition have different length
+# (DESeq contains all possible combinations of sgRNA and condition, df not)
+# a 'left_join' will keep the structure of df
+df <- left_join(df, DES_result_table) %>% ungroup
+```
+
+
+## Step 4: Annotation of data
+
+The data frame has to be completed with ```NA``` for sgRNAs missing in some 
+combinations of conditions. Here, ```tidyr::complete``` was used to fill these gaps. 
+The syntax is to indicate first the variable that is to be completed, and then the 
+variables that represent conditions to be completed. 
+All other variables (like measurements) are filled with ```NA```. 
+
+Different annotation columns are added to the master data frame, including a short sgRNA
+identifier (excluding the position on the gene), an sgRNA index (1 or 2), and the
+customized genome annotation from Uniprot/KEGG.
+
+```{r, results='hide'}
+df <- df %>% complete(sgRNA, nesting(condition, timepoint, induction)) %>%
+
+  # prepare merging by cleaning IDs from results table
+  # first remove sgRNA position number from gene IDs
+  mutate(sgRNA_short = 
+  gsub("(\\_| )[0-9]+(\\_MULTI)?$", "", sgRNA)) %>%
+  
+  # add sgRNA index number (1 or 2)
+  group_by(condition, timepoint, induction) %>%
+  mutate(sgRNA_index = duplicated(sgRNA_short) %>% as.numeric %>% {. + 1}) %>%
+
+  # map trivial names to LocusTags using a manually curated list
+  left_join(
+    read_tsv("../raw_data/gene_protein_table.txt") %>% 
+      filter(!duplicated(gene)), 
+    by = c("sgRNA_short" = "gene")) %>%
+  
+  # one more join, this time with the annotation db
+  # containing uniprot and categorial (KEGG Brite) data
+  left_join(read_csv("../raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv")[c(1,4:6,11,20,22,27:32)], 
+    by = c("locus" = "GeneID"))
+
+```
+
+Check that number of detected sgRNAs is the same for all conditions
+after completing.
+  
+```{r}
+  df %>% summarise(length(unique(sgRNA))) %>% head
+```
+
+----------
+
+The number of generations for each experiment and time point was calculated 
+based on known cultivation time and average growth rate in the turbidostat.
+A fitness score was defined as the area under/over the curve for log2 fold change
+over number of generations. An enrichment will result in a positive score, a depletion 
+in a negative score. The fitness score is normalized to the maximum number of 
+generations for a particular condition, and is therefore independent of the duration
+of a particular cultivation. The fitness score will be lower for faster depleting genes
+and higher for slowly depleting genes.
+
+```{r, results='hide'}
+# using left join with table
+df <- left_join(df, read_csv("../raw_data/growth_rate_library.csv")) %>%
+
+  # first fill up missing (NA) log2FC values for the initial 0d time point
+  group_by(condition, induction, sgRNA) %>%
+  mutate(log2FoldChange = ifelse(FC == 1, 0, log2FoldChange)) %>%
+  
+  # determine fitness score using DescTools::AUC()
+  mutate(fitness_score = AUC(generations, log2FoldChange)/max(generations)) %>%
+  
+  # make temporary change of NACL time points 12 and 30 days to 16 and 32, 
+  # to ease comparisons. That does not effect the fitness score that was calculated
+  # with the accurate time points, nor the number of generations
+  ungroup %>% mutate(timepoint = plyr::mapvalues(timepoint, c(12, 30), c(16, 32)))
+
+```
+
+```{r}
+  # check how many sgRNAs have valid scores
+  df %>% group_by(condition, induction) %>% 
+    summarise(total = length(fitness_score), NAs = sum(is.na(fitness_score)))
+```
+
+
+## Step 5: Quality control
+
+Quality control: check manual log2 FC versus DESeq2 log2 FC
+
+```{r}
+plot_DESeq2_vs_namual_FC <- df %>% 
+  
+  # plot only genes and remove time point zero
+  filter(!grepl("Entry", sgRNA),
+    !is.na(log2FoldChange), timepoint != 0) %>%
+  
+  xyplot(log2FoldChange ~ log2(FC) | factor(timepoint) * 
+      factor(condition, c("L100", "L300", "LD", "LAC", "NACL")), ., 
+    as.table = TRUE, groups = induction,
+    par.settings = custom.lattice, 
+    xlab = "manual log2FC", ylab = "DESeq2 log2FC",
+    pch = 19, cex = 0.3, 
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.key(c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+    }
+  )
+
+print(plot_DESeq2_vs_namual_FC)
+```
+
+
+```{r, results='hide', include=FALSE}
+png("../figures/supplemental/CRISPRi_library_DESeq2_vs_manual_FC.png", width = 1000, height = 800, res = 100)
+print(plot_DESeq2_vs_namual_FC)
+dev.off()
+```
+
+
+----------
+
+Quality control: volcanoplot
+
+```{r}
+plot_volcanoplot <- df %>%
+  
+  # plot only genes and remove time point zero
+  filter(!grepl("Entry", sgRNA),
+    !is.na(log2FoldChange), timepoint != 0) %>%
+  
+  xyplot(-log10(padj) ~ log2FoldChange | factor(timepoint) * condition, ., 
+    as.table = TRUE, groups = induction,
+    par.settings = custom.lattice, 
+    cex = 0.2, pch=19,
+    scales = list(alternating = FALSE),
+    ylim = c(- 20, 200), xlim = c(-10, 10),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.key(c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+    }
+  )
+
+print(plot_volcanoplot)
+```
+
+
+```{r, results='hide', include=FALSE}
+png("../figures/supplemental/CRISPRi_library_volcanoplot.png", width = 1000, height = 800, res = 100)
+print(plot_volcanoplot)
+dev.off()
+```
+
+----------
+
+Write processed data frame to file and continue with analysis
+in next script
+
+
+```{r}
+save(df, file = "../processed_data/CRISPRi_library_df_annotated.Rdata")
+save(DES_result_table, file = "../processed_data/CRISPRi_library_DESeq_result_table.Rdata")
+```
+
+
