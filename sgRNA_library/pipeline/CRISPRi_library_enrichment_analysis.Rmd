@@ -1,0 +1,383 @@
+---
+title: "CRISPRi library enrichment/depletion analysis"
+output: html_notebook
+---
+
+
+## Description
+
+The purpose of this R markdown notebook is to provide a trackable, reproducible,
+and comprehensive documentation of data processing steps for experiments carried 
+out using a CRISPRi sgRNA library in the  cyanobacterium _Synechocystis_ sp. PCC6803.
+
+This is the second pipeline of two, focusing on analysis of enrichment or depletion of 
+CRISPRi-repressed mutants in growth competiion experiments. The experimental 
+details will be published in a corresponding paper. This pipeline uses different
+strategies of clustering sgRNAs by similarity, checking for enriched gene ontology 
+terms, and picking out the most interesting sgRNAs/genes per cluster.
+
+
+```{r, results = 'hide'}
+# LOAD PACKAGES
+
+library(lattice)
+library(latticeExtra)
+library(cluster)
+library(dendextend)
+library(topGO)
+library(tidyverse)
+library(Rtools)
+library(grid)
+```
+
+
+## Step 1: Loading preprocessed data
+
+Preprocessed data in the form of reads per gene was summarized and annotated 
+in pipeline 1. It includes mean read fraction, log2 FC and p-value calculated 
+using DESeq2. Genome annotation was added based on uniprot and cyanobase annotation
+of the reference genome for _Synechocystis_ sp. PCC6803.
+
+```{r}
+# load data file
+load(file = "../processed_data/CRISPRi_library_df_annotated.Rdata")
+# turn conditon into a factor for ordered plotting, input should be ungroup()ed
+df <- ungroup(df) %>% mutate(condition = factor(condition, c("L100", "L300", "LD", "LAC", "NACL")))
+# split into gene and ncRNA containing data and continue with gene only
+df <- df %>% filter(!grepl("^Entry", sgRNA))
+```
+
+
+## Step 2: Basic statistics
+
+The purpose of this section is to investiagte basic statistical properties
+of the annotated sgRNA library data. This includes 'coverage' metrics like total 
+number of unique sgRNAs, unique genes, missing values per condition, and 
+distribution of raw read fractions or log2 FCs.
+
+```{r}
+# Number of unique sgRNAs
+paste(df$sgRNA %>% unique %>% length, "unique sgRNAs in all conditions")
+# Number of unique genes
+paste(df$locus %>% unique %>% length, "unique genes covered")
+# Missing sgRNA quantifications per condition, higher for LAC
+df %>% group_by(condition, induction, sgRNA) %>%
+  summarise(NAs = sum(is.na(read.fraction.mean))) %>% 
+  summarise(sum(NAs > 0))
+```
+
+-----------
+
+#### Read distribution
+
+The distribution of raw read fraction should ideally be a normal or Gauss-distribution,
+meaning that most of the mutants in the sgRNA library are equally distributed. 
+However, there is clearly a skewed and in several cases a bimodal distribution visible,
+indicating that a sub-population of mutants was already depleted from the library
+(or always present at lower proportion) at the 0 d time point.
+
+```{r}
+# Raw read fraction distribution
+plot_read_density <- densityplot( ~ log10(read.fraction.mean) | 
+    plyr::mapvalues(induction, c("i", "u"), c("induced", "uninduced")) * condition, 
+  groups = timepoint, df, 
+  col = colorRampPalette(custom.lattice()$superpose.line$col[1:3])(7),
+  as.table = TRUE, scales = list(alternating = FALSE),
+  par.settings = custom.lattice, between = list(x = 0.5, y = 0.5),
+  xlim = c(-7.5,-0.5),
+  panel = function(x, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.densityplot(x, plot.points = FALSE, lwd = 2, ...)
+    panel.key(labels = c("0d","1d","2d","4d","8d","16d","32d"), 
+      points = FALSE, lines = TRUE, lwd = 2, which.panel = 10,
+      col = colorRampPalette(custom.lattice()$superpose.line$col[1:3])(7))
+  }
+)
+```
+
+```{r, fig.align = 'center', fig.width = 6.5, fig.height = 8}
+print(plot_read_density)
+```
+
+
+```{r, results = 'hide', include = FALSE}
+svg("../figures/supplemental/CRISPRi_library_read_density.svg", width = 6.5, height = 8)
+print(plot_read_density)
+dev.off()
+```
+
+-----------
+
+**Supplementary Figure.**
+Distribution of mean read fraction (sgRNA reads per gene divided by total number 
+of reads). Broken down by condition, and color-coded by time point in days. A bimodal
+disitrubtion for some conditions indicate that a pre-selection of mutants was 
+taking place eve before growth competition experiments.
+Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+
+-----------
+
+
+#### sgRNA pair correlation
+
+To get a more detailed picture how well 2 sgRNAs for the same gene compare, 
+the log2 FC of sgRNA 1 is plotted against sgRNA 2. The ideal is a perfect correlation
+between every sgRNA pair but this is unlikely to happen. Here, sgRNA correlation
+is broken down by condition.
+
+```{r}
+# Correlation between sgRNA 1 and 2 per gene, and condition
+plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` | 
+  factor(timepoint) * condition,
+  # filter out genes that don't have two sgRNAs
+  df[c(2,3,4,9,14,15,16)] %>% group_by(sgRNA_short) %>%
+    filter(timepoint > 0) %>%
+    spread(key = sgRNA_index, value = log2FoldChange) %>%
+    rename_at(vars(6:7), function(x) paste0("sgRNA-", x)),
+  groups = induction, as.table = TRUE, 
+  between = list(x = 0.5, y = 0.5),
+  par.settings = custom.lattice, cex = 0.2, pch=19,
+  scales = list(alternating = FALSE),
+  xlim = c(-9, 4), ylim = c(-9, 4),
+  xlab = "log2 FC sgRNA1", ylab = "log2 FC sgRNA2",
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.xyplot(x, y, ... )
+    if (panel.number() %in% c(1:5, 7:11, 17:18, 23:24, 29:30)) {
+      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, ...)
+    }
+    panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+  }
+)
+```
+
+```{r, fig.align = 'center', fig.width = 9, fig.height = 9}
+print(plot_2sgRNA_correlation)
+```
+
+
+```{r, results = 'hide', include = FALSE}
+png("../figures/supplemental/CRISPRi_library_2sgRNA_correlation.png", 
+  width = 1200, height = 1200, res = 120)
+print(plot_2sgRNA_correlation)
+dev.off()
+```
+
+-----------
+
+**Supplementary Figure.**
+Correlation of the log2 FC of sgRNA1 _versus_ sgRNA 2 for each gene,
+broken down by condition. Each panel shows an overlay of induced (blue) and uninduced (red)
+samples. Panel numbers indicate time in days.
+Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+
+-----------
+
+
+#### Unsupervised clustering of sgRNAs by depletion similarity
+
+A matrix is generated from sgRNA log2 FC values to apply clustering and plot
+a heatmap. The matrix should be in 'wide' format while the master data frame
+is  in 'long' format (one variable/observations per column). 
+
+
+```{r, results = 'hide'}
+mat <- unite(df, condition, condition, induction, timepoint) %>%
+  
+  # combine sgRNA indices (will be rows) to help spreading
+  unite(sgRNA, sgRNA_short, sgRNA_index) %>%
+  
+  # select only the required columns
+  select(sgRNA, condition, log2FoldChange) %>%
+  
+  # replace NA in log2FoldChange with 1
+  mutate(log2FoldChange = coalesce(log2FoldChange, 0)) %>%
+  
+  # and spread with condition as key and log2foldchange as value
+  spread(key = condition, value = log2FoldChange) %>%
+  
+  # rename columns clumsily
+  rename_at(vars(ends_with("_0")), funs(sub("_0$", "_00", .))) %>%
+  rename_at(vars(ends_with("_1")), funs(sub("_1$", "_01", .))) %>%
+  rename_at(vars(ends_with("_2")), funs(sub("_2$", "_02", .))) %>%
+  rename_at(vars(ends_with("_4")), funs(sub("_4$", "_04", .))) %>%
+  rename_at(vars(ends_with("_8")), funs(sub("_8$", "_08", .)))
+
+# change row names
+rownames(mat) <- mat$sgRNA
+
+# reorder and coerce to matrix
+mat <- ungroup(mat) %>% select(-sgRNA) %>%
+  select(contains("00"), contains("01"), contains("02"), contains("04"), 
+    contains("08"), contains("16"), contains("32")) %>%
+  select(contains("L100"), contains("L300"), contains("LD"), contains("LAC"), contains("NACL")) %>%
+  select(contains("_u_"), contains("_i_")) %>% as.matrix
+  
+# optionally select only a subset of the data, e.g. no LAC/NACL
+mat <- mat[, grepl("L100|L300|LD", colnames(mat))]
+```
+
+----------
+
+The data matrix is primarily used for clustering. For clustering, a dissimilarity 
+matrix has to be computed using R's ```dist()``` function with distance measure 
+```euclidean```. The clustering is performed using function ```hclust()``` 
+with method ```ward.D2```.
+
+```{r}
+# for more info on clustering algorithm, see hclust manual
+cluster <- hclust(dist(mat), method = "ward.D2")
+```
+
+----------
+
+#### Choose and plot selected clusters
+
+To evaluate the quality of clustering (maximum within-cluster similarity 
+and minimum between-cluster similarity) silhouette analysis is performed. 
+Silhouette analysis can be iteratively applied for a range of cluster numbers,
+prerequisite is only a cluster object such as obtained from ```hclust()```.
+
+```{r}
+silhouetteResult <- silhouetteAnalysis(mat, cluster, 2:20)
+
+print(silhouetteResult$plot.clusters, position = c(0, 0, 0.6, 1), more = TRUE)
+print(silhouetteResult$plot.summary, position = c(0.6, 0, 1, 1))
+```
+
+
+```{r, results = 'hide', include = FALSE}
+svg("../figures/supplemental/CRISPRi_library_average_silhouette.svg", 9, 5)
+print(silhouetteResult$plot.clusters, position = c(0, 0, 0.6, 1), more = TRUE)
+print(silhouetteResult$plot.summary, position = c(0.6, 0, 1, 1))
+dev.off()
+```
+
+----------
+
+The result from silhouette analysis of 2 to 20 clusters indicates that a cluster 
+number of 2 to 9 offers good separation, while higher cluster numbers reduce
+silhouette width. The next step is to choose a certain number of clusters
+and split the dendrogram at a height that will produce the corresponding nubmer 
+of clusters. Here, ```cutreeord()``` from R package ```vegan``` to cut the dendrogram,
+the resulting clusters were re-ordered and two unchanged clusters merged into one.
+
+
+```{r}
+# We can select the k upmost clusters using cutree. 
+clusters <- vegan::cutreeord(cluster, k = 6); clusters %>% table
+
+# combine clusters 4 and 5 as they are very similar; rename cluster 6 to 4.
+clusters <- clusters %>% recode(`4` = 5L, `6` = 4L) %>% setNames(., names(clusters))
+
+# The cluster order by cutree does not correspond to the one of the dendrogram
+# therefore change order of clusters manually using factor levels
+clusters <- factor(clusters, unique(clusters) %>% sort)
+
+# make the silhouette for plotting
+sil <- silhouette(as.numeric(clusters), dist(mat))
+
+# merge predicted clusters with df
+df <- group_by(df, condition, timepoint, induction) %>% mutate(cluster = clusters)
+```
+
+```{r, include = FALSE}
+# custom color vector for clusters, without first color that equals last
+custom_palette <- colorspace::qualitative_hcl(n = length(unique(clusters)), h = c(30, 360), c = 100, l = 50)
+custom_lattice <- custom.lattice()
+custom_lattice$superpose.polygon$col = custom_palette
+custom_lattice$superpose.symbol$col = custom_palette
+custom_lattice$superpose.line$col = custom_palette
+
+# re-order the dendrogram a bit for plotting, in order of clusters
+cluster_reordered <- as.dendrogram(cluster) %>% 
+  reorder(wts = clusters[cluster$labels], agglo.FUN = mean)
+```
+
+----------
+
+#### Plotting heatmap and dendrogram
+
+```{r}
+# plot colored dendrogram, heatmap and clusters all on one page
+library(grid)
+library(gridBase)
+
+#svg("CRISPRi_library_heatmap.svg", width = 12, height = 7)
+png("CRISPRi_library_heatmap.png", width = 1750, height = 800, res = 165)
+plot.new()
+viewport(x = 0.01, y = 0.21, width = 0.98, height = 0.79, just = c("left", "bottom")) %>%
+  pushViewport
+
+# plot dendrogram first
+par(new = TRUE, fig = gridFIG())
+plot(color_branches(
+  cluster_reordered,
+  #plyr::mutate(cluster_reordered, labels = rep("", length(labels))),
+  #k = length(unique(clusters)),
+  groupLabels = as.numeric(levels(clusters)), lwd = 1,
+  col = custom_palette[as.numeric(levels(clusters))],
+  clusters = sort(as.numeric(clusters))
+))
+
+upViewport()
+viewport(x = 0, y = 0, width = 1, height = 0.35, just = c("left", "bottom")) %>%
+  pushViewport
+
+# plot heatmap according to clustered protein groups
+lp <- levelplot(
+  # limit plotted range to log2 FC of -5 to 5 (32 fold)
+  mat[as.hclust(cluster_reordered)$order, ] %>% replace(., . > 5, 5) %>% replace(., . < -5, -5),
+  col.regions = colorRampPalette(c(custom_palette[4], grey(0.95), custom_palette[1])),
+  as.table = TRUE, aspect = "fill", 
+  xlab = "sgRNA", ylab = "time [d]",
+  scales = list(alternating = FALSE, x = list(draw = FALSE))
+)
+print(lp, more = TRUE, position=c(0.017, 0, 1, 1))
+dev.off()
+
+
+# plot colored dendrogram and silhouette width
+png("CRISPRi_library_silhouette.png")
+plot(sil, 
+  border = NA, 
+  col = custom_palette[sort(unique(clusters))])
+dev.off()
+```
+
+
+----------
+
+#### Regulation for different functional groups
+
+General overview about clusters
+
+```{r}
+plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition, " - ", cluster),
+  # we have to add one more fake data point, at max of 50 generations, with NA
+  # so that lines are broken after last time point
+  bind_rows(
+    df %>% ungroup %>% filter(induction == "i", condition %in% c("DN", "HL", "LL")),
+    df %>% ungroup %>% filter(induction == "i", condition %in% c("DN", "HL", "LL"), timepoint == 0) %>%
+      mutate(generations = 50, log2FoldChange = NA)
+  ) %>% arrange(condition, cluster, sgRNA, generations),
+  groups = cluster, type = "l", between = list(x = 0.6, y = 0.6), 
+  as.table = TRUE, layout = c(length(unique(clusters)), 3),
+  col = paste0(custom_lattice$superpose.polygon$col, "20"),
+  xlab = "generations", ylab = "log2 FC", 
+  ylim = c(-8, 4), xlim = c(0, 40),
+  scales = list(alternating = FALSE), pch = 16, cex = 0.7, 
+  par.settings = custom_lattice,
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.xyplot(x, y, ...)
+    #panel.stripplot(x, y, jitter.data = TRUE, amount = 0.2, horizontal = FALSE, ...)
+    medianFC <- tapply(y, x, function(x) median(x, na.rm=TRUE))
+    panel.xyplot(names(medianFC) %>% as.numeric, medianFC, col = grey(0.3), type = "l", lwd = 3)
+    panel.text(10, 2.5, paste(length(x)/length(unique(x)), "sgRNAs"), cex = 0.6, col = grey(0.5))
+  }
+)
+```
+
+
+
