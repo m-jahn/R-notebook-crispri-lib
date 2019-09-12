@@ -1,5 +1,6 @@
 .Rhistory
 .Rdata
-sgRNA_library/figures/*
+Ralstonia-KEGG/*
 sgRNA_library/raw_data/*
 sgRNA_library/processed_data/*
+sgRNA_library/figures/main/*

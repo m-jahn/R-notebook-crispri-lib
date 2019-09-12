@@ -68,7 +68,7 @@ df_raw <- list(
   mutate(read.fraction = readcount/sum(readcount))
 ```
 
-The correct calculation of read fraction is controlled by the following steps, 
+The correct calculation of read fraction is checked by the following steps, 
 including summarizing unique sgRNAs and mean read count per condition.
 
 ```{r}
@@ -117,6 +117,7 @@ plot_median_read_count <- df_raw %>%
   
   # and plot
   xyplot(median_read_count ~ factor(timepoint) | induction * condition, .,
+    xlab = "time [d]", ylab = "median read count",
     as.table = TRUE, par.settings = custom.lattice, 
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
@@ -142,6 +143,7 @@ plot_unique_sgRNA <- df_raw %>%
 
   xyplot(unique_sgRNAs ~ factor(timepoint) | induction *  condition, .,
     pch = 19, type = c("p"),
+    xlab = "time [d]", ylab = "unique sgRNAs",
     as.table = TRUE, par.settings = custom.lattice, 
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
@@ -156,12 +158,19 @@ print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
 print(plot_unique_sgRNA, split = c(2,1,2,1))
 ```
 
-```{r, results='hide', include=FALSE}
+```{r, results = 'hide', include = FALSE}
 svg("../figures/supplemental/CRISPRi_library_read_counts.svg", width = 10, height = 7)
 print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
 print(plot_unique_sgRNA, split = c(2,1,2,1))
 dev.off()
 ```
+-----------
+
+**Supplementary Figure.**
+**A**. Median read count per condition. Bars and whiskers correspond to mean and standard deviation of 4 biological replicates. 
+**B**. Coverage of samples in terms of quantified unique sgRNAs. Bars and whiskers correspond to mean and standard deviation of 4 biological replicates. Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+
+-----------
 
 
 ## Step 2: DESEQ2 analysis for fold change and significance testing
@@ -170,7 +179,7 @@ To obtain fold changes between conditions and a significance metric, the R packa
 DESeq2 was used. DESeq2 uses a negative binomial distribution of read counts to make more
 accurate estimation of fold change and significance per gene. DESeq2 reference:
 
-Love, M.I., Huber, W., Anders, S. (2014) Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15:550. https://doi.org/10.1186/s13059-014-0550-8
+*Love, M.I., Huber, W., Anders, S. (2014) Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15:550. https://doi.org/10.1186/s13059-014-0550-8*
 
 #### 1. Read count matrix
 
@@ -205,7 +214,7 @@ to each other.
 
 ```{r}
 # The meta data frame with experiment annotation
-Samples <- data.frame(
+samples <- data.frame(
   all_conditions = colnames(counts),
   # Order must be same as Reads columns!
   row.names = colnames(counts) 
@@ -218,7 +227,7 @@ Samples <- data.frame(
   # then test each time point against each other within the group
   unite(group, condition, induction, timepoint, remove = FALSE)
 
-head(Samples)
+head(samples)
 ```
 
 #### 3. Perform DESeq2 analysis
@@ -230,16 +239,16 @@ and then do pairwise comparison of the groups one is interested in.
 
 **WARNING: This step is computation-intense and can take several hours**
 
-```{r, eval=FALSE}
-DES_result <- DESeqDataSetFromMatrix(
-  countData = counts,
-  colData = Samples,
-  design = ~ group) %>%
-  DESeq
-
-
-# Have alook at the combinations that were tested
-resultsNames(DES_result)[1:10]
+```{r, eval = FALSE}
+  DES_result <- DESeqDataSetFromMatrix(
+    countData = counts,
+    colData = samples,
+    design = ~ group) %>%
+    DESeq
+  
+  
+  # Have alook at the combinations that were tested
+  resultsNames(DES_result)[1:10]
 ```
 
 Next, results from DESeq2 models are extracted. The data set includes
@@ -249,14 +258,11 @@ contrasts ```contrast("variable", "level1", "level2")```. To automate this,
 a list of condition and reference pairs is set up. As mentioned before, DESEq2 
 has more advanced ways of constructing contrasts but the syntax is more difficult.
 
-```{r, results='hide', eval=FALSE}
+```{r, results = 'hide', eval = FALSE}
 # list of contrasts/combinations
-combinations <- list(
-  testCond = Samples$group %>% unique %>% 
-    grep(pattern = "_(1|2|4|8|16|32|12|30)", value = TRUE),
-  refCond = rep(Samples$group %>% unique %>% 
-    grep(pattern = "_0", value = TRUE), c(2,2,5,5,2,2,5,5,2))
-)
+combinations <- samples$group %>% unique %>% 
+    grep(pattern = "_([1-9]*|30)$", value = TRUE) %>%
+  list(testCond = ., refCond = gsub("_([1-9]*|30)$", "_0", .))
 
 
 # loop through all possible combinations
@@ -282,7 +288,7 @@ Alternatively, it is possible to load a precumputed DESeq2 results table. This a
 re-running the entire DESeq2 analysis only for another part of the pipeline has
 changed.
 
-```{r, results='hide', eval=FALSE}
+```{r, results = 'hide', eval = FALSE}
 # load precomputed DESeq2 result in form of Rdata object
 load("../processed_data/CRISPRi_library_DESeq_result_table.Rdata")
 ```
@@ -333,7 +339,7 @@ Different annotation columns are added to the master data frame, including a sho
 identifier (excluding the position on the gene), an sgRNA index (1 or 2), and the
 customized genome annotation from Uniprot/KEGG.
 
-```{r, results='hide'}
+```{r, results = 'hide'}
 df <- df %>% complete(sgRNA, nesting(condition, timepoint, induction)) %>%
 
   # prepare merging by cleaning IDs from results table
@@ -376,7 +382,7 @@ generations for a particular condition, and is therefore independent of the dura
 of a particular cultivation. The fitness score will be lower for faster depleting genes
 and higher for slowly depleting genes.
 
-```{r, results='hide'}
+```{r, results = 'hide'}
 # using left join with table
 df <- left_join(df, read_csv("../raw_data/growth_rate_library.csv")) %>%
 
@@ -403,7 +409,10 @@ df <- left_join(df, read_csv("../raw_data/growth_rate_library.csv")) %>%
 
 ## Step 5: Quality control
 
-Quality control: check manual log2 FC versus DESeq2 log2 FC
+The log2 FC that DESeq2 determines takes measures of read density or distribution 
+into account that a manually determined log2 FC does not. A good control of how 
+different a manual log2 FC is from the DESeq2 log2 FC is to simply plot one 
+against the other. There are only minor differences.
 
 ```{r}
 plot_DESeq2_vs_namual_FC <- df %>% 
@@ -430,7 +439,7 @@ print(plot_DESeq2_vs_namual_FC)
 ```
 
 
-```{r, results='hide', include=FALSE}
+```{r, results = 'hide', include = FALSE}
 png("../figures/supplemental/CRISPRi_library_DESeq2_vs_manual_FC.png", width = 1000, height = 800, res = 100)
 print(plot_DESeq2_vs_namual_FC)
 dev.off()
@@ -439,7 +448,10 @@ dev.off()
 
 ----------
 
-Quality control: volcanoplot
+A second check of DESeq2's calculation of log2 FC and p-value is to visualize both
+metrics in a volcanoplot. The log2 FC is usually on the x-axis and the negative log10 
+p-value on the y-axis, showing the most significantly _and_ strongly changed genes 
+(here sgRNAs) in the upper right and left corner.
 
 ```{r}
 plot_volcanoplot <- df %>%
@@ -448,8 +460,10 @@ plot_volcanoplot <- df %>%
   filter(!grepl("Entry", sgRNA),
     !is.na(log2FoldChange), timepoint != 0) %>%
   
-  xyplot(-log10(padj) ~ log2FoldChange | factor(timepoint) * condition, ., 
+  xyplot(-log10(padj) ~ log2FoldChange | factor(timepoint) * 
+      factor(condition, c("L100", "L300", "LD", "LAC", "NACL")), ., 
     as.table = TRUE, groups = induction,
+    xlab = "log2 FC", ylab = "-log10(p value)",
     par.settings = custom.lattice, 
     cex = 0.2, pch=19,
     scales = list(alternating = FALSE),
@@ -465,16 +479,23 @@ print(plot_volcanoplot)
 ```
 
 
-```{r, results='hide', include=FALSE}
+```{r, results = 'hide', include = FALSE}
 png("../figures/supplemental/CRISPRi_library_volcanoplot.png", width = 1000, height = 800, res = 100)
 print(plot_volcanoplot)
 dev.off()
 ```
 
-----------
+-----------
 
-Write processed data frame to file and continue with analysis
-in next script
+**Supplementary Figure.**
+Volcanoplot of log2 FC versus negative log10 transformed p-value as result of DESeq2 analysis. Each panel shows one condition and time point with overlay of induced and uninduced samples (color-coded in blue and red, respectively). Induction of sgRNA expression was performed by adding IPTG.
+Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+
+-----------
+
+The last step is to save the DESeq2 result (computatioanlly intense) and the 
+processed data frame to file and continue with the actual analysis of sgRNA enrichment
+and depletion in the next part of the pipeline.
 
 
 ```{r}
