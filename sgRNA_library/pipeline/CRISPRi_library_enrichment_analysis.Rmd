@@ -17,7 +17,7 @@ strategies of clustering sgRNAs by similarity, checking for enriched gene ontolo
 terms, and picking out the most interesting sgRNAs/genes per cluster.
 
 
-```{r, results = 'hide'}
+```{r, results = 'hide', message = FALSE}
 # LOAD PACKAGES
 
 library(lattice)
@@ -44,6 +44,7 @@ load(file = "../processed_data/CRISPRi_library_df_annotated.Rdata")
 # turn conditon into a factor for ordered plotting, input should be ungroup()ed
 df <- ungroup(df) %>% mutate(condition = factor(condition, c("L100", "L300", "LD", "LAC", "NACL")))
 # split into gene and ncRNA containing data and continue with gene only
+df_ncRNA <- df %>% filter(grepl("^Entry", sgRNA))
 df <- df %>% filter(!grepl("^Entry", sgRNA))
 ```
 
@@ -174,7 +175,7 @@ Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2
 -----------
 
 
-#### Unsupervised clustering of sgRNAs by depletion similarity
+#### Step 3: Unsupervised clustering of sgRNAs
 
 A matrix is generated from sgRNA log2 FC values to apply clustering and plot
 a heatmap. The matrix should be in 'wide' format while the master data frame
@@ -201,28 +202,23 @@ mat <- unite(df, condition, condition, induction, timepoint) %>%
   rename_at(vars(ends_with("_1")), funs(sub("_1$", "_01", .))) %>%
   rename_at(vars(ends_with("_2")), funs(sub("_2$", "_02", .))) %>%
   rename_at(vars(ends_with("_4")), funs(sub("_4$", "_04", .))) %>%
-  rename_at(vars(ends_with("_8")), funs(sub("_8$", "_08", .)))
-
-# change row names
-rownames(mat) <- mat$sgRNA
-
-# reorder and coerce to matrix
-mat <- ungroup(mat) %>% select(-sgRNA) %>%
-  select(contains("00"), contains("01"), contains("02"), contains("04"), 
-    contains("08"), contains("16"), contains("32")) %>%
-  select(contains("L100"), contains("L300"), contains("LD"), contains("LAC"), contains("NACL")) %>%
-  select(contains("_u_"), contains("_i_")) %>% as.matrix
+  rename_at(vars(ends_with("_8")), funs(sub("_8$", "_08", .))) %>%
   
-# optionally select only a subset of the data, e.g. no LAC/NACL
-mat <- mat[, grepl("L100|L300|LD", colnames(mat))]
+  # change row names
+  column_to_rownames("sgRNA") %>% ungroup %>%
+
+  # reorder columns and exclude LAC/NACL data
+  select(sort(colnames(.))) %>% 
+  select(contains("L100"), contains("L300"), contains("LD")) %>%
+  select(contains("_u_"), contains("_i_")) %>% as.matrix
 ```
 
 ----------
 
-The data matrix is primarily used for clustering. For clustering, a dissimilarity 
-matrix has to be computed using R's ```dist()``` function with distance measure 
-```euclidean```. The clustering is performed using function ```hclust()``` 
-with method ```ward.D2```.
+The data matrix is primarily used for clustering. For this purpose, a dissimilarity 
+matrix is computed using R's `dist()` function with distance measure 
+`euclidean`. The clustering is performed using function `hclust()` 
+with method `ward.D2`.
 
 ```{r}
 # for more info on clustering algorithm, see hclust manual
@@ -234,12 +230,12 @@ cluster <- hclust(dist(mat), method = "ward.D2")
 #### Choose and plot selected clusters
 
 To evaluate the quality of clustering (maximum within-cluster similarity 
-and minimum between-cluster similarity) silhouette analysis is performed. 
+over minimum between-cluster similarity), silhouette analysis is performed. 
 Silhouette analysis can be iteratively applied for a range of cluster numbers,
-prerequisite is only a cluster object such as obtained from ```hclust()```.
+prerequisite is only a cluster object such as obtained from `hclust()`.
 
 ```{r}
-silhouetteResult <- silhouetteAnalysis(mat, cluster, 2:20)
+silhouetteResult <- Rtools::silhouetteAnalysis(mat, cluster, 2:20)
 
 print(silhouetteResult$plot.clusters, position = c(0, 0, 0.6, 1), more = TRUE)
 print(silhouetteResult$plot.summary, position = c(0.6, 0, 1, 1))
@@ -257,18 +253,20 @@ dev.off()
 
 The result from silhouette analysis of 2 to 20 clusters indicates that a cluster 
 number of 2 to 9 offers good separation, while higher cluster numbers reduce
-silhouette width. The next step is to choose a certain number of clusters
-and split the dendrogram at a height that will produce the corresponding nubmer 
-of clusters. Here, ```cutreeord()``` from R package ```vegan``` to cut the dendrogram,
-the resulting clusters were re-ordered and two unchanged clusters merged into one.
+silhouette width. Next, a certain number of clusters was chosen and the 
+dendrogram was split at a height that will produce the corresponding number
+of clusters. Here, `cutreeord()` from R package `vegan` was used to cut 
+the dendrogram. The resulting clusters were re-ordered and two similar unchanged 
+clusters merged into one.
 
 
-```{r}
+```{r, message = FALSE}
 # We can select the k upmost clusters using cutree. 
 clusters <- vegan::cutreeord(cluster, k = 6); clusters %>% table
 
-# combine clusters 4 and 5 as they are very similar; rename cluster 6 to 4.
-clusters <- clusters %>% recode(`4` = 5L, `6` = 4L) %>% setNames(., names(clusters))
+# combine clusters 5 and 6 as they are very similar
+clusters <- clusters %>% recode(`2` = 1L, `1` = 2L, `3` = 4L, `4` = 3L, `6` = 5L) %>% 
+  setNames(., names(clusters))
 
 # The cluster order by cutree does not correspond to the one of the dendrogram
 # therefore change order of clusters manually using factor levels
@@ -279,53 +277,41 @@ sil <- silhouette(as.numeric(clusters), dist(mat))
 
 # merge predicted clusters with df
 df <- group_by(df, condition, timepoint, induction) %>% mutate(cluster = clusters)
-```
-
-```{r, include = FALSE}
-# custom color vector for clusters, without first color that equals last
-custom_palette <- colorspace::qualitative_hcl(n = length(unique(clusters)), h = c(30, 360), c = 100, l = 50)
-custom_lattice <- custom.lattice()
-custom_lattice$superpose.polygon$col = custom_palette
-custom_lattice$superpose.symbol$col = custom_palette
-custom_lattice$superpose.line$col = custom_palette
 
 # re-order the dendrogram a bit for plotting, in order of clusters
 cluster_reordered <- as.dendrogram(cluster) %>% 
   reorder(wts = clusters[cluster$labels], agglo.FUN = mean)
 ```
 
+
+```{r, include = FALSE}
+# custom color vector for clusters, without first color that equals last
+custom_palette <- colorspace::qualitative_hcl(
+  n = length(unique(clusters)), h = c(30, 360), c = 100, l = 50)
+custom_lattice <- custom.lattice()
+custom_lattice$superpose.polygon$col = custom_palette
+custom_lattice$superpose.symbol$col = custom_palette
+custom_lattice$superpose.line$col = custom_palette
+```
+
 ----------
 
 #### Plotting heatmap and dendrogram
 
+Heat map and colored dendrogram are plotted and then externally combined into
+one figure because they use different graphic systems (`grid` graphics 
+_versus_ `base` graphics).
+
 ```{r}
-# plot colored dendrogram, heatmap and clusters all on one page
-library(grid)
-library(gridBase)
-
-#svg("CRISPRi_library_heatmap.svg", width = 12, height = 7)
-png("CRISPRi_library_heatmap.png", width = 1750, height = 800, res = 165)
-plot.new()
-viewport(x = 0.01, y = 0.21, width = 0.98, height = 0.79, just = c("left", "bottom")) %>%
-  pushViewport
-
-# plot dendrogram first
-par(new = TRUE, fig = gridFIG())
-plot(color_branches(
-  cluster_reordered,
-  #plyr::mutate(cluster_reordered, labels = rep("", length(labels))),
-  #k = length(unique(clusters)),
+# plot colored dendrogram
+plot(color_branches(cluster_reordered,
   groupLabels = as.numeric(levels(clusters)), lwd = 1,
   col = custom_palette[as.numeric(levels(clusters))],
   clusters = sort(as.numeric(clusters))
 ))
 
-upViewport()
-viewport(x = 0, y = 0, width = 1, height = 0.35, just = c("left", "bottom")) %>%
-  pushViewport
-
 # plot heatmap according to clustered protein groups
-lp <- levelplot(
+plot_heatmap <- levelplot(
   # limit plotted range to log2 FC of -5 to 5 (32 fold)
   mat[as.hclust(cluster_reordered)$order, ] %>% replace(., . > 5, 5) %>% replace(., . < -5, -5),
   col.regions = colorRampPalette(c(custom_palette[4], grey(0.95), custom_palette[1])),
@@ -333,32 +319,43 @@ lp <- levelplot(
   xlab = "sgRNA", ylab = "time [d]",
   scales = list(alternating = FALSE, x = list(draw = FALSE))
 )
-print(lp, more = TRUE, position=c(0.017, 0, 1, 1))
-dev.off()
+
+print(plot_heatmap)
+```
 
 
-# plot colored dendrogram and silhouette width
-png("CRISPRi_library_silhouette.png")
-plot(sil, 
-  border = NA, 
-  col = custom_palette[sort(unique(clusters))])
+```{r, results = 'hide', include = FALSE}
+# export both dendrogram and heatmap
+png("../figures/main/CRISPRi_library_dendrogram.png", , width = 1800, height = 650, res = 165)
+plot(color_branches(cluster_reordered,
+  groupLabels = as.numeric(levels(clusters)), lwd = 1,
+  col = custom_palette[as.numeric(levels(clusters))],
+  clusters = sort(as.numeric(clusters))
+))
 dev.off()
+
+png("../figures/main/CRISPRi_library_heatmap.png", width = 1800, height = 300, res = 165)
+print(plot_heatmap)
+dev.off()
+
 ```
 
 
 ----------
 
-#### Regulation for different functional groups
+#### sgRNA depletion in major clusters
 
-General overview about clusters
+Heatmap and dendrogram show that a large part of sgRNAs is not depleted, either 
+because they target non-essential genes under the given condition, or the 
+repression efficiency is low for various reasons.
 
 ```{r}
 plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition, " - ", cluster),
   # we have to add one more fake data point, at max of 50 generations, with NA
   # so that lines are broken after last time point
   bind_rows(
-    df %>% ungroup %>% filter(induction == "i", condition %in% c("DN", "HL", "LL")),
-    df %>% ungroup %>% filter(induction == "i", condition %in% c("DN", "HL", "LL"), timepoint == 0) %>%
+    df %>% ungroup %>% filter(induction == "i", condition %in% c("LD", "L300", "L100")),
+    df %>% ungroup %>% filter(induction == "i", condition %in% c("LD", "L300", "L100"), timepoint == 0) %>%
       mutate(generations = 50, log2FoldChange = NA)
   ) %>% arrange(condition, cluster, sgRNA, generations),
   groups = cluster, type = "l", between = list(x = 0.6, y = 0.6), 
@@ -379,5 +376,338 @@ plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition,
 )
 ```
 
+----------
+
+#### Step 4: Gene ontology (GO) term enrichment
+
+For GO term enrichment, the `TopGO` package by Alexa et al., 2006, was used to
+determine GO terms associated with sgRNAs for the first four clusters. The function
+uses the hypergeometric test internally to test enrichment of one group against the 
+'background' of all genes/sgRNAs. Reference:
+
+_Alexa A., Rahnenfuhrer J., Lengauer T., Improved scoring of functional groups from gene expression data by decorrelating GO graph structure, Bioinformatics 22(13): 1600-1607, 2006._
 
 
+```{r, results = 'hide', message = FALSE}
+library(topGO)
+
+# the GetTopGO function takes as input either
+#   1. a data frame with one row per gene as only presence in cluster is 
+#      important here. Three columns are obligatory, "cluster", "GeneID", and 
+#      "Gene.ontology.IDs" with GO terms separated by '; '
+#   2. alternatively three vectors or lists corresponding to
+#      the three columns can be provided
+
+TopGoResult <- lapply(1:length(unique(clusters)), function(i) {
+    with(df[!duplicated(df$sgRNA), ] %>% as.data.frame,
+      GetTopGO(df = NULL,
+        cluster = as.numeric(cluster),
+        GeneID = sgRNA,
+        Gene.ontology.IDs,
+        topNodes = 50, 
+        selected.cluster = i
+      )
+    )
+  }) %>%
+
+  # regarding p-value adjustment: the authors discourage from multiple 
+  # hypothesis testing and indeed, it turns most p-values insignificant
+  setNames(1:length(unique(clusters))) %>%
+    
+  # turn into data frame with cluster as ID columns
+  plyr::ldply(., .id = "cluster")
+    
+  # save unfiltered TopGO result
+  write_csv(TopGoResult, "../processed_data/TopGoResult.csv")
+```
+
+----------
+
+In an effort to filter the resulting extensive list of GO terms,
+a filtering step using `REVIGO` was conducted that excludes redundant GO terms.
+To this end, the result table was uploaded to http://revigo.irb.hr/ and a table with
+redundancy scores obtained. These scores can be used to trim the GO terms to
+the most essential/unique ones.
+
+```{r, message = FALSE}
+# merge TopGo result with REVIGO dispensibility analysis
+TopGoResultFiltered <- left_join(as_tibble(TopGoResult), read_csv("../processed_data/REVIGO.csv"), 
+  by = c("GO.ID" = "term_ID")) %>%
+  
+  # trim data frame by p.value and GO term node size
+  filter(dispensability <= 0.5,
+    elimFisher < 0.03,
+    Annotated >= 5,
+    Annotated <= 200) %>%
+  
+  # optionally trim lengthy GO terms and fuse with cluster (some show up several times)
+  mutate(
+    TermAbbr = gsub("(biosynthetic|metabolic|catabolic) proce?s?s?|\\.\\.\\.|metabolic.?.?.?", 
+    replacement = "", Term) %>% paste0(., "...", cluster)
+  ) %>% filter(!duplicated(TermAbbr))
+
+head(TopGoResultFiltered)
+```
+
+----------
+
+#### Combined plot of results
+
+Plot results of GO enrichment for each cluster (here, p-value is the probability 
+that differential expression of interesting genes is identical to background). 
+GO term enrichment plot together with clustering results are combined in **Figure 2**.
+
+```{r}
+# plot of enriched GO terms per cluster
+plot_TopGO_table <- xyplot(factor(TermAbbr, unique(TermAbbr)) ~ as.numeric(elimFisher), 
+  TopGoResultFiltered %>% filter(cluster != 5) %>% arrange(desc(cluster), desc(elimFisher)), 
+  groups = factor(cluster), main = "", #"GO enrichment, GO terms by p-value",
+  par.settings = custom_lattice, xlab = "p-value", ylab = "GO term",
+  scales = list(alternating=FALSE, x = list(rot = 45)), 
+  panel = function(x, y, groups = groups, subscripts = subscripts, ...) {
+    panel.abline(h = 1:length(y), col = grey(0.9), lty = 2)
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.key(labels = paste("cluster", 1:4), pch = 19, corner = c(0.9, 0.95))
+    panel.superpose(x, y, groups, subscripts, ...)
+  },
+  panel.groups = function(x, y, groups = groups, subscripts = subscripts, ...) {
+    panel.xyplot(x, y, cex = 2.5-(50*x), pch = 19, alpha = 0.7,
+      col = custom_lattice$superpose.polygon$col[subscripts])
+  }
+)
+
+# plot of single sgRNAs per most enriched GO terms
+plot.sgRNAs <- function(data, comment = NULL) {
+  
+  xyplot(log2FoldChange ~ factor(timepoint), 
+    data, as.table=TRUE, groups = cluster,
+    xlab = "time [d]", ylab = "log2 FC", 
+    between = list(x = 0.5, y = 0.5),
+    layout = c(5, 4),
+    ylim = c(-9, 3), pch = 19, cex = 0.2, lwd = 2, 
+    par.settings = custom_lattice,
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.superpose(x, y, ...)
+      panel.text(3, 2, labels = comment, cex = 0.6, col = grey(0.5))
+    },
+    panel.groups = function(x, y, ...) {
+      panel.stripplot(x, y, jitter.data = TRUE, amount = 0.2, horizontal = FALSE, ...)
+      panel.smoother(x, y, ...)
+    }
+  )
+}
+
+# make plots with genes for the most enriched GO terms
+plot.list <- filter(TopGoResultFiltered, cluster != 5) %>%
+  
+  # select top 4 terms per cluster by p-value
+  group_by(cluster) %>% slice(1:4) %>%
+  
+  # pass only the abbreviated GO term/cluster combination
+  pull(TermAbbr) %>% lapply(., function(x) {
+  
+    # extract sgRNA or gene IDs
+    sgRNAs = filter(TopGoResultFiltered, TermAbbr %in% x)$SigGenes %>%
+      strsplit(split = ",") %>%
+      unlist
+  
+    # generate plot of subsetted data
+    plot.sgRNAs(
+      data = filter(df, sgRNA %in% sgRNAs, induction == "i") %>%
+        mutate(log2FoldChange = coalesce(log2FoldChange, 0)),
+      comment = paste(length(sgRNAs), "sgRNAs")
+    )
+  }) %>%
+  
+  setNames(filter(TopGoResultFiltered, cluster != 5) %>% 
+    group_by(cluster) %>% slice(1:4) %>% 
+    pull(TermAbbr) %>% substr(1, 15))
+```
+
+
+```{r, fig.align = 'center', fig.width = 10, fig.height = 11, warning = FALSE}
+print(plot_library_depletion, position = c(0, 0.54, 1, 1), more = TRUE)
+print(plot_TopGO_table, position = c(0, 0, 0.5, 0.56), more = TRUE)
+print(do.call(c, plot.list), position = c(0.5, 0, 1, 0.56))
+```
+
+
+```{r, results = 'hide', include = FALSE}
+svg("../figures/main/CRISPRi_library_TopGoResult.svg", width = 10, height = 11)
+print(plot_library_depletion, position = c(0, 0.54, 1, 1), more = TRUE)
+print(plot_TopGO_table, position = c(0, 0, 0.5, 0.56), more = TRUE)
+print(do.call(c, plot.list), position = c(0.5, 0, 1, 0.56))
+dev.off()
+```
+
+----------
+
+**Figure 2.**
+**A.** Clustered sgRNAs by similarity of log2 FC over time. Cluster 1 to 4 comprise
+sgRNAs with with decreasing degree of depletion. Cluster 5 comrpises sgRNAs that remained
+unchanged over the tested conditions.
+**B.** Log2 fold change of each individual sgRNA over time course of a growth
+competition experiment. Experiment run time was normalized to generations based on
+the average growth rate of a population in the photobioreactor. SgRNA abundance was
+determined by HT sequencing of the sgRNA constructed integrated into the genome.
+Each panel shows sgRNAs for one particular condition (L100 - light with 100 
+µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle) and cluster (1-5).
+**C.** Enriched gene ontology (GO) terms for the four clusters (1-4) showing 
+sgRNA depletion. GO term enrichment was performed using the TopGO package in R 
+(Materials and Methods). Many signifantly enriched terms are related to essential
+metabolic traits such as photosynthesis or translation.
+**D.** Log2 fold change of sgRNAs related to enriched GO terms. The four most
+significantly enriched GO terms per cluster were selected for plotting (except 
+for cluster 4 where only 2 terms fell under the chosen critera).
+
+
+----------
+
+#### Step 5: Fitness difference between different light conditions
+
+The fitness score can be the major determinant to find differences between
+selected conditions and clusters. The following section makes a three-step analysis:
+First comparing global fitness score (F) distribution between L100 and L300 per cluster. 
+Then investigating the strongest difference between the two conditions for specific sgRNAs,
+and filtering the ones with the highest differential fitness score dF. And finally,
+showing the depletion/enrichment over time for 20 selected genes where both
+sgRNAs are depleted.
+
+
+**Subfigure A: Difference in fitness score distribution between L100 and L300**
+
+```{r}
+plot_global_fitness <- df %>% 
+    
+  # select conditions for comparison
+  filter(condition %in% c("L100", "L300"), induction == "i", 
+    timepoint == 0, cluster != 5) %>% 
+  
+  # create boxplot or violinplot for fitness score, direct comparison
+  xyplot(fitness_score ~ factor(condition, c("L100", "L300")) | factor(cluster), .,
+    as.table = TRUE, par.settings = custom_lattice,
+    groups = cluster, between = list(x = 0.5, y = 0.5),
+    scales = list(alternating = FALSE), layout = c(4,1),
+    xlab = "", ylab = "fitness score F",
+    ylim = c(-8, 3), 
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.stripplot(as.numeric(x)-0.25, y, jitter.data = TRUE, amount = 0.14, 
+        pch = ".", cex = 2, horizontal = FALSE, ...)
+      panel.violin(as.numeric(x)+0.25, y, horizontal = FALSE, box.ratio = 0.5, 
+        border = grey(0.5), col = custom_palette[panel.number()], ...)
+    }
+  )
+```
+
+----------
+
+**Subfigure B: Differential fitness score (dF) per gene, cluster and `cyanobase pathway`**
+
+```{r}
+# Have a look at strongest difference between sgRNAs 
+# of two conditions. First create a list of candidates.
+df_selected_fitness <- df %>% 
+  
+  # select conditions for comparison
+  filter(condition %in% c("L100", "L300"), induction == "i", 
+    timepoint == 0, cluster != 5) %>%
+  
+  # optional filter for sgRNAs that have 2 members per cluster
+  group_by(cluster, sgRNA_short) %>% filter(length(sgRNA_index) == 4) %>% 
+  
+  # filter by highest fitness difference between sgRNA of two conditions (L300-L100)
+  # positive for stronger L300 depletion, negative for stronger L100 depletion
+  group_by(cluster, sgRNA_short) %>% summarise(
+    diff_fitness_score = mean(fitness_score[c(2,4)]) - mean(fitness_score[c(1,3)]),
+    Process.abbr = unique(Process.abbr)
+  ) %>% 
+  
+  # group by cluster and sort by fitness score for top n filtering
+  group_by(cluster) %>% arrange(cluster, desc(diff_fitness_score))
+
+
+plot_diff_fitness <- xyplot(diff_fitness_score ~ factor(Process.abbr) | factor(cluster), 
+  df_selected_fitness, group = between(diff_fitness_score, -3, 3),
+  xlab = "", ylab = "dF (L300-L100)",
+  par.settings = custom_lattice, type = "p", pch = 19, as.table = TRUE, 
+  col = c("#D33F6A", "#00989D"),
+  scales = list(alternating = FALSE, x = list(rot = 45, cex = 0.65)), 
+  ylim = c(-6, 6), between = list(x = 0.5, y = 0.5),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.abline(h = c(-3, 3), lty = 2, lwd = 1, col = grey(0.5))
+    panel.stripplot(x, y, jitter.data = TRUE, amount = 0.2, 
+      alpha = 0.6, horizontal = FALSE, ...)
+    panel.text(1, 4, pos = 4, col = grey(0.5),
+      labels = paste0(sum(y <= -3 | y >= 3, na.rm = TRUE), " out of ", length(y), " genes"))
+  }
+)
+```
+
+----------
+
+**Subfigure C: Log2FC over number of generations for the most different sgRNAs**
+
+```{r}
+df_selected_genes <- filter(df_selected_fitness, 
+  !between(diff_fitness_score, -3, 3), 
+  !grepl("^s[sl][lr][0-9]{4}", sgRNA_short)) %>% 
+  pull(sgRNA_short)
+  
+plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations | paste0(cluster, "   ", sgRNA_short), 
+    df %>% filter(sgRNA_short %in% df_selected_genes[1:18], 
+      induction == "i", condition %in% c("L100", "L300")), 
+    as.table = TRUE, groups = paste(condition, sgRNA_index) %>% factor(.), 
+    par.settings = {cust = custom_lattice;
+      cust$superpose.polygon$col = c("#D33F6A", "#D33F6A", "#00989D", "#00989D"); cust}, 
+    type = "l", layout = c(6, 3),
+    scales = list(alternating = FALSE, cex = 0.8),
+    ylim = c(-10, 10), xlim = c(0, 17),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.key(c("L300", "L100"), points = FALSE, col = c("#00989D", "#D33F6A"),
+        lines = TRUE, cex = 0.7, corner = c(0.05, 0.95), ...)
+      panel.abline(h = 0, lty = 2, lwd = 1.5, col = grey(0.5))
+      panel.xyarea(x, y, origin = 0, alpha = 0.6, ...)
+    }
+  )
+```
+
+
+```{r, fig.align = 'center', fig.width = 5, fig.height = 8, warning = FALSE}
+print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
+print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
+print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
+grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+```
+
+  
+```{r, results = 'hide', include = FALSE}
+svg("../figures/main/Figure3.svg", width = 5, height = 8)
+print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
+print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
+print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
+grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+dev.off()
+```
+  
+----------
+
+**Figure 3.**
+**A.** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
+indicates the degree of enrichment (positive) or depletion (negative) of an sgRNA.
+Comarison between low light and high light intensity (L100 - light with 100 
+µmol/m2\*s, L300 - light with 100 µmol/m2\*s) shows sgRNAs are on average stronger depleted
+under high light.
+**B.** Difference between fitness score of high light and low light (dF) for 
+genes with both sgRNAs in the same cluster. Cluster 3 contains most differentially
+depleted/enriched sgRNAs of all clusters (red symbols, threshold: 3 <= dF <= -3).
+**C.** Selection of top 18 genes with dF above threshold as described in B.
+Only genes with 2 depleted/enriched sgRNAs and annotated description were selected.
+
+----------
