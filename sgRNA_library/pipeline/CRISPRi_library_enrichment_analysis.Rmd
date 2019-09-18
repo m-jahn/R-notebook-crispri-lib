@@ -983,7 +983,7 @@ but not sodium chloride. Quantification of _asd_ sgRNA 1 for NaCl control, 32 d,
 
 ----------
 
-#### Supplemental: Genes with 1 or 2 sgRNAs depleted under lactate
+#### Supplemental: Genes with 1 or 2 sgRNAs _depleted_ under lactate
 
 ----------
 
@@ -1138,3 +1138,17 @@ for enrichment and negative for depletion of sgRNAs.
 
 ----------
 
+
+#### Step 7: Save processed data to disk
+
+The last step is to save the processed data frame to disk.
+This table is identical to the result of the previous pipeline ('df_annotated')
+but contains 1 additional column with cluster annotation.
+
+
+```{r}
+# merge df containing all genes with df containing noncoding RNAs
+df <- bind_rows(df, df_ncRNA)
+save(df, file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
+write_csv(df, "../processed_data/CRISPRi_library_df_cluster.csv")
+```
