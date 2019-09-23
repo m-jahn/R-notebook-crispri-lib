@@ -1,0 +1,231 @@
+---
+title: "CRISPRi library additional tests"
+output: html_notebook
+---
+
+
+## Description
+
+The purpose of this R markdown notebook is to provide a trackable, reproducible,
+and comprehensive documentation of data processing steps for experiments carried 
+out using a CRISPRi sgRNA library in the  cyanobacterium _Synechocystis_ sp. PCC6803.
+
+This is an additional part of the pipeline where other tracks are explored by
+blending the fitness results of the CRISPRi library with protein abundance
+or protein variability. The additional data set used here is a proteomics study 
+from [Jahn et al., Cell Reports, 2018](https://linkinghub.elsevier.com/retrieve/pii/S2211124718314852).
+The idea is that gene/protein essentiality could correlate with variability in
+protein abundance. One scenario would be that 'core proteins' are both essential and
+less variable in abundance as they are required under all possible conditions.
+The 'core proteome' (around 400 proteins in _E. coli_) was reported to  be mostly
+allosterically regulated instead of transcriptionally.
+
+
+```{r, results = 'hide', message = FALSE}
+# LOAD PACKAGES
+
+library(lattice)
+library(latticeExtra)
+library(grid)
+library(tidyverse)
+library(Rtools)
+```
+
+
+## Correlation between gene fitness and gene expression variability
+
+Preprocessed data in the form of reads per gene was summarized and annotated 
+in pipeline 1. It includes mean read fraction, log2 FC and p-value calculated 
+using DESeq2. Genome annotation was added based on uniprot and cyanobase annotation
+of the reference genome for _Synechocystis_ sp. PCC6803. 
+
+----------
+
+#### Loading and merging proteomics data
+
+```{r, message = FALSE, warning = FALSE}
+# load CRISPRi library data
+load(file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
+
+# exclude ncRNAs from analysis
+df <- df %>% filter(!grepl("^Entry", sgRNA))
+
+# load MS data and combine with library;
+# matching conditions are mapped to each other (L300 and L100 conditions);
+# the MS data does not contain LD cycle
+
+df <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/diffacto_weightedsum/df_long_massfrac.csv") %>%
+  
+  # load mass fraction data from Cell Reports paper
+  filter(sample == "light", light %in% c(300, 100)) %>%
+  
+  # change sample annotation from [100, 300] to [L100, L300]
+  mutate(condition = recode(light, `300` = "L300", `100` = "L100")) %>%
+  
+  # rename a column
+  rename(locus = protein) %>%
+  
+  # select only the interesting columns
+  select(locus, condition, mean.mass.fraction.norm, ANOVA, ANOVA.adj) %>%
+  
+  # merge with df
+  left_join(df, .) %>%
+  
+  # filter for L100 and L300 only
+  filter(condition %in% c("L100", "L300"))
+  
+# test if mass fraction sums up to _around 1_ (also depends on intersection
+# between proteomics and CRISPRi library gene sets)
+df %>% group_by(condition, timepoint, induction, sgRNA_index) %>% 
+  summarise(sum(mean.mass.fraction.norm, na.rm = TRUE)) %>% head
+
+
+# # optionally reduce data to only the most 
+# df <- df %>% group_by(condition, induction, sgRNA_short) %>%
+# summarise(
+#   fitness_score = min(fitness_score),
+#   ANOVA.adj = min(ANOVA.adj)
+# )
+
+```
+
+----------
+
+#### Correlation between change over light conditions and essentiality
+
+Different metrics could be used to determine a the extent of a protein changing 
+abundance over light conditions. The MS dataset contains an ANOVA p-value that is 
+lower (more significant) the more a protein changes abudnance over light intensity/
+growth rate (5 light intensities were originally tested: L60, L100, L200, L300 
+and L1000). The p-value obtained from ANOVA is the same for all conditions. It is
+therefore not neccessary to include all possible light conditions. If all sgRNAs 
+are mapped to their corresponding proteins (2 sgRNAs per protein), no correlation is
+visible. Also not, if optionally only the more depleted of the two sgRNAs per protein
+are selected.
+
+```{r, fig.align = 'center', fig.width = 6, fig.height = 3.5}
+# filter dataset for 1 time point only (fitness score is identical
+# for all time points of 1 condition)
+df %>% filter(timepoint == 0) %>%
+  
+  xyplot(-log10(ANOVA.adj) ~ fitness_score | factor(condition, unique(condition)), .,
+  as.table = TRUE, groups = induction, 
+  between = list(x = 0.5, y = 0.5),
+  par.settings = custom.lattice, pch = 19, cex = 0.3,
+  scales = list(alternating = FALSE),
+  #xlim = c(-9, 4), ylim = c(-9, 4),
+  xlab = "fitness", ylab = "ANOVA -log10 p-value",
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.xyplot(x, y, ... )
+    panel.key(c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+  }
+)
+```
+
+However it is possible to refine the approach by selecting subsets of sgRNAs or 
+proteins. In the following step, proteins are binned by ANOVA log10 -p-value,
+and fitness score distribution evaluated as box and whisker plot. Here, a trend
+can be seen in the form of more significantly regulated genes (higher -log10 p-value)
+having reduced median fitness.
+
+```{r, fig.align = 'center', fig.width = 5, fig.height = 4}
+# customize plotting colors a bit
+custom.lattice <- custom.lattice()
+custom.lattice$box.rectangle$col = rep(c("#CC476B", "#00526D"), c(3,2))
+custom.lattice$box.umbrella$col = rep(c("#CC476B", "#00526D"), c(3,2))
+custom.lattice$box.rectangle$lwd = 1.5
+custom.lattice$box.umbrella$lwd = 1.5
+
+
+# filter dataset for 1 time point only (fitness score is identical
+# for all time points of 1 condition)
+plot_fitness_ANOVA_bw <- df %>% filter(timepoint == 0) %>%
+  
+  # bin into groups by -log10 p-value
+  mutate(ANOVA_bin = cut(ANOVA.adj, breaks = c(1,0.1,0.05,0.01,0.001,0))) %>%
+  
+  xyplot(fitness_score ~ factor(ANOVA_bin) | factor(condition) %>% 
+      paste0(" - ", recode(induction, i = "induced", u = "uninduced")), .,
+    as.table = TRUE, between = list(x = 0.5, y = 0.5),
+    par.settings = custom.lattice, lwd = 1.5, 
+    scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)),
+    xlab = "ANOVA -log10 p-value", ylab = "fitness",
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.violin(x, y, horizontal = FALSE, border = NA, col = grey(0.7, 0.5))
+      panel.bwplot(x, y, horizontal = FALSE, pch = "|", do.out = FALSE, ... )
+      panel.pvalue(x, y, fixed_pos = -1, std = 5, 
+        col = rep(c("#CC476B", "#00526D"), c(3,2))
+      )
+    }
+  )
+
+print(plot_fitness_ANOVA_bw)
+```
+
+
+As a follow-up, the most regulated proteins were selected and the fitness of the 
+corresponding sgRNAs was plotted as barchart (groups in red from above, 
+$p_{value} \leq 0.05$). 
+
+
+
+```{r, fig.align = 'center', fig.width = 5, fig.height = 4}
+# customize plotting colors a bit
+custom.lattice$box.rectangle$col = "#CC476B"#"#00526D"
+custom.lattice$box.umbrella$col = "#CC476B"#"#00526D"
+
+# filter dataset for 1 time point only (fitness score is identical
+# for all time points of 1 condition)
+plot_fitness_ANOVA_pw <- df %>% 
+  
+  # filter also for most regulated genes = p-value <= 0.01
+  filter(timepoint == 0, induction == "i", ANOVA.adj <= 0.05) %>% 
+  
+  # arrange genes by mean fitness over pathway
+  group_by(Process.abbr) %>% 
+  mutate(
+    mean_fitness = mean(fitness_score, na.rm = TRUE),
+    n_sgRNAs = length(unique(sgRNA))) %>%
+  arrange(mean_fitness) %>%
+  
+  # plot fitness per pathway
+  xyplot(fitness_score ~ paste0(Process.abbr, " (", n_sgRNAs, ")") %>% factor(., unique(.)) | 
+      paste0(condition, " - induced"), .,
+    as.table = TRUE, between = list(x = 0.5, y = 0.5),
+    par.settings = custom.lattice, lwd = 1.5, layout = c(1,2),
+    scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)),
+    xlab = "cyanobase pathway", ylab = "fitness",
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.violin(x, y, horizontal = FALSE, border = NA, col = grey(0.7, 0.5),... )
+      panel.bwplot(x, y, horizontal = FALSE, pch = "|", do.out = FALSE, ... )
+    }
+  )
+
+print(plot_fitness_ANOVA_pw)
+```
+
+```{r, results = 'hide', include = FALSE}
+svg("../figures/supplemental/Supplemental_figure_prot_regulation.svg", width = 5, height = 7)
+print(plot_fitness_ANOVA_bw, position = c(0, 0.48, 1, 1.04), more = TRUE)
+print(plot_fitness_ANOVA_pw, position = c(0, 0, 1, 0.53))
+grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03), y = c(0.98, 0.5), gp = gpar(cex = 1.3))
+dev.off()
+```
+
+----------
+
+**Supplementary Figure. Highly regulated proteins have lower average fitness.**
+**A.** Fitness score of sgRNAs broken down by protein variability. Protein variability
+was estimated using a proteomics study with measurement of protein abundance over several
+light conditions (Jahn et al., Cell Reports, 2018). Here, the adjusted p-value from 
+ANOVA over all light conditions was used as a metric for variability. For this comparison,
+every sgRNA was mapped to its corresponding protein. Red, proteins with $p_{value} \leq 0.05$).
+Blue, proteins with $p_{value} > 0.05$).
+**B.** Fitness score of sgRNAs associated with most significantly changing proteins
+($p_{value} \leq 0.05$, red in (A), broken down by cyanobase pathways.
+In brackets, number of unique sgRNAs per pathway.
+
+----------
