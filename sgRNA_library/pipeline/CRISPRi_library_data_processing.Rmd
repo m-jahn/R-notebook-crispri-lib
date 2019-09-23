@@ -84,8 +84,8 @@ summarise(df_raw, readcount = median(readcount)) %>% head
 ```
 
 One particular control condition, the lactate-tolerance sample for time point zero, 
-induced (```LAC_0d_induced```), was not sequenced individually as it is identical
-with the non-induced counter part of the same condition (```LAC_0d_uninduced```). 
+induced (`LAC_0d_induced`), was not sequenced individually as it is identical
+with the non-induced counter part of the same condition (`LAC_0d_uninduced`). 
 For calculation of fold change metric, the missing condition was simply copied 
 from the present control.
 
@@ -97,12 +97,12 @@ df_raw <- filter(df_raw, condition == "LAC" & timepoint == 0 & induction == "u")
 
 A preliminary analysis of raw read counts for all different conditions, timepoints, 
 and replicates was conducted. For the sake of simplicity, the time points 12 and
-and 30 days (sodium chloride control, condition ```NACL```) were mapped to 
+and 30 days (sodium chloride control, condition `NACL`) were mapped to 
 16 and 32 days to correspond to time points of all other samples. This does not
 influence calculation of generation time or fitness score, and was done only to
 display the data.
 
-```{r}
+```{r, fig.width = 10, fig.height = 7}
 plot_median_read_count <- df_raw %>% 
   
   # focus on genes
@@ -253,8 +253,8 @@ and then do pairwise comparison of the groups one is interested in.
 
 Next, results from DESeq2 models are extracted. The data set includes
 5 conditions x 2 inductions x 3/4/6 timepoints = 38 combinatiions in total.
-The syntax to call DESeq2's ```results(...)``` function is to use one pair of 
-contrasts ```contrast("variable", "level1", "level2")```. To automate this, 
+The syntax to call DESeq2's `results(...)` function is to use one pair of 
+contrasts `contrast("variable", "level1", "level2")`. To automate this, 
 a list of condition and reference pairs is set up. As mentioned before, DESEq2 
 has more advanced ways of constructing contrasts but the syntax is more difficult.
 
@@ -329,11 +329,11 @@ df <- left_join(df, DES_result_table) %>% ungroup
 
 ## Step 5: Annotation of data
 
-The data frame has to be completed with ```NA``` for sgRNAs missing in some 
-combinations of conditions. Here, ```tidyr::complete``` was used to fill these gaps. 
+The data frame has to be completed with `NA` for sgRNAs missing in some 
+combinations of conditions. Here, `tidyr::complete` was used to fill these gaps. 
 The syntax is to indicate first the variable that is to be completed, and then the 
 variables that represent conditions to be completed. 
-All other variables (like measurements) are filled with ```NA```. 
+All other variables (like measurements) are filled with `NA`. 
 
 Different annotation columns are added to the master data frame, including a short sgRNA
 identifier (excluding the position on the gene), an sgRNA index (1 or 2), and the
@@ -414,7 +414,7 @@ into account that a manually determined log2 FC does not. A good control of how
 different a manual log2 FC is from the DESeq2 log2 FC is to simply plot one 
 against the other. There are only minor differences.
 
-```{r}
+```{r, fig.width = 8, fig.height = 7}
 plot_DESeq2_vs_namual_FC <- df %>% 
   
   # plot only genes and remove time point zero
@@ -453,7 +453,7 @@ metrics in a volcanoplot. The log2 FC is usually on the x-axis and the negative 
 p-value on the y-axis, showing the most significantly _and_ strongly changed genes 
 (here sgRNAs) in the upper right and left corner.
 
-```{r}
+```{r, fig.width = 8, fig.height = 7}
 plot_volcanoplot <- df %>%
   
   # plot only genes and remove time point zero
