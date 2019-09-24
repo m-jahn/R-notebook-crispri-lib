@@ -50,29 +50,42 @@ load(file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
 # exclude ncRNAs from analysis
 df <- df %>% filter(!grepl("^Entry", sgRNA))
 
-# load MS data and combine with library;
-# matching conditions are mapped to each other (L300 and L100 conditions);
-# the MS data does not contain LD cycle
-
+# load MS data from Cell Reports paper and combine with library
 df <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/diffacto_weightedsum/df_long_massfrac.csv") %>%
   
-  # load mass fraction data from Cell Reports paper
-  filter(sample == "light", light %in% c(300, 100)) %>%
+  # we can try both light and CO2-related regulation (one ANOVA test per limitation and protein)
+  # -------------------------
+  # this block is for LIGHT
+  # -------------------------
+  #filter(sample == "light", light %in% c(300, 100)) %>%
   
   # change sample annotation from [100, 300] to [L100, L300]
-  mutate(condition = recode(light, `300` = "L300", `100` = "L100")) %>%
+  #mutate(condition = recode(light, `300` = "L300", `100` = "L100")) %>%
+  
+  # rename a column
+  #rename(locus = protein) %>%
+  
+  # select only the interesting columns
+  #select(locus, condition, mean.mass.fraction.norm, ANOVA, ANOVA.adj) %>%
+  
+  # -------------------------
+  # this block is for CO2
+  # -------------------------
+  filter(sample == "CO2", concentration == 1) %>% 
   
   # rename a column
   rename(locus = protein) %>%
   
   # select only the interesting columns
-  select(locus, condition, mean.mass.fraction.norm, ANOVA, ANOVA.adj) %>%
+  select(locus, mean.mass.fraction.norm, ANOVA, ANOVA.adj) %>%
+  # -------------------------
   
   # merge with df
   left_join(df, .) %>%
   
   # filter for L100 and L300 only
   filter(condition %in% c("L100", "L300"))
+
   
 # test if mass fraction sums up to _around 1_ (also depends on intersection
 # between proteomics and CRISPRi library gene sets)
@@ -208,7 +221,7 @@ print(plot_fitness_ANOVA_pw)
 ```
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/supplemental/Supplemental_figure_prot_regulation.svg", width = 5, height = 7)
+svg("../figures/supplemental/Supplemental_figure_prot_regulation_CO2.svg", width = 5, height = 7)
 print(plot_fitness_ANOVA_bw, position = c(0, 0.48, 1, 1.04), more = TRUE)
 print(plot_fitness_ANOVA_pw, position = c(0, 0, 1, 0.53))
 grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03), y = c(0.98, 0.5), gp = gpar(cex = 1.3))
