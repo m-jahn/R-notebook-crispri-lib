@@ -51,7 +51,7 @@ load(file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
 df <- df %>% filter(!grepl("^Entry", sgRNA))
 
 # load MS data from Cell Reports paper and combine with library
-df <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/diffacto_weightedsum/df_long_massfrac.csv") %>%
+df_ms <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/diffacto_weightedsum/df_long_massfrac.csv") %>%
   
   # we can try both light and CO2-related regulation (one ANOVA test per limitation and protein)
   # -------------------------
@@ -89,12 +89,12 @@ df <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/di
   
 # test if mass fraction sums up to _around 1_ (also depends on intersection
 # between proteomics and CRISPRi library gene sets)
-df %>% group_by(condition, timepoint, induction, sgRNA_index) %>% 
+df_ms %>% group_by(condition, timepoint, induction, sgRNA_index) %>% 
   summarise(sum(mean.mass.fraction.norm, na.rm = TRUE)) %>% head
 
 
 # # optionally reduce data to only the most 
-# df <- df %>% group_by(condition, induction, sgRNA_short) %>%
+# df_ms <- df_ms %>% group_by(condition, induction, sgRNA_short) %>%
 # summarise(
 #   fitness_score = min(fitness_score),
 #   ANOVA.adj = min(ANOVA.adj)
@@ -119,7 +119,7 @@ are selected.
 ```{r, fig.align = 'center', fig.width = 6, fig.height = 3.5}
 # filter dataset for 1 time point only (fitness score is identical
 # for all time points of 1 condition)
-df %>% filter(timepoint == 0) %>%
+df_ms %>% filter(timepoint == 0) %>%
   
   xyplot(-log10(ANOVA.adj) ~ fitness_score | factor(condition, unique(condition)), .,
   as.table = TRUE, groups = induction, 
@@ -153,7 +153,7 @@ custom.lattice$box.umbrella$lwd = 1.5
 
 # filter dataset for 1 time point only (fitness score is identical
 # for all time points of 1 condition)
-plot_fitness_ANOVA_bw <- df %>% filter(timepoint == 0) %>%
+plot_fitness_ANOVA_bw <- df_ms %>% filter(timepoint == 0) %>%
   
   # bin into groups by -log10 p-value
   mutate(ANOVA_bin = cut(ANOVA.adj, breaks = c(1,0.1,0.05,0.01,0.001,0))) %>%
@@ -191,7 +191,7 @@ custom.lattice$box.umbrella$col = "#CC476B"#"#00526D"
 
 # filter dataset for 1 time point only (fitness score is identical
 # for all time points of 1 condition)
-plot_fitness_ANOVA_pw <- df %>% 
+plot_fitness_ANOVA_pw <- df_ms %>% 
   
   # filter also for most regulated genes = p-value <= 0.01
   filter(timepoint == 0, induction == "i", ANOVA.adj <= 0.05) %>% 
@@ -242,3 +242,149 @@ Blue, proteins with $p_{value} > 0.05$).
 In brackets, number of unique sgRNAs per pathway.
 
 ----------
+
+## Determine mutant growth rate from depletion over time
+
+The main dataset contains measurements of thousands of sgRNA mutants over time.
+The proportion of these mutant sub-populations of the total population 
+changes over time depending on their individual growth rate. If a mutant grows faster
+than the population average, it will outcompete the other mutants in terms of growth
+and enrich in the population. Likewise, mutants with a growth defect be diluted over time
+eventually get depleted from the population. Theoretically, this problem is similar
+to the mathematical concept of half-life as it is known from nuclear decay. At a certain
+rate (half-life), an unstable isotope will break apart into a more stable one releasing 
+radiation.
+
+#### Mathematical concept
+
+All parameters to determine the growth rate of each individual mutant are known.
+The main parameters are the average growth rate ($\mu$, equals dilution rate ($D$) 
+of the population, and the relative fraction of each mutant ($FC$) of the total population 
+at the initial and later time points ($t_0, t_i$). 
+If a mutant will not grow at all, it is depleted from the library
+at the rate of population growth ($D_{total}$). If it grows at a slower rate $D_{mutant}$,
+it is depleted from the library at rate $D_{diff}$.
+
+$$ D_{diff} = D_{total} - D_{mutant} $$
+
+The depletion of a mutant from the library can be modeled for arbitrary time points,
+where the mutant fraction $F_t$ at time point $t$ becomes
+
+$$ F(t) = F(_{t=0}) \times (1-({D_{total}-D_{mutant}}))^{t} $$
+For example, population fraction $F$ after 10 h growth with a population growth rate 
+of $D_{total} = 0.1$, a mutant growth rate of $D_{mutant} = 0.05$, and inital population 
+fraction of $F(t=0) = 0.1$ is $F(10 h) = 0.1 \times (1-(0.1-0.05))^{10} = 0.059$.
+This is effectively a growth model that can be fitted to each sgRNA using the known 
+parameters $F(t=0)$, $D_{total}$, and $F(t)$, and solving for $D_{mutant}$. 
+To make things easier, it is possibe to use the fold change (FC) as normalized 
+measure of read fraction. Then initial population fraction becomes 1 ($F(t=0) = 1$) 
+and can be removed from the equation. To fit this model to sgRNA depletion, 
+R's standard non-linear fitting system `nls()` can be used.
+
+#### Implementation
+
+```{r}
+# prepare a subset of data containing only selected sgRNAs
+# time in days has has to be converted to time in hours (to match growth rate per hour)
+df_mu <- df %>% ungroup %>% 
+  filter(condition %in% c("L100", "L300", "LD")) %>%
+  mutate(timepoint = timepoint * 24) %>%
+  select(condition, induction, sgRNA, timepoint, 
+    FC, average_growth_rate, Process.abbr)
+  
+
+# use a wrapper function for nls() that we can apply on whole data frame
+fit_mu <- function(time, pop_mu, FC) {
+  # wrap function in a tryCatch statement to handle max iteration errors
+  model <- tryCatch(error = function(e) {NULL},
+    nls(
+      formula = FC ~ (1 - (pop_mu - mut_mu))^time,
+      data = data.frame(time = time, pop_mu = pop_mu, FC = FC),
+      start = list(mut_mu = 0.01)
+    )
+  )
+  # test for errors and return result
+  if (is.null(model)) {
+    return(NA)
+  } else {
+    summary(model)[["parameters"]][[1]]
+  }
+}
+
+
+# add modeled depletion to data frame using fitted mutant growth rate
+df_mu <- df_mu %>% group_by(condition, induction, sgRNA) %>%
+  mutate(
+    mutant_growth_rate = fit_mu(timepoint, average_growth_rate, FC),
+    FC_fit = (1 - (average_growth_rate - mutant_growth_rate))^timepoint
+  )
+
+select(df_mu, -condition, -induction, Process.abbr) %>% head
+```
+
+----------
+
+The result from the growth models is the estimated parameter, the mutant growth rate,
+and the predicted depletion/enrichment over time in FC (`FC_fit`). 
+However, a first necessary check is to see how many genes failed to get a growth model fitted. 
+Second, the distribution of mutant growth rates can be plotted. Third, as an example we can plot the _predicted_ depletion/enrichment over time _versus_ the _actual_ depletion/enrichment.
+
+
+```{r}
+# check how many models failed
+df_mu %>% group_by(condition, induction) %>% filter(timepoint == 0) %>%
+  summarise(
+    successful_models = sum(!is.na(mutant_growth_rate)),
+    failed_models = sum(is.na(mutant_growth_rate))
+  )
+```
+
+
+```{r, fig.width = 4, fig.height = 3, fig.align = 'center'}
+# plot mutant growth rates
+xyplot(mutant_growth_rate ~ paste0(condition, " - ", induction) %>% factor,
+  df_mu %>% ungroup %>%
+    filter(timepoint == 0, condition != "LD"), groups = induction,
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  par.settings = custom.lattice, lwd = 1.5,
+  xlab = "condition", ylab = "µ_mutant [h-1]", 
+  ylim = c(0, 0.1),
+  scales = list(alternating = FALSE),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.violin(x, y, horizontal = FALSE, border = NA, col = grey(0.7, 0.5),... )
+    panel.bwplot(x, y, horizontal = FALSE, pch = "|", do.out = FALSE, ... )
+  }
+)
+```
+
+
+```{r, fig.width = 8, fig.height = 10, fig.align = 'center'}
+# plot fitted model and actual depletion together for subset of sgRNAs
+plot_mutant_mu <- lapply(c("i", "u"), function(ind) {
+  xyplot(log2(FC) + log2(FC_fit) ~ timepoint | sgRNA, 
+    df_mu %>% ungroup %>% filter(grepl("ndh", sgRNA), condition == "L300", induction == ind),
+    as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(8, 5),
+    par.settings = custom.lattice, type = "l", lwd = 1.5,
+    main = "Comparison of predicted and actual depletion/enrichment of sgRNAs",
+    xlab = "time [h]", ylab = "normalized proportion (FC)", ylim = c(-7, 7),
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.key(c("FC data", "FC growth model"))
+    }
+  )
+})
+
+print(plot_mutant_mu[[1]], position = c(0,0.5,1,1), more = TRUE)
+print(plot_mutant_mu[[2]], position = c(0,0,1,0.5))
+
+```
+
+
+
+
+
+
+
