@@ -49,7 +49,10 @@ load(file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
 
 # exclude ncRNAs from analysis
 df <- df %>% filter(!grepl("^Entry", sgRNA))
+```
 
+
+```{r, message = FALSE, warning = FALSE}
 # load MS data from Cell Reports paper and combine with library
 df_ms <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis/diffacto_weightedsum/df_long_massfrac.csv") %>%
   
@@ -220,7 +223,7 @@ plot_fitness_ANOVA_pw <- df_ms %>%
 print(plot_fitness_ANOVA_pw)
 ```
 
-```{r, results = 'hide', include = FALSE}
+```{r, results = 'hide', include = FALSE, eval = FALSE}
 svg("../figures/supplemental/Supplemental_figure_prot_regulation_CO2.svg", width = 5, height = 7)
 print(plot_fitness_ANOVA_bw, position = c(0, 0.48, 1, 1.04), more = TRUE)
 print(plot_fitness_ANOVA_pw, position = c(0, 0, 1, 0.53))
@@ -284,12 +287,11 @@ R's standard non-linear fitting system `nls()` can be used.
 #### Implementation
 
 ```{r}
-# prepare a subset of data containing only selected sgRNAs
+# prepare reduced data frame
 # time in days has has to be converted to time in hours (to match growth rate per hour)
 df_mu <- df %>% ungroup %>% 
-  filter(condition %in% c("L100", "L300", "LD")) %>%
   mutate(timepoint = timepoint * 24) %>%
-  select(condition, induction, sgRNA, timepoint, 
+  select(condition, timepoint, induction, sgRNA, sgRNA_short, locus, 
     FC, average_growth_rate, Process.abbr)
   
 
@@ -318,20 +320,30 @@ df_mu <- df_mu %>% group_by(condition, induction, sgRNA) %>%
     mutant_growth_rate = fit_mu(timepoint, average_growth_rate, FC),
     FC_fit = (1 - (average_growth_rate - mutant_growth_rate))^timepoint
   )
-
+  
+# preview
 select(df_mu, -condition, -induction, Process.abbr) %>% head
+
+# save the data
+write_csv(df_mu, "../processed_data/CRISPRi_library_df_growthrates.csv")
 ```
+
+```{r, include = FALSE, eval = FALSE}
+# can also load previously computed result table
+df_mu <- read_csv("../processed_data/CRISPRi_library_df_growthrates.csv")
+```
+
 
 ----------
 
 The result from the growth models is the estimated parameter, the mutant growth rate,
 and the predicted depletion/enrichment over time in FC (`FC_fit`). 
 However, a first necessary check is to see how many genes failed to get a growth model fitted. 
-Second, the distribution of mutant growth rates can be plotted. Third, as an example we can plot the _predicted_ depletion/enrichment over time _versus_ the _actual_ depletion/enrichment.
+Second, the distribution of mutant growth rates can be plotted.
 
 
 ```{r}
-# check how many models failed
+# check how many models failed (mostly due to NA/missing values)
 df_mu %>% group_by(condition, induction) %>% filter(timepoint == 0) %>%
   summarise(
     successful_models = sum(!is.na(mutant_growth_rate)),
@@ -341,8 +353,12 @@ df_mu %>% group_by(condition, induction) %>% filter(timepoint == 0) %>%
 
 
 ```{r, fig.width = 4, fig.height = 3, fig.align = 'center'}
+# customize plotting colors a bit
+custom.lattice$box.rectangle$col = "#00526D"
+custom.lattice$box.umbrella$col = "#00526D"
+
 # plot mutant growth rates
-xyplot(mutant_growth_rate ~ paste0(condition, " - ", induction) %>% factor,
+xyplot(mutant_growth_rate ~ paste0(condition, "\n", induction) %>% factor,
   df_mu %>% ungroup %>%
     filter(timepoint == 0, condition != "LD"), groups = induction,
   as.table = TRUE, between = list(x = 0.5, y = 0.5),
@@ -358,33 +374,122 @@ xyplot(mutant_growth_rate ~ paste0(condition, " - ", induction) %>% factor,
 )
 ```
 
+----------
 
-```{r, fig.width = 8, fig.height = 10, fig.align = 'center'}
+#### Growth rate of sgRNA mutants for selected pathways
+
+We can plot the _predicted_ depletion/enrichment over time _versus_ the _actual_ 
+depletion/enrichment. Different sets of interesting genes or pathways could be
+selected. For a start, a selection of genes for **photorespiration** and for
+**Calvin cycle** related genes can be created. The next step is to compare the 
+fitted growth rates for individual mutants, for example between induced and non-induced
+conditions.
+
+#### Faster growing sgRNA mutants
+
+A few clones actually gained a condition-dependent fitness advantage over the 
+population average. In the case of the turbidostat, cells are selected for maximum
+specific growth rate and maximizing fitness is therefore reduced to maximizing
+steady-state growth rate for a particular condition. In the next paragraph, 
+not only mutants for specific pathways but also faster-growing mutants are 'isolated'.
+
+```{r}
+# Photorespiration genes (extracted from Hagemann papers)
+list_photores <- c(
+  "sll0404", "slr0806", "sll0171", "slr0229", "slr1348", 
+  "sll1349", "sll1981", "slr2088", "sll1559", "slr1931"
+)
+
+# Calvin cycle genes
+list_calvin <- c(
+  "sll1525", "slr0012", "slr0009", "slr0394", "sll1342",
+  "slr0884", "slr0943", "sll0018", "slr0952", "slr2094",
+  "sll1070", "slr0194", "ssl2153", "slr0783", "sll0807",
+  "slr1793", "sll0587", "sll1275", "slr0752", "slr1945",
+  "slr0084", "slr1349", "slr1124", "sll0395", "slr1748"
+)
+
+# faster growing mutants
+list_faster <- c(
+  "sll1968", "sll1969", "slr1916", "slr1340", "ssl2982",
+  "slr1547"
+)
+```
+
+
+```{r, fig.width = 10, fig.height = 4, fig.align = 'center'}
 # plot fitted model and actual depletion together for subset of sgRNAs
 plot_mutant_mu <- lapply(c("i", "u"), function(ind) {
   xyplot(log2(FC) + log2(FC_fit) ~ timepoint | sgRNA, 
-    df_mu %>% ungroup %>% filter(grepl("ndh", sgRNA), condition == "L300", induction == ind),
-    as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(8, 5),
+    df_mu %>% ungroup %>% filter(locus %in% list_faster, condition == "L100", induction == ind),
+    as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(4, 3),
     par.settings = custom.lattice, type = "l", lwd = 1.5,
-    main = "Comparison of predicted and actual depletion/enrichment of sgRNAs",
-    xlab = "time [h]", ylab = "normalized proportion (FC)", ylim = c(-7, 7),
+    main = paste0("Predicted and actual depletion/ \nenrichment of sgRNAs (L300, ", 
+      ifelse(ind == "i", "induced", "uninduced"), ")"),
+    xlab = "time [h]", ylab = "normalized proportion (FC)", ylim = c(-3, 3),
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.xyplot(x, y, ...)
-      panel.key(c("FC data", "FC growth model"))
+      panel.key(c("FC data", "FC model"), points = FALSE, lines = TRUE, cex = 0.7)
     }
   )
 })
 
-print(plot_mutant_mu[[1]], position = c(0,0.5,1,1), more = TRUE)
-print(plot_mutant_mu[[2]], position = c(0,0,1,0.5))
-
+print(plot_mutant_mu[[1]], position = c(0.5,0,1,1), more = TRUE)
+print(plot_mutant_mu[[2]], position = c(0,0,0.5,1))
 ```
 
+Comparison of growth rate for the selected genes. Mutant growth rate is
+aggregated as mean and standard deviation of the two sgRNAs. Induced _versus_ uninduced
+condition is plotted. A variant of this is not plotting actual growth rates but
+the % of change in growth rate compared to the popualtion average.
 
+```{r, fig.width = 6, fig.height = 9, fig.align = 'center'}
+plot_mutant_mu_2 <- lapply(list(list_calvin, list_photores, list_faster), function(genes) {
+  
+  # adjust scale to selected gene set
+  if ("slr1916" %in% genes) ylim = c(90, 130) else ylim = c(-50, 150)
+  
+  df_mu %>% ungroup %>%
+  
+  # select subset of sgRNA
+  filter(locus %in% genes, condition %in% c("L100", "L300")) %>%
+  
+  # plot relative change in mutant growth rate compared to pop average
+  xyplot(mutant_growth_rate/average_growth_rate*100 ~ factor(sgRNA_short) | condition, .,
+    groups = induction, 
+    as.table = TRUE, between = list(x = 0.3, y = 0.3), 
+    par.settings = custom.lattice, layout = c(1, 2),
+    pch = 19, col = c("#00526D", "#CC476B"),
+    main = "Mutant growth rate obtained from depletion/enrichment model",
+    xlab = "", ylab = "µ [% pop. average]", 
+    ylim = ylim, 
+    scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.abline(h = 100, col = grey(0.5), lty = 2)
+      panel.superpose(x, y, ...)
+      #panel.key(c("induced", "uninduced"), pch = 19)
+    }, panel.groups = function(x, y, ...) {
+      panel.errbars(x, y, ewidth = 0, ...)
+    }
+  )
+  
+})
 
+print(plot_mutant_mu_2[[1]], position = c(0,0.65,1,1), more = TRUE)
+print(plot_mutant_mu_2[[2]], position = c(0,0.32,1,0.67), more = TRUE)
+print(plot_mutant_mu_2[[3]], position = c(0,0,1,0.34))
+```
 
+```{r, results = 'hide', include = FALSE}
+svg("../figures/supplemental/Supplemental_figure_mutant_growth.svg", width = 6, height = 9)
+print(plot_mutant_mu_2[[1]], position = c(0,0.65,1,1), more = TRUE)
+print(plot_mutant_mu_2[[2]], position = c(0,0.32,1,0.67), more = TRUE)
+print(plot_mutant_mu_2[[3]], position = c(0,0,1,0.34))
+dev.off()
+```
 
 
 
