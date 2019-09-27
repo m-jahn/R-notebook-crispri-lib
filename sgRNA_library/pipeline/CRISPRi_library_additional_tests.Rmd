@@ -328,11 +328,11 @@ select(df_mu, -condition, -induction, Process.abbr) %>% head
 write_csv(df_mu, "../processed_data/CRISPRi_library_df_growthrates.csv")
 ```
 
+
 ```{r, include = FALSE, eval = FALSE}
 # can also load previously computed result table
 df_mu <- read_csv("../processed_data/CRISPRi_library_df_growthrates.csv")
 ```
-
 
 ----------
 
@@ -443,8 +443,9 @@ print(plot_mutant_mu[[2]], position = c(0,0,0.5,1))
 
 Comparison of growth rate for the selected genes. Mutant growth rate is
 aggregated as mean and standard deviation of the two sgRNAs. Induced _versus_ uninduced
-condition is plotted. A variant of this is not plotting actual growth rates but
-the % of change in growth rate compared to the popualtion average.
+condition is plotted. More informative than plotting actual growth rates is plotting
+the % of change in growth rate compared to the population average. The table with mutant
+growth rate of all selected strains is saved as a *Supplementary Data* table.
 
 ```{r, fig.width = 6, fig.height = 9}
 plot_mutant_mu_2 <- lapply(list(list_calvin, list_photores, list_faster), function(genes) {
@@ -492,5 +493,32 @@ print(plot_mutant_mu_2[[3]], position = c(0,0,1,0.34))
 dev.off()
 ```
 
+
+```{r}
+df_mu %>% ungroup %>% 
+  
+  # select subset of sgRNAs and conditions
+  filter(
+    locus %in% c(list_calvin, list_photores, list_faster), 
+    condition %in% c("L100", "L300"),
+    timepoint == 0
+  ) %>%
+  
+  # summarize mutant growth rate as mean and stdev
+  group_by(sgRNA_short, condition, induction) %>%
+  summarize(
+    locus = locus[1],
+    population_growth_rate = average_growth_rate[1],
+    mean_mutant_growth_rate = mean(mutant_growth_rate),
+    stdev_mutant_growth_rate = sd(mutant_growth_rate)
+  ) %>%
+  
+  # add relative change
+  mutate(mutant_growth_rate_percent = 
+    mean_mutant_growth_rate/population_growth_rate*100) %T>%
+  
+  print(head(.)) %>% 
+  write_csv("../processed_data/Supplemental_data_S4.csv")
+```
 
 
