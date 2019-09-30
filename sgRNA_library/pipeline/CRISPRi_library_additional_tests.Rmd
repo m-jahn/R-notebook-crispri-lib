@@ -48,6 +48,7 @@ of the reference genome for _Synechocystis_ sp. PCC6803.
 load(file = "../processed_data/CRISPRi_library_df_cluster.Rdata")
 
 # exclude ncRNAs from analysis
+df_all <- df
 df <- df %>% filter(!grepl("^Entry", sgRNA))
 ```
 
@@ -354,8 +355,11 @@ df_mu %>% group_by(condition, induction) %>% filter(timepoint == 0) %>%
 
 ```{r, fig.width = 4, fig.height = 3}
 # customize plotting colors a bit
+custom.lattice <- custom.lattice()
 custom.lattice$box.rectangle$col = "#00526D"
 custom.lattice$box.umbrella$col = "#00526D"
+custom.lattice$box.rectangle$lwd = 1.5
+custom.lattice$box.umbrella$lwd = 1.5
 
 # plot mutant growth rates
 xyplot(mutant_growth_rate ~ paste0(condition, "\n", induction) %>% factor,
@@ -493,16 +497,17 @@ print(plot_mutant_mu_2[[3]], position = c(0,0,1,0.34))
 dev.off()
 ```
 
+----------
 
-```{r}
-df_mu %>% ungroup %>% 
-  
-  # select subset of sgRNAs and conditions
-  filter(
-    locus %in% c(list_calvin, list_photores, list_faster), 
-    condition %in% c("L100", "L300"),
-    timepoint == 0
-  ) %>%
+#### Saving processed data frames as Supplemental Data
+
+1. Complete original data frame (including ncRNAs) with extra columns for
+   mutant growth rate relative growth rate change in %. 
+   This is **Supplemental Data S1**.
+
+```{r, message = FALSE}
+# merge master data frame with predicted growth rates
+df_all <- df_mu %>% ungroup %>% 
   
   # summarize mutant growth rate as mean and stdev
   group_by(sgRNA_short, condition, induction) %>%
@@ -515,9 +520,40 @@ df_mu %>% ungroup %>%
   
   # add relative change
   mutate(mutant_growth_rate_percent = 
-    mean_mutant_growth_rate/population_growth_rate*100) %T>%
+    mean_mutant_growth_rate/population_growth_rate*100) %>%
   
-  print(head(.)) %>% 
+  # select only growth rate-related columns and merge
+  select(sgRNA_short, condition, induction, 
+    mean_mutant_growth_rate, mutant_growth_rate_percent) %>%
+  left_join(df_all, .) %>%
+  
+  # remove unnecessary columns
+  select(-FC, -Gene.ontology.IDs, -Process.abbr, -Pathway.abbr)
+
+# and save to disk
+write_csv(df_all, "../processed_data/Supplemental_data_S2.csv")
+```
+
+
+2. Selected genes for photorespiation, Calvin cycle, and increased growth rate.
+   This is **Supplemental Data S4**.
+
+```{r}
+df_all %>% ungroup %>% 
+  
+  # select subset of sgRNAs and conditions
+  filter(
+    locus %in% c(list_calvin, list_photores, list_faster), 
+    condition %in% c("L100", "L300"),
+    timepoint == 0,
+    sgRNA_index == 1
+  ) %>%
+  
+  # select only important columns
+  select(sgRNA_short, condition, induction, locus, 
+    average_growth_rate, mean_mutant_growth_rate, 
+    mutant_growth_rate_percent) %T>% print %>% 
+  
   write_csv("../processed_data/Supplemental_data_S4.csv")
 ```
 
