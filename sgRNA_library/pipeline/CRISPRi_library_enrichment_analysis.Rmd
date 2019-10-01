@@ -114,7 +114,7 @@ Distribution of mean read fraction (sgRNA reads per gene divided by total number
 of reads). Broken down by condition, and color-coded by time point in days. A bimodal
 disitrubtion for some conditions indicate that a pre-selection of mutants was 
 taking place eve before growth competition experiments.
-Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+Abbreviations: L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
 
 -----------
 
@@ -126,7 +126,7 @@ the log2 FC of sgRNA 1 is plotted against sgRNA 2. The ideal is a perfect correl
 between every sgRNA pair but this is unlikely to happen. Here, sgRNA correlation
 is broken down by condition.
 
-```{r}
+```{r, fig.width = 9, fig.height = 9}
 # Correlation between sgRNA 1 and 2 per gene, and condition
 plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` | 
   factor(timepoint) * condition,
@@ -150,9 +150,7 @@ plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` |
     panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
   }
 )
-```
 
-```{r, fig.align = 'center', fig.width = 9, fig.height = 9}
 print(plot_2sgRNA_correlation)
 ```
 
@@ -170,10 +168,59 @@ dev.off()
 Correlation of the log2 FC of sgRNA1 _versus_ sgRNA 2 for each gene,
 broken down by condition. Each panel shows an overlay of induced (blue) and uninduced (red)
 samples. Panel numbers indicate time in days.
-Abbreviations: L100 - light with 100 µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+Abbreviations: L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, 
+L300 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
 
 -----------
 
+#### sgRNA pair correlation, subset of ribosomal proteins
+
+Using the same strategy as above, we can also plot only ribosomal genes in order
+to see if correlation for both sgRNAs for these highly essential genes is higher.
+Here only constant light conditions 100 and 300 µmol photons m<sup>-2</sup> s<sup>-1</sup> 
+were selected.
+
+```{r, fig.width = 7.5, fig.height = 4, echo = FALSE}
+# Correlation between sgRNA 1 and 2 per gene, and condition
+plot_2sgRNA_correlation_rib <- df %>% 
+  
+  # filter out genes that don't have two sgRNAs
+  filter(Pathway.abbr == "Ribosomal proteins", condition %in% c("L100", "L300")) %>% 
+  select(c(2,3,4,9,14,15,16)) %>%
+  group_by(sgRNA_short) %>%
+  filter(timepoint > 0) %>%
+  spread(key = sgRNA_index, value = log2FoldChange) %>%
+  rename_at(vars(6:7), function(x) paste0("sgRNA-", x)) %>%
+  
+  # plot
+  xyplot(`sgRNA-2` ~ `sgRNA-1` | factor(timepoint) * condition, .,
+    groups = induction, as.table = TRUE, 
+    between = list(x = 0.5, y = 0.5),
+    par.settings = custom.lattice, cex = 0.2, pch=19,
+    scales = list(alternating = FALSE),
+    xlim = c(-9, 4), ylim = c(-9, 4),
+    xlab = "log2 FC sgRNA1", ylab = "log2 FC sgRNA2",
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ... )
+      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), ...)
+      panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+    }
+  )
+
+print(plot_2sgRNA_correlation_rib)
+```
+
+
+```{r, results = 'hide', include = FALSE}
+png("../figures/supplemental/Supplemental_figure_2sgRNA_correlation_rib.png", 
+  width = 1000, height = 530, res = 120)
+print(plot_2sgRNA_correlation_rib)
+dev.off()
+```
+
+
+----------
 
 ## Step 3: Unsupervised clustering of sgRNAs
 
@@ -560,7 +607,7 @@ competition experiment. Experiment run time was normalized to generations based 
 the average growth rate of a population in the photobioreactor. SgRNA abundance was
 determined by HT sequencing of the sgRNA constructed integrated into the genome.
 Each panel shows sgRNAs for one particular condition (L100 - light with 100 
-µmol/m2\*s, L300 - light with 100 µmol/m2\*s, LD - light-dark-cycle) and cluster (1-5).
+µmol photons m<sup>-2</sup> s<sup>-1</sup>, L300 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark-cycle) and cluster (1-5).
 **C.** Enriched gene ontology (GO) terms for the four clusters (1-4) showing 
 sgRNA depletion. GO term enrichment was performed using the TopGO package in R 
 (Materials and Methods). Many signifantly enriched terms are related to essential
@@ -726,9 +773,7 @@ filter(df,
 **Figure 3. Genes with condition dependent fitness for high and low light.**
 **A.** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
 indicates the degree of enrichment (positive) or depletion (negative) of an sgRNA.
-Comparison between low light (L100 - light with 100 µmol/m2\*s) and high light 
-intensity (L300 - light with 300 µmol/m2\*s) shows sgRNAs are on average stronger depleted
-under high light.
+Comparison between low light (L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>) and high light intensity (L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) shows sgRNAs are on average stronger depleted under high light.
 **B.** Difference between fitness score of high light and low light (dF) for 
 genes with both sgRNAs in the same cluster. Cluster 3 contains most differentially
 depleted/enriched sgRNAs of all clusters (red symbols, threshold: 3 <= dF <= -3).
@@ -772,8 +817,7 @@ dev.off()
 **Supplemental Figure. Genes with condition dependent fitness for high light and light-dark cycle.**
 **A.** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
 indicates the degree of enrichment (positive) or depletion (negative) of an sgRNA.
-Comarison between light-dark cycle (LD - light between 0 and 300 µmol/m2\*s) and 
-high light intensity (L300 - light with 300 µmol/m2\*s) shows similar depletion of sgRNAs.
+Comarison between light-dark cycle (LD - light between 0 and 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) and high light intensity (L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) shows similar depletion of sgRNAs.
 **B.** Difference between fitness score of high light and light-dark cycle (dF) for 
 genes with both sgRNAs in the same cluster (red symbols, threshold: 3 <= dF <= -3).
 **C.** Four genes have a dF above threshold as described in B. Only genes with 2 
@@ -1291,8 +1335,12 @@ and a library grown in presence of equimolar concentration of sodium chloride (N
 in the NaCl control.
 **B.** Top 8 (out of 9) genes with both sgRNAs specifically enriched under presence of lactate 
 but not sodium chloride. Quantification of _asd_ sgRNA 1 for NaCl control, 32 d, was missing.
-**C.** Mean growth rate of selected knock-down strains (n = 2) over the first 
-**D.** To be added.
+**C.** Mean growth rate of selected knock-down strains (n = 2) over the first 80 h of cultivation.
+**D.** Example of growth advantage of sgRNA mutants _bcp2_ and _aroH_ over control (NT0).
+**E.** Absorption spectra of five fastest growing sgRNA mutants and control (NT0). 
+Arrows mark absoprtion maxima for pigments. CT - carotenoids, PC - phycocyanin, CA - chlorophyll A.
+**F.** Relative pigment absorption for carotenoids, phycocyanin and chlorophyll A for the five
+fastest growing mutants in comparison to control (NT0).
 
 ----------
 
