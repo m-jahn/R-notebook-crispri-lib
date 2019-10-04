@@ -1,0 +1,96 @@
+---
+title: "Mapping KEGG pathways to proteins"
+output: html_notebook
+---
+
+<!-- Link [R Markdown](http://rmarkdown.rstudio.com) -->
+
+# Investigating protein allocation in _Ralstonia eutropha_ H16
+
+The _Ralstonia eutropha_ H16 genome was previously annotated using the EMBL-maintained tool 
+[eggNOG](http://eggnogdb.embl.de/#/app/home), see my R notebook 
+```../Ralstonia_COG/Ralstonia_H16_genome_re_annotation.Rmd ```. 
+All genes/proteins were annotated based on sequence similarity and grouped 
+into homology groups (Cluster of Orthologous Groups, COG). Groups were then
+manually curated by moving genes from less to better matching categories. 
+
+However, one important difference between COG and KEGG is that KEGG Brite annotation 
+is not unambiguous like COG, but one gene/protein can be mapped to multiple 
+functions/pathways. This behavior is more realistic then the COG classification.
+Another advantage is that KEGG is a manually curated, systematic, and well-connected
+database. Every protein in KEGG is associuated with enzyme-EC numbers, GO terms,
+other (parent or child) pathways, and associated reactions. This makes KEGG pathways
+superior to COG terms when it comes to funtional interpreatation or even quantitative
+metabolic models. As an example how to use (KEGG) ambiguous protein association with pathways,
+
+In this notebook I will try to map KEGG pathways (Brite or Modules) to the _R. eutropha_
+proteome and deal with ambiguous protein annotation. Sources used here are:
+
+- Previously improved _R. eutropha_ annotation, mainly COG ([eggNOG](http://eggnogdb.embl.de/#/app/home), downloaded 2019-06-12)
+- [KEGG BRite](https://www.kegg.jp/kegg-bin/show_organism?org=reh) database for _R. eutropha_ H16 (downloaded 2018-09-10)
+
+### Problem definition 
+
+1. Map proteins to KEGG pathways, either 'Brite' hierarchy or 'Modules'
+
+2. Investigate predicted protein abundance range per pathway (min, mean, max)
+
+3. Try to formalize biological role of pathways: size, reactions, input, output, variability
+
+
+### Task 1: Map proteins to KEGG pathways
+
+We begin with elucidating differences between KEGG Brite and KEGG Modules. Are they the same 
+(apparently not), which one is more comprehensive or has higher coverage for _R. eutropha_?
+
+
+```{r}
+# load packages
+library(tidyverse)
+library(lattice)
+library(latticeExtra)
+library(Rtools)
+library(KEGGREST)
+```
+
+Several alternatives are available to download and/or parse KEGG xml files,
+among them the R `KEGGREST` or the `KEGGgraph` package. One can also use simple bash
+download from KEGG using their REST API (thanks Johannes Asplund-Samuelsson for 
+simple example). 
+
+```{bash, eval = FALSE}
+wget -qO - http://rest.kegg.jp/link/ko/ko01200
+```
+
+Using R allows to import KEGG files directly into data frames or lists.
+
+```{r}
+# KEGG Brite annotation file, manually parsed from website
+KEGG_Brite <- read_csv("../data/KEGG_Brite_20180910_reh00001.csv")
+head(KEGG_Brite)
+
+# Alternatives
+# ---------------
+#
+# KEGGREST package as interface to KEGG
+# download annotation for all Ralstonia eutropha genes
+
+# query a single gene ID, KO number, or module, or pathway
+keggGet("reh:H16_A0003") %>% head
+keggGet("K00847") %>% {.[[1]][1:5]} %>% head
+keggGet("M00432") %>% flatten
+keggGet("reh00010") %>% head
+
+# obtain mapping of modules for each gene
+keggLink("module", "reh")
+
+# list of all available KEGG modules, named list of ID and name
+modules <- keggList(database = "module")
+modules[1:5]
+
+
+```
+
+
+  
+
