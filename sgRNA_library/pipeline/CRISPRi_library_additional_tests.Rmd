@@ -558,3 +558,137 @@ df_all %>% ungroup %>%
 ```
 
 
+## Transcriptome of selected mutants analysed by RNA-Seq
+
+Some genes in the sgRNA library were found to confer a growth advantage in 
+competition experiments when repressed. These faster growing mutants were *pmgA*, *sll1969*, 
+*slr1340*, *slr1916*, and *ssl2982*. These genes were grown in high light conditions
+(300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) in turbidostat regime identical to the
+conditions that the complete mutant library was grown before. The mRNA of these
+samples was extracted, purified and quantitatively analyzed using RNA-Seq. The
+reads per gene were processed using `DESeq2` in the same way as all other CRISPRi library
+samples before. The purpose of this analysis is to find differences between faster-growing
+sgRNA mutants compared to the NT0 (no-target sgRNA) control. The hypothesis is that 
+these mutants have an effect on global regulation of the cell.
+
+```{r, message = FALSE}
+df_rnaseq <- read_csv("../raw_data/transcriptomics_selected_mutants.csv")
+head(df_rnaseq)
+```
+
+----------
+
+We can start to explore differential regulation using a volcano plot.
+
+```{r, fig.width = 8, fig.height = 2.6}
+plot_volcanoplot <- df_rnaseq %>%
+  
+  filter(!grepl("MYO\\_", Name)) %>%
+  
+  xyplot(-log10(padj) ~ log2FoldChange | Condition %>% factor(., unique(.)[c(2,3,4,5,1)]), ., 
+    as.table = TRUE, groups = Significance,
+    xlab = "log2 FC", ylab = "-log10(p value)",
+    par.settings = custom.lattice, layout = c(5, 1),
+    # "#00526D" "#CC476B" "#9F7000" "#228B00" "#009681" "#0082CE" "#B646C7"
+    cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#00526D"),
+    scales = list(alternating = FALSE),
+    ylim = c(-5, 55), xlim = c(-5, 5),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.key(c("not significant", "significant"), col = c(grey(0.6), "#00526D"),
+        pch = 19, corner = c(0.1, 0.9), cex = 0.7)
+    }
+  )
+
+print(plot_volcanoplot)
+```
+
+----------
+
+Apparently, only few genes were differentially expressed in *sll1969* and *slr1340*,
+while considerably more were different in mutants *slr1916*, *ssl2982* and *pmgA*.
+In the next step, we have a look at the overlap between significantly regulated 
+genes between mutants. One way is to use a heat map.
+
+```{r, fig.width = 8, fig.height = 1.8}
+# filter for significant genes only (same critera Johannes used)
+sig_genes <- df_rnaseq %>% filter(!between(log2FoldChange, -1, 1), padj <= 0.05) %>%
+  pull(Name) %>% unique
+
+
+# prepare matrix for plotting heat map and plot
+plot_heatmap <- df_rnaseq %>% filter(Name %in% sig_genes) %>%
+  
+  # limit plotted range to log2 FC of -3 to 3 (8 fold)
+  mutate(log2FoldChange = 
+    log2FoldChange %>% replace(., . > 3.5, 3.5) %>% replace(., . < -3.5, -3.5)) %>%
+  
+  # spread to matrix
+  select(Name, Condition, log2FoldChange) %>% 
+  spread(Condition, log2FoldChange) %>% 
+  select(Name, pmgA, sll1969, slr1340, slr1916, ssl2982) %>%
+  
+  # reorder matrix by simple clustering
+  column_to_rownames("Name") %>% as.matrix %>% replace_na(0) %>%
+  {.[dist(.) %>% hclust(., method = "ward.D2") %>% {.$order}, ]} %>%
+  
+  # plot genes
+  levelplot(
+    col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(16),
+    as.table = TRUE, aspect = "fill", 
+    xlab = paste0("gene (n=", length(sig_genes), ")"), 
+    ylab = "sgRNA mutant",
+    scales = list(alternating = FALSE, x = list(draw = FALSE))
+  )
+
+print(plot_heatmap)
+```
+
+The heat map shows that the mode of action seems overall similar for the first 
+four genes, but pmgA has a different if not even inverted expression pattern.
+This could be an outlier as the samples were prepared/sequenced at a different date.
+The next step is to look for meaningful genes or patterns that could explain the
+observed increased growth rate.
+
+```{r}
+# Gene enrichment methods for the selected gene subset
+#
+# 1. KEGG module enrichment for list of sig reg genes
+library(clusterProfiler)
+library(limma)
+
+sig_genes %>% enrichMKEGG(organism = 'syn', minGSSize = 1,
+  pvalueCutoff = 1, qvalueCutoff = 1) %>%
+  {.@result %>% filter(Count >= 2)}
+
+# This result is not meaningful, there are no more than 2 
+# genes per module enriched. 
+# Alternatively we can try kegga pathway enrichment.
+
+sig_genes %>% kegga(species.KEGG = "syn", FDR = 0.05, trend = FALSE) %>%
+  arrange(P.DE) %>% filter(P.DE <= 0.1)
+```
+
+The only clear pattern is that genes involved in Amino acid metabolism are
+enriched. But since the dataset is small, the enrichment is not very significant.
+No pathway is really sticking out from the background. We established already that
+there seems to be a large overlap in differentially expressed genes for all
+mutants except `pmgA`. We can further elaborate this by plotting log2 FC for the 
+subset of differentially expressed genes against each other for all mutants.
+The result shows that *ssl2982*, *slr1916*, and *slr1340* are well correlated, but 
+*sll1969* and *pmgA* (*sll1968*) are not, not even with themselves.
+
+```{r, fig.width = 5, fig.height = 5}
+df_rnaseq %>% filter(Name %in% sig_genes) %>%
+  
+  # spread log2FC condition-wise
+  select(Name, Process, Condition, log2FoldChange) %>% 
+  spread(Condition, log2FoldChange) %>%
+  select(pmgA:ssl2982) %>%
+  
+  custom_splom( ~ .)
+```
+
+
+
