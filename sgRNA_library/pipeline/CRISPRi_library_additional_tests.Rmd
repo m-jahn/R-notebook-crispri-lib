@@ -580,6 +580,8 @@ head(df_rnaseq)
 
 ----------
 
+#### Overview of mutants gene expression
+
 We can start to explore differential regulation using a volcano plot.
 
 ```{r, fig.width = 8, fig.height = 2.8}
@@ -669,6 +671,10 @@ df_rnaseq %>% filter(Name %in% sig_genes) %>%
   
   custom_splom( ~ .)
 ```
+
+----------
+
+#### Clustering and KEGG pathway enrichment
 
 
 The next step is to look for meaningful genes or patterns that could explain the
@@ -770,8 +776,24 @@ Two more strategies can be applied to find biologically interesting patterns
 or even just hypothesis for the change in growth rate of mutants _versus_ control.
 One of those is network interactions analysis of sig. reguated genes, and the 
 other is simply looking at interesting cadndidates that alone can have an effect.
-Known examples that can speed up growth rate would be ribosomal genes, central
-carbon metabolim enzymes or ATP synthase (references).
+Known examples for genes with positive effect (or at least correlation) on growth 
+rate would be ribosomal genes, central carbon metabolism enzymes or ATP synthase 
+(references).
+
+
+```{r}
+# As before, we merge clusters 1 and 3 (significant for pmgA) and
+# clusters 2 and 4 (significant for others) and prepare names for
+# StringDB
+clusters %>%
+  plyr::mapvalues(c(3,4), c(1,2)) %>%
+  enframe(name = "Name", value = "cluster") %>%
+  filter(!grepl("SGL_", Name)) %>%
+  left_join(df_rnaseq %>% select(Name, Pathway, Protein)) %>%
+  filter(!duplicated(Name)) %>%
+  arrange(cluster, Pathway) %>%
+  write_csv("../processed_data/RNAseq_significant_genes.csv")
+```
 
 
 
