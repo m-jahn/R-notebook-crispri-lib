@@ -816,7 +816,7 @@ df_sig_genes %>% filter(cluster %in% c(2,4), !duplicated(locus)) %>%
 #### Differential expression of selected genes
 
 Here the purpose is simply to plot the most interesting genes as heatmap
-or correlation plot using the `corrplot` package.
+or correlation plot using the `corrplot` package. 
 
 
 ```{r}
@@ -841,13 +841,71 @@ plot_sig_genes <- lapply(c(2,4), function(clust) {
   levelplot(
     col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(26),
     as.table = TRUE, aspect = "fill", at = seq(-3, 3, 0.25),
-    #main = ifelse(clust %in% c(1,2), "up-regulated genes", "down-regulated genes"),
     xlab = "", ylab = "",
     scales = list(x = list(rot = 35, cex = 0.6, col = grey(0.5)))
   )
   
 })
+
+print(plot_sig_genes[[1]], position = c(0,0.5,1,1), more = TRUE)
+print(plot_sig_genes[[2]], position = c(0,0,1,0.5))
 ```
+
+An alternative is to plot genes per group in form of a dotplot instead of heatmap.
+The focus here should be on functional groups instead of single genes. Even more
+concise is a simple barchart summary of up and down-regulated gene per group.
+
+```{r, fig.width = 8, fig.height = 4}
+df_sig_genes %>% 
+  
+  # omit pmgA from data
+  filter(cluster %in% c(2,4), Condition != "pmgA") %>%
+  
+  xyplot(factor(Process.abbr) ~ log2FoldChange | Condition %>% factor(., unique(.)[c(2:5,1)]), .,
+    as.table = TRUE,
+    xlab = "log2 FC", ylab = "Pathway",
+    par.settings = custom.lattice, layout = c(4, 1),
+    scales = list(alternating = FALSE), xlim = c(-4, 4),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.abline(v = 0, lwd = 1.5, lty = 2, col = grey(0.5))
+      cols = scales::rescale(x, from = c(-3, 3), to = c(1, 20)) %>%
+        replace(., . < 1, 1) %>% replace(., .> 20, 20)
+      cols = colorRampPalette(c("steelblue", grey(0.7), "darkorange"))(20)[round(cols)]
+      panel.xyplot(x, y, # jitter.data = TRUE, horizontal = TRUE, amount = 0.2
+        pch = 19, cex = 0.6+(0.4*abs(x)), col = cols)
+    }
+  )
+```
+
+
+```{r}
+df_sig_genes %>% 
+  
+  # omit pmgA from data
+  filter(cluster %in% c(2,4), Condition != "pmgA") %>%
+  
+  # summarize number of genes up or down regulated
+  group_by(Condition, Process.abbr) %>%
+  summarize(
+    n_upreg_genes = sum(log2FoldChange > 1),
+    n_downreg_genes = sum(log2FoldChange < -1)
+  ) %>%
+  
+  barchart(factor(Process.abbr) ~ n_upreg_genes + -1*n_downreg_genes | 
+    Condition %>% factor(., unique(.)[c(2:5,1)]), .,
+    col = c("darkorange", "steelblue"), border = NA,
+    as.table = TRUE, xlab = "diff. expressed genes (-1 > log2 FC > 1)", ylab = "Pathway",
+    par.settings = custom.lattice, layout = c(4, 1),
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.abline(v = 0, lwd = 1.5, lty = 2, col = grey(0.5))
+      panel.barchart(x, y, origin = 0, ...)
+    }
+  )
+```
+
 
 ----------
 
