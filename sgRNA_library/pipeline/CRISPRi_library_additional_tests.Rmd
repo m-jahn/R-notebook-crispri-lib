@@ -644,7 +644,7 @@ plot_heatmap <- levelplot(sig_genes_mat,
   col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(26),
   as.table = TRUE, aspect = "fill", at = seq(-3, 3, 0.25),
   xlab = paste0("gene (n=", length(sig_genes), ")"),
-  ylab = "sgRNA mutant",
+  ylab = "",
   scales = list(alternating = FALSE, x = list(draw = FALSE))
 )
 
@@ -662,7 +662,7 @@ The result shows that *ssl2982*, *slr1916*, and *slr1340* are well correlated, b
 
 
 ```{r, fig.width = 5, fig.height = 5}
-df_rnaseq %>% filter(Name %in% sig_genes) %>%
+plot_splom <- df_rnaseq %>% filter(Name %in% sig_genes) %>%
   
   # spread log2FC condition-wise
   select(Name, Process, Condition, log2FoldChange) %>% 
@@ -670,6 +670,8 @@ df_rnaseq %>% filter(Name %in% sig_genes) %>%
   select(pmgA:ssl2982) %>%
   
   custom_splom( ~ .)
+
+print(plot_splom)
 ```
 
 ----------
@@ -703,11 +705,10 @@ for pmgA and the other 4 genes.
 clusters <- sig_genes_mat %>% dist %>% 
   hclust(method = "ward.D2") %>% cutree(k = 4)
 
-plot_clusters <- fviz_dend(sig_genes_mat %>% dist %>%
+    plot_clusters <- fviz_dend(sig_genes_mat %>% dist %>%
   hclust(method = "ward.D2"), k = 4, main = "",
   k_colors = custom.lattice()$superpose.symbol$col[1:4],
-  show_labels = FALSE,
-  rect = TRUE
+  show_labels = FALSE
 )
 
 print(plot_clusters)
@@ -774,26 +775,120 @@ kegga_result %>% select(Pathway, P.1:P.2) %>% rename(pmgA = P.1, other = P.2) %>
 
 Two more strategies can be applied to find biologically interesting patterns
 or even just hypothesis for the change in growth rate of mutants _versus_ control.
-One of those is network interactions analysis of sig. reguated genes, and the 
-other is simply looking at interesting cadndidates that alone can have an effect.
+One of those is network interaction analysis of sig. regulated genes, and the 
+other is simply looking at interesting candidates that alone can have an effect.
 Known examples for genes with positive effect (or at least correlation) on growth 
 rate would be ribosomal genes, central carbon metabolism enzymes or ATP synthase 
 (references).
 
 
 ```{r}
-# As before, we merge clusters 1 and 3 (significant for pmgA) and
-# clusters 2 and 4 (significant for others) and prepare names for
-# StringDB
-clusters %>%
-  plyr::mapvalues(c(3,4), c(1,2)) %>%
-  enframe(name = "Name", value = "cluster") %>%
-  filter(!grepl("SGL_", Name)) %>%
-  left_join(df_rnaseq %>% select(Name, Pathway, Protein)) %>%
-  filter(!duplicated(Name)) %>%
-  arrange(cluster, Pathway) %>%
-  write_csv("../processed_data/RNAseq_significant_genes.csv")
+# We create a new data frame with a selection of all interesting genes from cluster
+# 1-4 to be used for String DB, or simple heatmap plotting
+df_sig_genes <- clusters %>%
+  enframe(name = "locus", value = "cluster") %>%
+  filter(!grepl("SGL|MYO", locus)) %>%
+  
+  # join cluster data with RNAseq data
+  left_join(df_rnaseq %>% 
+    select(Name, Condition, log2FoldChange, padj, Pathway, Protein) %>% 
+    rename(locus = Name)) %>%
+  
+  # join with additional annotation
+  left_join(df_ms %>% ungroup %>%
+    select(locus, Process, Process.abbr, Gene.names) %>%
+    filter(!duplicated(locus))) %>%
+  
+  arrange(cluster, Process, Condition, log2FoldChange)
+
+write_csv(df_sig_genes, "../processed_data/RNAseq_significant_genes.csv")
 ```
+
+
+```{r, message = FALSE, include = FALSE, eval = FALSE}
+# extracting a gene lsit for string DB
+df_sig_genes %>% filter(cluster %in% c(2,4), !duplicated(locus)) %>% 
+  select(locus) %>% write_csv("/home/michael/Desktop/string_list.csv")
+```
+
+---------
+
+#### Differential expression of selected genes
+
+Here the purpose is simply to plot the most interesting genes as heatmap
+or correlation plot using the `corrplot` package.
+
+
+```{r}
+# select only consensus regulated genes (exclude pmgA, cluster 1+3)
+# and annotated genes
+plot_sig_genes <- lapply(c(2,4), function(clust) {
+  
+  df_sig_genes %>% filter(cluster == clust, !is.na(Pathway)) %>%
+  
+  # merge pathway and gene name
+  mutate(Gene.names = paste0(substr(Pathway, 1,10), ".. - ", Gene.names)) %>%
+  select(Gene.names, Condition, log2FoldChange) %>% 
+  
+  # spread
+  spread(Condition, log2FoldChange) %>% 
+  select(Gene.names, sll1969, slr1340, slr1916, ssl2982) %>%
+  
+  # and convert to matrix
+  column_to_rownames("Gene.names") %>% as.matrix %>%
+
+  # plot 
+  levelplot(
+    col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(26),
+    as.table = TRUE, aspect = "fill", at = seq(-3, 3, 0.25),
+    #main = ifelse(clust %in% c(1,2), "up-regulated genes", "down-regulated genes"),
+    xlab = "", ylab = "",
+    scales = list(x = list(rot = 35, cex = 0.6, col = grey(0.5)))
+  )
+  
+})
+```
+
+----------
+
+This is going to be Figure 4, the summary of the transcriptomics part.
+
+```{r, fig.width = 8, fig.height = 8}
+#print(plot_splom, position = c(0.53,0.45,1.0,0.75), more = TRUE)
+cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.01, 0.57, 0.93, 0.14)
+print(plot_volcanoplot, position = c(0,0.67,1,1), more = TRUE)
+print(plot_heatmap, position = c(0,0.45,1,0.62), more = TRUE)
+print(plot_sig_genes[[1]], position = c(0,0.20,1,0.49), more = TRUE)
+print(plot_sig_genes[[2]], position = c(0,-0.02,1,0.27), more = TRUE)
+```
+
+----------
+
+**Figure 4. Transcriptomics of faster growing sgRNA mutants.**
+The faster growing mutants pmgA (sll1968), sll1969, slr1340, slr1916, and ssl2982 
+were grown in high light conditions (300 µmol photons m<sup>-2</sup> s<sup>-1</sup>)
+in turbidostat regime identical to the conditions that the complete mutant 
+library was grown before. The transcriptome of the cells was analyzed using RNA-Seq.
+**A.** Volcanoplot of log<sub>2</sub> fold change (log<sub>2</sub> FC) against
+adjusted p-value for each gene. Grey - non-significantly different genes, blue - 
+significantly different genes (threshold: negative log<sub>10</sub> p-value $\geq$ 2, 
+-1 $\geq$ log<sub>2</sub> FC $\geq$ 1).
+**B.** Heat map of all 430 significantly different genes for the five selected mutants.
+The genes were clustered into four different groups based on similarity of gene expression.
+**C.** To be added.
+**D.** To be added.
+
+
+```{r, include = FALSE, eval = FALSE}
+svg("../figures/main/Figure4.svg", width = 8, height = 8)
+cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.01, 0.57, 0.93, 0.14)
+print(plot_volcanoplot, position = c(0,0.67,1,1), more = TRUE)
+print(plot_heatmap, position = c(0,0.45,1,0.62), more = TRUE)
+print(plot_sig_genes[[1]], position = c(0,0.20,1,0.49), more = TRUE)
+print(plot_sig_genes[[2]], position = c(0,-0.02,1,0.27), more = TRUE)
+dev.off()
+```
+
 
 
 
