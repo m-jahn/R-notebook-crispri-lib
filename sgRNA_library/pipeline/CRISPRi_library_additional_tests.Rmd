@@ -574,7 +574,13 @@ sgRNA mutants compared to the NT0 (no-target sgRNA) control. The hypothesis is t
 these mutants have an effect on global regulation of the cell.
 
 ```{r, message = FALSE}
-df_rnaseq <- read_csv("../raw_data/transcriptomics_selected_mutants.csv")
+df_rnaseq <- read_csv("../raw_data/transcriptomics_selected_mutants.csv") %>%
+  
+  # filter out pmgA condition and un-annotated ORFs
+  filter(
+    !grepl("MYO\\_|SGL\\_", Name),
+    Condition != "pmgA")
+  
 head(df_rnaseq)
 ```
 
@@ -584,17 +590,14 @@ head(df_rnaseq)
 
 We can start to explore differential regulation using a volcano plot.
 
-```{r, fig.width = 8, fig.height = 2.8}
+```{r, fig.width = 6.5, fig.height = 2.6}
 plot_volcanoplot <- df_rnaseq %>%
   
-  filter(!grepl("MYO\\_", Name)) %>%
-  
   xyplot(-log10(padj) ~ setNames(log2FoldChange, Name) | 
-      Condition %>% factor(., unique(.)[c(2,3,4,5,1)]), ., 
+      factor(Condition), ., 
     as.table = TRUE, groups = Significance,
     xlab = "log2 FC", ylab = "-log10(p value)",
-    par.settings = custom.lattice, layout = c(5, 1),
-    # "#00526D" "#CC476B" "#9F7000" "#228B00" "#009681" "#0082CE" "#B646C7"
+    par.settings = custom.lattice, layout = c(4, 1),
     cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#00526D"),
     scales = list(alternating = FALSE),
     ylim = c(-5, 55), xlim = c(-5, 5),
@@ -602,7 +605,7 @@ plot_volcanoplot <- df_rnaseq %>%
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.xyplot(x, y, ...)
       # select top diff expr genes and plot labels
-      sel <- which(!between(x, -1.3, 1.3) & y >= 12)
+      sel <- which(!between(x, -1, 1) & y >= 12)
       panel.text(x[sel], y[sel]+5, labels = names(x[sel]), cex = 0.6, col = "#00526D")
       panel.key(c("not significant", "significant"), col = c(grey(0.6), "#00526D"),
         pch = 19, corner = c(0.1, 0.9), cex = 0.7)
@@ -615,15 +618,17 @@ print(plot_volcanoplot)
 ----------
 
 Apparently, only few genes were differentially expressed in *sll1969* and *slr1340*,
-while considerably more were different in mutants *slr1916*, *ssl2982* and *pmgA*.
+while considerably more were different in mutants *slr1916*, *ssl2982* and *pmgA*
+(not shown).
 In the next step, we have a look at the overlap between significantly regulated 
 genes between mutants. One way is to use a heat map for visual inspection and 
 cluster the data according to expression similarity as was done for the complete
 sgRNA library before.
 
-```{r, fig.width = 8, fig.height = 1.8}
+```{r, fig.width = 6.5, fig.height = 1.3}
 # filter for significant genes only (same critera Johannes used)
-sig_genes <- df_rnaseq %>% filter(!between(log2FoldChange, -1, 1), padj <= 0.05) %>%
+sig_genes <- df_rnaseq %>% filter(
+    !between(log2FoldChange, -1, 1), padj <= 0.05) %>%
   pull(Name) %>% unique
 
 # prepare matrix for plotting heat map and plot
@@ -632,7 +637,7 @@ sig_genes_mat <- df_rnaseq %>% filter(Name %in% sig_genes) %>%
   # spread to matrix
   select(Name, Condition, log2FoldChange) %>% 
   spread(Condition, log2FoldChange) %>% 
-  select(Name, pmgA, sll1969, slr1340, slr1916, ssl2982) %>%
+  select(Name, sll1969, slr1340, slr1916, ssl2982) %>%
   
   # reorder matrix by simple pre-clustering with hclust
   column_to_rownames("Name") %>% as.matrix %>% replace_na(0) %>%
@@ -652,26 +657,38 @@ print(plot_heatmap)
 ```
 
 The heat map shows that the mode of action seems overall similar for the first 
-four genes, but pmgA has a different if not even inverted expression pattern.
-This could be an outlier as the samples were prepared/sequenced at a different date.
-The overlap in differentially expressed genes for all mutants except `pmgA`
+four genes. But *pmgA* had a different if not even inverted expression pattern and
+was exlcuded from further analysis, also because RNAseq was conducted at a different
+occasion than for the other genes.
+
+The overlap in differentially expressed genes for all mutants except *pmgA*
 can be quantified by correlating log2FC for all significantly regulated genes 
 of each mutant against each other. 
 The result shows that *ssl2982*, *slr1916*, and *slr1340* are well correlated, but 
 *sll1969* and *pmgA* (*sll1968*) are not, not even with themselves.
 
 
-```{r, fig.width = 5, fig.height = 5}
-plot_splom <- df_rnaseq %>% filter(Name %in% sig_genes) %>%
+```{r, fig.width = 6.5, fig.height = 3.25}
+plot_splom <- lapply(c(FALSE, TRUE), function(s) {
+  
+  # filter genes conditionally
+  if (s) {df_rnaseq <- filter(df_rnaseq, Name %in% sig_genes)}
+  
+  df_rnaseq %>% 
   
   # spread log2FC condition-wise
   select(Name, Process, Condition, log2FoldChange) %>% 
   spread(Condition, log2FoldChange) %>%
-  select(pmgA:ssl2982) %>%
+  select(sll1969:ssl2982) %>%
   
-  custom_splom( ~ .)
+  custom_splom( ~ ., 
+    main = ifelse(s, "only significant genes", "all genes")
+  )
+  
+})
 
-print(plot_splom)
+print(plot_splom[[1]], split = c(1,1,2,1), more = TRUE)
+print(plot_splom[[2]], split = c(2,1,2,1))
 ```
 
 ----------
@@ -695,19 +712,21 @@ gridExtra::grid.arrange(ncol = 3,
 )
 ```
 
-Three to four clusters seems to be the consensus optimal number of clusters.
-A number of four clusters were chosen covering the two up and down-regulated clusters
-for pmgA and the other 4 genes.
+Two clusters seems to be the consensus optimal number of clusters.
+This indicates that the mode of action is very similar for those, only the degree
+of regulation (i.e. FC) is different. This could be a consequence of slightly 
+different cultivation conditions, such as growth rate or generation time for the 
+individual sgRNA mutant turbidostats.
 
 ```{r, fig.width = 8, fig.height = 2.5}
 # computing clusters with same method as in heatmap
 # we omit re-scaling the data as we assume it is already scaled by DESeq2
 clusters <- sig_genes_mat %>% dist %>% 
-  hclust(method = "ward.D2") %>% cutree(k = 4)
+  hclust(method = "ward.D2") %>% cutree(k = 2)
 
-    plot_clusters <- fviz_dend(sig_genes_mat %>% dist %>%
-  hclust(method = "ward.D2"), k = 4, main = "",
-  k_colors = custom.lattice()$superpose.symbol$col[1:4],
+plot_clusters <- fviz_dend(sig_genes_mat %>% dist %>%
+  hclust(method = "ward.D2"), k = 2, main = "",
+  k_colors = custom.lattice()$superpose.symbol$col[1:2],
   show_labels = FALSE
 )
 
@@ -738,12 +757,8 @@ sig_genes %>% enrichMKEGG(organism = 'syn', minGSSize = 1,
 sig_genes %>% kegga(species.KEGG = "syn", FDR = 0.05, trend = FALSE) %>%
   arrange(P.DE) %>% filter(P.DE <= 0.1)
 
-# 3. Trying pathway enrichment for specific clusters 1-4
-# alternatively to testing 1 cluster at a time, cluster 1+3 (pmgA-specific)
-# and cluster 2+4 (ssl2982 and slr1916 specific) can be combined
-kegga_result <- clusters %>% plyr::mapvalues(c(3,4), c(1,2)) %>%
-  
-  # turn into df
+# 3. Trying pathway enrichment for specific clusters 1 and 2.
+kegga_result <- clusters %>% 
   enframe(name = "protein", value = "cluster") %>%
   
   plyr::dlply(.variables = 'cluster', function(x)  x$protein) %>%
@@ -756,7 +771,7 @@ print(kegga_result)
 
 ```{r, message = FALSE, fig.width = 6, fig.height = 2.25}
 # plot the resut
-kegga_result %>% select(Pathway, P.1:P.2) %>% rename(pmgA = P.1, other = P.2) %>%
+kegga_result %>% select(Pathway, P.1:P.2) %>% rename(up = P.1, down = P.2) %>%
   
   # turn into matrix
   column_to_rownames("Pathway") %>% as.matrix %>% {t(.)} %>%
@@ -782,12 +797,11 @@ rate would be ribosomal genes, central carbon metabolism enzymes or ATP synthase
 (references).
 
 
-```{r}
+```{r, message = FALSE}
 # We create a new data frame with a selection of all interesting genes from cluster
-# 1-4 to be used for String DB, or simple heatmap plotting
-df_sig_genes <- clusters %>%
+# 1 and 2 to be used for String DB, or simple heatmap plotting
+df_sig_genes <- clusters %>% 
   enframe(name = "locus", value = "cluster") %>%
-  filter(!grepl("SGL|MYO", locus)) %>%
   
   # join cluster data with RNAseq data
   left_join(df_rnaseq %>% 
@@ -795,7 +809,7 @@ df_sig_genes <- clusters %>%
     rename(locus = Name)) %>%
   
   # join with additional annotation
-  left_join(df_ms %>% ungroup %>%
+  left_join(df %>% ungroup %>%
     select(locus, Process, Process.abbr, Gene.names) %>%
     filter(!duplicated(locus))) %>%
   
@@ -807,8 +821,8 @@ write_csv(df_sig_genes, "../processed_data/RNAseq_significant_genes.csv")
 
 ```{r, message = FALSE, include = FALSE, eval = FALSE}
 # extracting a gene lsit for string DB
-df_sig_genes %>% filter(cluster %in% c(2,4), !duplicated(locus)) %>% 
-  select(locus) %>% write_csv("/home/michael/Desktop/string_list.csv")
+df_sig_genes %>% filter(!duplicated(locus)) %>% select(locus) %>%
+  write_csv("/home/michael/Desktop/string_list.csv")
 ```
 
 ---------
@@ -822,7 +836,7 @@ or correlation plot using the `corrplot` package.
 ```{r}
 # select only consensus regulated genes (exclude pmgA, cluster 1+3)
 # and annotated genes
-plot_sig_genes <- lapply(c(2,4), function(clust) {
+plot_sig_genes <- lapply(1:2, function(clust) {
   
   df_sig_genes %>% filter(cluster == clust, !is.na(Pathway)) %>%
   
@@ -856,34 +870,41 @@ The focus here should be on functional groups instead of single genes. Even more
 concise is a simple barchart summary of up and down-regulated gene per group.
 
 ```{r, fig.width = 8, fig.height = 4}
-df_sig_genes %>% 
-  
-  # omit pmgA from data
-  filter(cluster %in% c(2,4), Condition != "pmgA") %>%
-  
-  xyplot(factor(Process.abbr) ~ log2FoldChange | Condition %>% factor(., unique(.)[c(2:5,1)]), .,
-    as.table = TRUE,
-    xlab = "log2 FC", ylab = "Pathway",
+# genes of particular interest
+selected_genes <- df_sig_genes %>% 
+  filter(log2FoldChange >= 2 | log2FoldChange <= -2) %>%
+  pull(Gene.names) %>% unique
+selected_genes <- c(selected_genes, "sll1316", 
+   "sll1796", "slr1291", "slr2007", "slr1732",
+   "ssr2016", "slr0940", "slr1254", "sll1541",
+   "slr0947", "slr0081", "slr2034", "sll0617",
+   "slr0749", "slr0750", "slr0506", "sll1969")
+
+plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, Gene.names) | 
+      factor(Condition), df_sig_genes, as.table = TRUE, 
+    xlab = "log2 FC", ylab = "",
     par.settings = custom.lattice, layout = c(4, 1),
-    scales = list(alternating = FALSE), xlim = c(-4, 4),
+    scales = list(alternating = FALSE), xlim = c(-6, 6),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.abline(v = 0, lwd = 1.5, lty = 2, col = grey(0.5))
       cols = scales::rescale(x, from = c(-3, 3), to = c(1, 20)) %>%
         replace(., . < 1, 1) %>% replace(., .> 20, 20)
       cols = colorRampPalette(c("steelblue", grey(0.7), "darkorange"))(20)[round(cols)]
-      panel.xyplot(x, y, # jitter.data = TRUE, horizontal = TRUE, amount = 0.2
-        pch = 19, cex = 0.6+(0.4*abs(x)), col = cols)
+      panel.xyplot(x, y, pch = 19, cex = 0.6+(0.4*abs(x)), col = cols)
+      sel <- which(names(x) %in% selected_genes & (x >= 1 | x <= -1))
+      panel.xyplot(x[sel], y[sel], cex = 1.2+(0.4*abs(x[sel])), col = grey(0.3))
+      panel.text(x[sel], y[sel], labels = names(x)[sel], cex = 0.6, col = grey(0.3),
+        pos = 3, offset = -2)
     }
   )
+
+print(plot_dots)
 ```
 
 
-```{r}
+```{r, fig.width = 8, fig.height = 4}
 df_sig_genes %>% 
-  
-  # omit pmgA from data
-  filter(cluster %in% c(2,4), Condition != "pmgA") %>%
   
   # summarize number of genes up or down regulated
   group_by(Condition, Process.abbr) %>%
@@ -893,10 +914,10 @@ df_sig_genes %>%
   ) %>%
   
   barchart(factor(Process.abbr) ~ n_upreg_genes + -1*n_downreg_genes | 
-    Condition %>% factor(., unique(.)[c(2:5,1)]), .,
+      factor(Condition), .,
     col = c("darkorange", "steelblue"), border = NA,
-    as.table = TRUE, xlab = "diff. expressed genes (-1 > log2 FC > 1)", ylab = "Pathway",
-    par.settings = custom.lattice, layout = c(4, 1),
+    as.table = TRUE, xlab = "diff. expressed genes (-1 > log2 FC > 1)", ylab = "",
+    par.settings = custom.lattice, layout = c(4, 1), xlim = c(-20, 20),
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -911,13 +932,12 @@ df_sig_genes %>%
 
 This is going to be Figure 4, the summary of the transcriptomics part.
 
-```{r, fig.width = 8, fig.height = 8}
-#print(plot_splom, position = c(0.53,0.45,1.0,0.75), more = TRUE)
-cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.01, 0.57, 0.93, 0.14)
-print(plot_volcanoplot, position = c(0,0.67,1,1), more = TRUE)
-print(plot_heatmap, position = c(0,0.45,1,0.62), more = TRUE)
-print(plot_sig_genes[[1]], position = c(0,0.20,1,0.49), more = TRUE)
-print(plot_sig_genes[[2]], position = c(0,-0.02,1,0.27), more = TRUE)
+```{r, fig.width = 6.5, fig.height = 7.3}
+#cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.011, 0.5, 0.91, 0.15)
+print(plot_volcanoplot, position = c(0,0.64,1,1), more = TRUE)
+print(plot_heatmap, position = c(0.037,0.50,0.987,0.67), more = TRUE)
+print(plot_dots, position = c(0,0,1,0.55), more = TRUE)
+
 ```
 
 ----------
@@ -938,17 +958,12 @@ The genes were clustered into four different groups based on similarity of gene 
 
 
 ```{r, include = FALSE, eval = FALSE}
-svg("../figures/main/Figure4.svg", width = 8, height = 8)
-cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.01, 0.57, 0.93, 0.14)
-print(plot_volcanoplot, position = c(0,0.67,1,1), more = TRUE)
-print(plot_heatmap, position = c(0,0.45,1,0.62), more = TRUE)
-print(plot_sig_genes[[1]], position = c(0,0.20,1,0.49), more = TRUE)
-print(plot_sig_genes[[2]], position = c(0,-0.02,1,0.27), more = TRUE)
+svg("../figures/main/Figure4.svg", width = 6.5, height = 7.3)
+print(plot_volcanoplot, position = c(0,0.64,1,1), more = TRUE)
+print(plot_heatmap, position = c(0.037,0.50,0.987,0.67), more = TRUE)
+print(plot_dots, position = c(0,0,1,0.55), more = TRUE)
 dev.off()
 ```
-
-
-
 
 
 
