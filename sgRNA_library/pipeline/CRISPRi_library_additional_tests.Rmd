@@ -29,6 +29,9 @@ library(latticeExtra)
 library(grid)
 library(tidyverse)
 library(Rtools)
+library(factoextra)
+library(clusterProfiler)
+library(limma)
 ```
 
 
@@ -292,7 +295,7 @@ R's standard non-linear fitting system `nls()` can be used.
 # time in days has has to be converted to time in hours (to match growth rate per hour)
 df_mu <- df %>% ungroup %>% 
   mutate(timepoint = timepoint * 24) %>%
-  select(condition, timepoint, induction, sgRNA, sgRNA_short, locus, 
+  select(condition, timepoint, induction, sgRNA, sgRNA_short, sgRNA_index, locus, 
     FC, average_growth_rate, Process.abbr)
   
 
@@ -323,7 +326,7 @@ df_mu <- df_mu %>% group_by(condition, induction, sgRNA) %>%
   )
   
 # preview
-select(df_mu, -condition, -induction, Process.abbr) %>% head
+df_mu %>% head
 
 # save the data
 write_csv(df_mu, "../processed_data/CRISPRi_library_df_growthrates.csv")
@@ -415,34 +418,34 @@ list_calvin <- c(
 
 # faster growing mutants
 list_faster <- c(
-  "sll1968", "sll1969", "slr1916", "slr1340", "ssl2982",
-  "slr1547"
+  "sll1968", "sll1969", "slr1916", "slr1340", "ssl2982"
 )
 ```
 
 
-```{r, fig.width = 9, fig.height = 4}
+```{r, fig.width = 6.5, fig.height = 4.5}
 # plot fitted model and actual depletion together for subset of sgRNAs
-plot_mutant_mu <- lapply(c("i", "u"), function(ind) {
-  xyplot(log2(FC) + log2(FC_fit) ~ timepoint | sgRNA, 
-    df_mu %>% ungroup %>% filter(locus %in% list_faster, condition == "L300", induction == ind),
-    as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(4, 3),
-    par.settings = custom.lattice, type = "l", lwd = 1.5,
-    main = paste0("Predicted and actual depletion/ \nenrichment of sgRNAs (L300, ", 
-      ifelse(ind == "i", "induced", "uninduced"), ")"),
-    xlab = "time [h]", ylab = "log2 FC", ylim = c(-10, 10),
+plot_mutant_mu <- lapply(c("FC", "FC_fit"), function(var) {
+  xyplot(log2(get(var)) ~ timepoint | sgRNA_short, 
+    df_mu %>% ungroup %>% filter(locus %in% list_faster, condition == "L300"),
+    groups = paste(induction, sgRNA_index), col = rep(c("#00526D", "#CC476B"), each = 2),
+    as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(5, 1),
+    par.settings = custom.lattice, type = "l", lwd = 2,
+    xlab = "time [h]", ylab = "log2 FC", 
+    xlim = c(0, 400), ylim = c(-5, 10),
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.xyplot(x, y, ...)
-      panel.key(c("FC data", "FC model"), corner = c(0.1,0.1), 
+      panel.key(c("induced", "uninduced"), corner = c(0.1,0.05), 
         points = FALSE, lines = TRUE, cex = 0.6)
     }
   )
 })
 
-print(plot_mutant_mu[[1]], position = c(0.5,0,1,1), more = TRUE)
-print(plot_mutant_mu[[2]], position = c(0,0,0.5,1))
+print(plot_mutant_mu[[1]], position = c(0,0.5,1,1), more = TRUE)
+print(plot_mutant_mu[[2]], position = c(0,0,1,0.5))
+
 ```
 
 Comparison of growth rate for the selected genes. Mutant growth rate is
@@ -599,13 +602,18 @@ plot_volcanoplot <- df_rnaseq %>%
     xlab = "log2 FC", ylab = "-log10(p value)",
     par.settings = custom.lattice, layout = c(4, 1),
     cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#00526D"),
-    scales = list(alternating = FALSE),
-    ylim = c(-5, 55), xlim = c(-5, 5),
+    scales = list(alternating = FALSE), 
+    between = list(x = 0.4, y = 0.4),
+    ylim = c(-5, 55), xlim = c(-6, 6),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
+      # trim extremely far outside p-values to -log10(p) = 50 so that they are still
+      # in visible range
+      y <- replace(y, y >= 50, 50)
       panel.xyplot(x, y, ...)
       # select top diff expr genes and plot labels
-      sel <- which(!between(x, -1, 1) & y >= 12)
+      sel <- which(!between(x, -1, 1) & y >= 20 |
+        (names(x) %in% c("sll1969", "slr1340", "slr1916", "ssl2982")[panel.number()]))
       panel.text(x[sel], y[sel]+5, labels = names(x[sel]), cex = 0.6, col = "#00526D")
       panel.key(c("not significant", "significant"), col = c(grey(0.6), "#00526D"),
         pch = 19, corner = c(0.1, 0.9), cex = 0.7)
@@ -704,7 +712,6 @@ methods will suggest as optimal number of clusters when using `kmeans` instead o
 
 
 ```{r, fig.width = 8, fig.height = 2.5}
-library(factoextra)
 gridExtra::grid.arrange(ncol = 3,
   fviz_nbclust(sig_genes_mat, kmeans, method = "wss"),
   fviz_nbclust(sig_genes_mat, kmeans, method = "gap_stat"),
@@ -743,9 +750,6 @@ few pathways are enriched per cluster.
 ```{r, message = FALSE}
 # Gene enrichment methods for the selected gene subset
 # 1. KEGG module enrichment for list of sig reg genes
-library(clusterProfiler)
-library(limma)
-
 sig_genes %>% enrichMKEGG(organism = 'syn', minGSSize = 1,
   pvalueCutoff = 1, qvalueCutoff = 1) %>%
   {.@result %>% filter(Count >= 2)}
@@ -819,12 +823,6 @@ write_csv(df_sig_genes, "../processed_data/RNAseq_significant_genes.csv")
 ```
 
 
-```{r, message = FALSE, include = FALSE, eval = FALSE}
-# extracting a gene lsit for string DB
-df_sig_genes %>% filter(!duplicated(locus)) %>% select(locus) %>%
-  write_csv("/home/michael/Desktop/string_list.csv")
-```
-
 ---------
 
 #### Differential expression of selected genes
@@ -873,14 +871,14 @@ concise is a simple barchart summary of up and down-regulated gene per group.
 # genes of particular interest
 selected_genes <- df_sig_genes %>% 
   filter(log2FoldChange >= 2 | log2FoldChange <= -2) %>%
-  pull(Gene.names) %>% unique
+  pull(locus) %>% unique
 selected_genes <- c(selected_genes, "sll1316", 
-   "sll1796", "slr1291", "slr2007", "slr1732",
+   "sll1796", "slr1291", "slr2007", "sll1732",
    "ssr2016", "slr0940", "slr1254", "sll1541",
    "slr0947", "slr0081", "slr2034", "sll0617",
    "slr0749", "slr0750", "slr0506", "sll1969")
 
-plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, Gene.names) | 
+plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, locus) | 
       factor(Condition), df_sig_genes, as.table = TRUE, 
     xlab = "log2 FC", ylab = "",
     par.settings = custom.lattice, layout = c(4, 1),
@@ -894,7 +892,7 @@ plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, Gene.names) 
       panel.xyplot(x, y, pch = 19, cex = 0.6+(0.4*abs(x)), col = cols)
       sel <- which(names(x) %in% selected_genes & (x >= 1 | x <= -1))
       panel.xyplot(x[sel], y[sel], cex = 1.2+(0.4*abs(x[sel])), col = grey(0.3))
-      panel.text(x[sel], y[sel], labels = names(x)[sel], cex = 0.6, col = grey(0.3),
+      panel.text(x[sel], y[sel], labels = names(sel), cex = 0.6, col = grey(0.3),
         pos = 3, offset = -2)
     }
   )
@@ -932,12 +930,13 @@ df_sig_genes %>%
 
 This is going to be Figure 4, the summary of the transcriptomics part.
 
-```{r, fig.width = 6.5, fig.height = 7.3}
-#cowplot::ggdraw() + cowplot::draw_plot(plot_clusters, 0.011, 0.5, 0.91, 0.15)
-print(plot_volcanoplot, position = c(0,0.64,1,1), more = TRUE)
-print(plot_heatmap, position = c(0.037,0.50,0.987,0.67), more = TRUE)
-print(plot_dots, position = c(0,0,1,0.55), more = TRUE)
-
+```{r, fig.width = 6.5, fig.height = 8.3}
+print(plot_mutant_mu[[1]], position = c(0,0.77,1,1.03), more = TRUE)
+print(plot_volcanoplot, position = c(0,0.56,1,0.84), more = TRUE)
+print(plot_heatmap, position = c(0.037,0.44,0.987,0.59), more = TRUE)
+print(plot_dots, position = c(0,0,1,0.484))
+grid.text(label = c("A", "B", "C", "D"), x = rep(0.03, 4), 
+  y = c(0.98, 0.8, 0.56, 0.44), gp = gpar(cex = 1.3))
 ```
 
 ----------
@@ -947,23 +946,27 @@ The faster growing mutants pmgA (sll1968), sll1969, slr1340, slr1916, and ssl298
 were grown in high light conditions (300 µmol photons m<sup>-2</sup> s<sup>-1</sup>)
 in turbidostat regime identical to the conditions that the complete mutant 
 library was grown before. The transcriptome of the cells was analyzed using RNA-Seq.
-**A.** Volcanoplot of log<sub>2</sub> fold change (log<sub>2</sub> FC) against
+**A.** 
+**B.** Volcanoplot of log<sub>2</sub> fold change (log<sub>2</sub> FC) against
 adjusted p-value for each gene. Grey - non-significantly different genes, blue - 
 significantly different genes (threshold: negative log<sub>10</sub> p-value $\geq$ 2, 
--1 $\geq$ log<sub>2</sub> FC $\geq$ 1).
-**B.** Heat map of all 430 significantly different genes for the five selected mutants.
-The genes were clustered into four different groups based on similarity of gene expression.
-**C.** To be added.
+-1 $\geq$ log<sub>2</sub> FC $\geq$ 1). The p-value for three sgRNA mutants was outside 
+the plotting region and was restricted to -log10(p) = 50.
+**C.** Heat map of all 305 significantly different genes for the four selected mutants.
+The genes were clustered into two different groups based on similarity of gene expression.
 **D.** To be added.
+**E.** To be added.
 
 
 ```{r, include = FALSE, eval = FALSE}
-svg("../figures/main/Figure4.svg", width = 6.5, height = 7.3)
-print(plot_volcanoplot, position = c(0,0.64,1,1), more = TRUE)
-print(plot_heatmap, position = c(0.037,0.50,0.987,0.67), more = TRUE)
-print(plot_dots, position = c(0,0,1,0.55), more = TRUE)
+svg("../figures/main/Figure4_raw.svg", width = 6.5, height = 8.3)
+print(plot_mutant_mu[[1]], position = c(0,0.77,1,1.03), more = TRUE)
+print(plot_volcanoplot, position = c(0,0.56,1,0.84), more = TRUE)
+print(plot_heatmap, position = c(0.037,0.44,0.987,0.59), more = TRUE)
+print(plot_dots, position = c(0,0,1,0.484))
+grid.text(label = c("A", "B", "C", "D"), x = rep(0.03, 4), 
+  y = c(0.98, 0.8, 0.56, 0.44), gp = gpar(cex = 1.3))
 dev.off()
 ```
-
 
 
