@@ -506,7 +506,7 @@ dev.off()
 
 1. Complete original data frame (including ncRNAs) with extra columns for
    mutant growth rate relative growth rate change in %. 
-   This is **Supplemental Data S1**.
+   This is **Supplemental Data S3**.
 
 ```{r, message = FALSE}
 # merge master data frame with predicted growth rates
@@ -534,12 +534,12 @@ df_all <- df_mu %>% ungroup %>%
   select(-FC, -Gene.ontology.IDs, -Process.abbr, -Pathway.abbr)
 
 # and save to disk
-write_csv(df_all, "../processed_data/Supplemental_data_S2.csv")
+write_csv(df_all, "../processed_data/Supplemental_data_S3.csv")
 ```
 
 
 2. Selected genes for photorespiation, Calvin cycle, and increased growth rate.
-   This is **Supplemental Data S4**.
+   This is **Supplemental Data S5**.
 
 ```{r}
 df_all %>% ungroup %>% 
@@ -557,7 +557,7 @@ df_all %>% ungroup %>%
     average_growth_rate, mean_mutant_growth_rate, 
     mutant_growth_rate_percent) %T>% print %>% 
   
-  write_csv("../processed_data/Supplemental_data_S4.csv")
+  write_csv("../processed_data/Supplemental_data_S5.csv")
 ```
 
 ----------
@@ -817,9 +817,9 @@ df_sig_genes <- clusters %>%
     select(locus, Process, Process.abbr, Gene.names) %>%
     filter(!duplicated(locus))) %>%
   
-  arrange(cluster, Process, Condition, log2FoldChange)
+  arrange(cluster, Condition, log2FoldChange)
 
-write_csv(df_sig_genes, "../processed_data/RNAseq_significant_genes.csv")
+write_csv(df_sig_genes, "../processed_data/Supplemental_data_S6.csv")
 ```
 
 
@@ -968,5 +968,4 @@ grid.text(label = c("A", "B", "C", "D"), x = rep(0.03, 4),
   y = c(0.98, 0.8, 0.56, 0.44), gp = gpar(cex = 1.3))
 dev.off()
 ```
-
 
