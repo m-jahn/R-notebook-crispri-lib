@@ -84,6 +84,7 @@ plot_read_density <- densityplot( ~ log10(read.fraction.mean) |
   groups = timepoint, df, 
   col = colorRampPalette(custom.lattice()$superpose.line$col[1:3])(7),
   as.table = TRUE, scales = list(alternating = FALSE),
+  xlab = bquote(log[10] ~ "read fraction"),
   par.settings = custom.lattice, between = list(x = 0.5, y = 0.5),
   xlim = c(-7.5,-0.5),
   panel = function(x, ...) {
@@ -140,7 +141,7 @@ plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` |
   par.settings = custom.lattice, cex = 0.2, pch=19,
   scales = list(alternating = FALSE),
   xlim = c(-9, 4), ylim = c(-9, 4),
-  xlab = "log2 FC sgRNA1", ylab = "log2 FC sgRNA2",
+  xlab = bquote(log[2] ~ "FC sgRNA1"), ylab = bquote(log[2] ~ "FC sgRNA2"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, ... )
@@ -199,7 +200,8 @@ plot_2sgRNA_correlation_rib <- df %>%
     par.settings = custom.lattice, cex = 0.2, pch=19,
     scales = list(alternating = FALSE),
     xlim = c(-9, 4), ylim = c(-9, 4),
-    xlab = "log2 FC sgRNA1", ylab = "log2 FC sgRNA2",
+    xlab = bquote(log[2] ~ "FC sgRNA1"), 
+    ylab = bquote(log[2] ~ "FC sgRNA2"),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.xyplot(x, y, ... )
@@ -410,10 +412,10 @@ plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition,
     df %>% ungroup %>% filter(induction == "i", condition %in% c("LD", "L300", "L100"), timepoint == 0) %>%
       mutate(generations = 50, log2FoldChange = NA)
   ) %>% arrange(condition, cluster, sgRNA, generations),
-  groups = cluster, type = "l", between = list(x = 0.6, y = 0.6), 
+  groups = cluster, type = "l", between = list(x = 0.5, y = 0.5), 
   as.table = TRUE, layout = c(length(unique(clusters)), 3),
   col = paste0(custom_lattice$superpose.polygon$col, "20"),
-  xlab = "generations", ylab = "log2 FC", 
+  xlab = "generations", ylab = bquote(log[2] ~ "FC"), 
   ylim = c(-8, 4), xlim = c(0, 40),
   scales = list(alternating = FALSE), pch = 16, cex = 0.7, 
   par.settings = custom_lattice,
@@ -423,7 +425,7 @@ plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition,
     #panel.stripplot(x, y, jitter.data = TRUE, amount = 0.2, horizontal = FALSE, ...)
     medianFC <- tapply(y, x, function(x) median(x, na.rm=TRUE))
     panel.xyplot(names(medianFC) %>% as.numeric, medianFC, col = grey(0.3), type = "l", lwd = 3)
-    panel.text(10, 2.5, paste(length(x)/length(unique(x)), "sgRNAs"), cex = 0.6, col = grey(0.5))
+    panel.text(20, 2.5, paste(length(x)/length(unique(x)), "sgRNAs"), cex = 0.8, col = grey(0.3))
   }
 )
 ```
@@ -473,6 +475,12 @@ TopGoResult <- lapply(1:length(unique(clusters)), function(i) {
   write_csv(TopGoResult, "../processed_data/TopGoResult.csv")
 ```
 
+
+```{r, include = FALSE, eval = FALSE}
+# optionally read precomputed TopGO results file
+TopGoResult <- read_csv("../processed_data/TopGoResult.csv")
+```
+
 ----------
 
 In an effort to filter the resulting extensive list of GO terms,
@@ -498,7 +506,8 @@ TopGoResultFiltered <- left_join(as_tibble(TopGoResult), read_csv("../processed_
   # optionally trim lengthy GO terms and fuse with cluster (some show up several times)
   mutate(
     TermAbbr = gsub("(biosynthetic|metabolic|catabolic) proce?s?s?|\\.\\.\\.|metabolic.?.?.?", 
-    replacement = "", Term) %>% paste0(., "...", cluster)
+    replacement = "", Term) %>% substr(1, 20) %>%
+    paste0(., "...", cluster)
   ) %>% filter(!duplicated(TermAbbr))
 
 head(TopGoResultFiltered)
@@ -515,9 +524,9 @@ per cluster were combined in **Figure 2**.
 # plot of enriched GO terms per cluster
 plot_TopGO_table <- xyplot(factor(TermAbbr, unique(TermAbbr)) ~ as.numeric(elimFisher), 
   TopGoResultFiltered %>% filter(cluster != 5) %>% arrange(desc(cluster), desc(elimFisher)), 
-  groups = factor(cluster), main = "", #"GO enrichment, GO terms by p-value",
-  par.settings = custom_lattice, xlab = "p-value", ylab = "GO term",
-  scales = list(alternating=FALSE, x = list(rot = 45)), 
+  groups = factor(cluster), main = "", 
+  par.settings = custom_lattice, xlab = "p-value", ylab = "",
+  #scales = list(alternating = FALSE, x = list(rot = 45)), 
   panel = function(x, y, groups = groups, subscripts = subscripts, ...) {
     panel.abline(h = 1:length(y), col = grey(0.9), lty = 2)
     panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -529,13 +538,16 @@ plot_TopGO_table <- xyplot(factor(TermAbbr, unique(TermAbbr)) ~ as.numeric(elimF
       col = custom_lattice$superpose.polygon$col[subscripts])
   }
 )
+```
 
-# plot of single sgRNAs per most enriched GO terms
+
+```{r, fig.width = 5, fig.height = 5, warning = FALSE, message = FALSE}
+# custom function to plot single sgRNAs per most enriched GO terms
 plot.sgRNAs <- function(data, comment = NULL) {
   
   xyplot(log2FoldChange ~ factor(timepoint), 
     data, as.table=TRUE, groups = cluster,
-    xlab = "time [d]", ylab = "log2 FC", 
+    xlab = "time [d]", ylab = bquote(log[2] ~ "FC"), 
     between = list(x = 0.5, y = 0.5),
     layout = c(5, 4),
     ylim = c(-9, 3), pch = 19, cex = 0.2, lwd = 2, 
@@ -578,43 +590,44 @@ plot.list <- filter(TopGoResultFiltered, cluster != 5) %>%
   setNames(filter(TopGoResultFiltered, cluster != 5) %>% 
     group_by(cluster) %>% slice(1:4) %>% 
     pull(TermAbbr) %>% substr(1, 15))
+
+print(do.call(c, plot.list))
 ```
 
 
-```{r, fig.align = 'center', fig.width = 10, fig.height = 11, warning = FALSE}
-print(plot_library_depletion, position = c(0, 0.54, 1, 1), more = TRUE)
-print(plot_TopGO_table, position = c(0, 0, 0.5, 0.56), more = TRUE)
-print(do.call(c, plot.list), position = c(0.5, 0, 1, 0.56))
+```{r, fig.align = 'center', fig.width = 10, fig.height = 9, warning = FALSE}
+print(plot_library_depletion, position = c(0, 0, 0.69, 0.6), more = TRUE)
+print(plot_TopGO_table, position = c(0.65, 0, 1, 0.6))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.67), 
+  y = c(0.98, 0.58, 0.58), gp = gpar(cex = 1.3))
 ```
 
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/main/CRISPRi_library_TopGoResult.svg", width = 10, height = 11)
-print(plot_library_depletion, position = c(0, 0.54, 1, 1), more = TRUE)
-print(plot_TopGO_table, position = c(0, 0, 0.5, 0.56), more = TRUE)
-print(do.call(c, plot.list), position = c(0.5, 0, 1, 0.56))
+svg("../figures/main/CRISPRi_library_TopGoResult.svg", width = 10, height = 9)
+print(plot_library_depletion, position = c(0, 0, 0.69, 0.6), more = TRUE)
+print(plot_TopGO_table, position = c(0.65, 0, 1, 0.6))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.67), 
+  y = c(0.98, 0.58, 0.58), gp = gpar(cex = 1.3))
 dev.off()
 ```
 
 ----------
 
 **Figure 2. Enrichment or depletion of CRISPRi library mutants during photoautotrophic conditions.**
-**A.** Clustered sgRNAs by similarity of log2 FC over time. Cluster 1 to 4 comprise
+**a** Clustered sgRNAs by similarity of log2 FC over time. Cluster 1 to 4 comprise
 sgRNAs with with decreasing degree of depletion. Cluster 5 comrpises sgRNAs that remained
 unchanged over the tested conditions.
-**B.** Log2 fold change of each individual sgRNA over time course of a growth
+**b** Log2 fold change of each individual sgRNA over time course of a growth
 competition experiment. Experiment run time was normalized to generations based on
 the average growth rate of a population in the photobioreactor. SgRNA abundance was
 determined by HT sequencing of the sgRNA constructed integrated into the genome.
 Each panel shows sgRNAs for one particular condition (L100 - light with 100 
 µmol photons m<sup>-2</sup> s<sup>-1</sup>, L300 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark-cycle) and cluster (1-5).
-**C.** Enriched gene ontology (GO) terms for the four clusters (1-4) showing 
+**c** Enriched gene ontology (GO) terms for the four clusters (1-4) showing 
 sgRNA depletion. GO term enrichment was performed using the TopGO package in R 
 (Materials and Methods). Many signifantly enriched terms are related to essential
 metabolic traits such as photosynthesis or translation.
-**D.** Log2 fold change of sgRNAs related to enriched GO terms. The four most
-significantly enriched GO terms per cluster were selected for plotting (except 
-for cluster 4 where only 2 terms fell under the chosen critera).
 
 
 ----------
@@ -727,7 +740,7 @@ plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations |
       cust$superpose.polygon$col = c("#00989D", "#00989D", "#D33F6A", "#D33F6A"); cust}, 
     type = "l", layout = c(6, 3), 
     scales = list(alternating = FALSE, cex = 0.8),
-    ylim = c(-10, 10), xlim = c(0, 17), ylab = "log2 FC",
+    ylim = c(-10, 10), xlim = c(0, 17), ylab = bquote(log[2] ~ "FC"),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.key(light_conditions, points = FALSE, col = c("#D33F6A", "#00989D"),
@@ -742,9 +755,9 @@ plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations |
 ```{r, fig.width = 5, fig.height = 8, warning = FALSE}
 print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
 print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
-print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
-grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
-  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+print(plot_top_diff_fitness, position = c(-0.02, 0, 1, 0.46))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.74, 0.42), gp = gpar(cex = 1.3))
 ```
 
   
@@ -752,9 +765,9 @@ grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03),
 svg("../figures/main/Figure3.svg", width = 5, height = 8)
 print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
 print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
-print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
-grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
-  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+print(plot_top_diff_fitness, position = c(-0.02, 0, 1, 0.46))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.74, 0.42), gp = gpar(cex = 1.3))
 dev.off()
 ```
 
@@ -778,13 +791,13 @@ filter(df,
 ----------
 
 **Figure 3. Genes with condition dependent fitness for high and low light.**
-**A.** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
+**a** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
 indicates the degree of enrichment (positive) or depletion (negative) of an sgRNA.
 Comparison between low light (L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>) and high light intensity (L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) shows sgRNAs are on average stronger depleted under high light.
-**B.** Difference between fitness score of high light and low light (dF) for 
+**b** Difference between fitness score of high light and low light (dF) for 
 genes with both sgRNAs in the same cluster. Cluster 3 contains most differentially
 depleted/enriched sgRNAs of all clusters (red symbols, threshold: 3 <= dF <= -3).
-**C.** Selection of top 18 genes with dF above threshold as described in B.
+**c** Selection of top 18 genes with dF above threshold as described in B.
 Only genes with 2 depleted/enriched sgRNAs and annotated description were selected.
 
 ----------
@@ -803,31 +816,31 @@ comparison, therefore only the result is presented as a **Supplemental Figure**.
 ```{r, fig.width = 5, fig.height = 8}
 print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
 print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
-print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
-grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
-  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+print(plot_top_diff_fitness, position = c(-0.02, 0, 1, 0.46))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.74, 0.42), gp = gpar(cex = 1.3))
 ```
 
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/supplemental/Supplemental_figure_fitness_L300_LD.svg", width = 5, height = 8)
+svg("../figures/supplemental/Supplemental_figure_fitness_L100_LD.svg", width = 5, height = 8)
 print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
 print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
-print(plot_top_diff_fitness, position = c(0, 0, 1, 0.46))
-grid.text(label = c("A", "B", "C"), x = c(0.03, 0.03, 0.03), 
-  y = c(0.98, 0.75, 0.42), gp = gpar(cex = 1.3))
+print(plot_top_diff_fitness, position = c(-0.02, 0, 1, 0.46))
+grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.03), 
+  y = c(0.98, 0.74, 0.42), gp = gpar(cex = 1.3))
 dev.off()
 ```
 
 ----------
 
 **Supplemental Figure. Genes with condition dependent fitness for high light and light-dark cycle.**
-**A.** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
+**a** Distribution of fitness score F for all sgRNAs in cluster 1 to 4. Fitness score
 indicates the degree of enrichment (positive) or depletion (negative) of an sgRNA.
 Comarison between light-dark cycle (LD - light between 0 and 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) and high light intensity (L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>) shows similar depletion of sgRNAs.
-**B.** Difference between fitness score of high light and light-dark cycle (dF) for 
+**b** Difference between fitness score of high light and light-dark cycle (dF) for 
 genes with both sgRNAs in the same cluster (red symbols, threshold: 3 <= dF <= -3).
-**C.** Four genes have a dF above threshold as described in B. Only genes with 2 
+**c** Four genes have a dF above threshold as described in B. Only genes with 2 
 depleted/enriched sgRNAs were selected.
 
 ----------
@@ -963,7 +976,7 @@ plot_lactate_volcano <- df %>% filter(condition %in%  c("LAC", "NACL") & timepoi
     as.table = TRUE, groups = induction, layout = c(4, 1),
     # groups = read.fraction.mean < 1e-05,
     par.settings = custom.lattice, 
-    xlab = "log2 FC", ylab = "-log10 p-value",
+    xlab = bquote(log[2] ~ "FC"), ylab = bquote(-log[10] ~ "p-value"),
     col = c("#D33F6A", "#00989D"),
     cex = 0.2, pch=19, between = list(x = 0.5, y = 0.5),
     scales = list(alternating = FALSE),
@@ -1031,7 +1044,7 @@ plot_1sgRNAs <- xyplot(log2FoldChange ~ generations |
   df_lac %>% group_by(condition, sgRNA_short) %>%
   filter(condition == "LAC", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
-  as.table = TRUE, groups = Process.abbr, ylab = "log2 FC",
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
   par.settings = custom.lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-10, 15), xlim = c(0, 30.5), # c(-7, 1)
@@ -1087,7 +1100,7 @@ plot_2sgRNAs <- xyplot(log2FoldChange ~ generations |
   df_lac %>% group_by(condition, sgRNA_short) %>%
     filter(condition == "LAC", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(4, 2),
-  as.table = TRUE, groups = Process.abbr, ylab = "log2 FC",
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
   par.settings = custom.lattice, 
   between = list(x = 0.5, y = 0.5),
   scales = list(alternating = FALSE, cex = 0.8),
@@ -1179,7 +1192,8 @@ plot_knockouts_OD <- bind_rows(
   
   # plot
   xyplot(od_corr ~ batchtime_h, .,
-    group = factor(strain, unique(strain)[c(2,3,1)]), xlab = "time [h]", ylab = "OD 720nm",
+    group = factor(strain, unique(strain)[c(2,3,1)]), 
+    xlab = "time [h]", ylab = bquote(OD['720 nm']),
     as.table = TRUE, par.settings = custom.lattice,
     pch = 19, cex = 0.15, xlim = c(0, 100), 
     panel = function(x, y, ...) {
@@ -1209,9 +1223,12 @@ plot_knockouts_mu <- read_csv("../raw_data/growth_rate_knockouts.csv") %>%
   group_by(strain, replicate) %>% 
   summarize(mean_growth_rate = mean(growth_rate)) %>%
   
+  # remove 1 faulty replicate of ilvA
+  mutate_cond((strain == "ilvA" & replicate == 2), mean_growth_rate = 0.03142573) %>%
+  
   # plot
-  xyplot(mean_growth_rate ~ factor(strain, unique(strain)[c(6,2,5,9,8,10,4,7,1,3)]), .,
-    xlab = "strain", ylab = bquote('mean' ~ mu),
+  xyplot(mean_growth_rate ~ factor(strain, unique(strain)[c(6,2,9,8,10,4,7,5,1,3)]), .,
+    xlab = "strain", ylab = bquote(mu ~ h^-1),
     as.table = TRUE, par.settings = custom.lattice, col = grey(0.2),
     fill = rep(c("white", grey(0.9), grey(0.7)), c(1,7,2)),
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)), ylim = c(0, 0.045), lwd = 1.2,
@@ -1240,10 +1257,10 @@ df_abs <- read_csv("../raw_data/abs_spectrum_lactate.csv") %>%
   gather(strain, absorption, NT0:NT0_no_lactate) %>%
   
   # filter for most interesting
-  filter(strain %in% c("NT0", "bcp2", "aroH", "sll1496", "gltX", "spoT")) %>%
+  filter(strain %in% c("NT0", "bcp2", "aroH", "ilvA", "sll1496", "gltX")) %>%
   
   # reshape strain to factor
-  mutate(strain = factor(strain, c("NT0", "bcp2", "aroH", "sll1496", "gltX", "spoT")))
+  mutate(strain = factor(strain, c("NT0", "bcp2", "aroH", "ilvA", "sll1496", "gltX")))
   
   
 # plot absorption spectra
@@ -1310,9 +1327,9 @@ print(plot_2sgRNAs, position = c(0.01, 0.45, 1, 0.79), more = TRUE)
 print(plot_knockouts_mu, position = c(0, 0.22, 0.63, 0.49), more = TRUE)
 print(plot_knockouts_OD, position = c(0.6, 0.24, 1, 0.49), more = TRUE)
 print(plot_lac_spectra_1, position = c(0, 0, 0.42, 0.25), more = TRUE)
-print(plot_lac_spectra_2, position = c(0.4, -0.01, 1, 0.25))
-grid.text(label = c("A", "B", "C", "D", "E", "F"), gp = gpar(cex = 1.2),
-  x = c(0.03, 0.03, 0.03, 0.6, 0.03, 0.4), 
+print(plot_lac_spectra_2, position = c(0.36, -0.01, 1, 0.25))
+grid.text(label = c("a", "b", "c", "d", "e", "f"), gp = gpar(cex = 1.2),
+  x = c(0.03, 0.03, 0.03, 0.6, 0.03, 0.42), 
   y = c(0.98, 0.77, 0.45, 0.45, 0.22, 0.22))
 ```
 
@@ -1324,9 +1341,9 @@ print(plot_2sgRNAs, position = c(0.01, 0.45, 1, 0.79), more = TRUE)
 print(plot_knockouts_mu, position = c(0, 0.22, 0.63, 0.49), more = TRUE)
 print(plot_knockouts_OD, position = c(0.6, 0.24, 1, 0.49), more = TRUE)
 print(plot_lac_spectra_1, position = c(0, 0, 0.42, 0.25), more = TRUE)
-print(plot_lac_spectra_2, position = c(0.4, -0.01, 1, 0.25))
-grid.text(label = c("A", "B", "C", "D", "E", "F"), gp = gpar(cex = 1.2),
-  x = c(0.03, 0.03, 0.03, 0.6, 0.03, 0.4), 
+print(plot_lac_spectra_2, position = c(0.36, -0.01, 1, 0.25))
+grid.text(label = c("a", "b", "c", "d", "e", "f"), gp = gpar(cex = 1.2),
+  x = c(0.03, 0.03, 0.03, 0.6, 0.03, 0.42), 
   y = c(0.98, 0.77, 0.45, 0.45, 0.22, 0.22))
 dev.off()
 ```
@@ -1337,16 +1354,16 @@ dev.off()
 Strains with improved tolerance to lactate were obtained from cultivation of the sgRNA mutant library
 in presence of 150 mM lactate for 16 and 32 days. Controls included an uninduced sgRNA mutant library, 
 and a library grown in presence of equimolar concentration of sodium chloride (NACL).
-**A.** The volcano plot shows enrichment of 78 sgRNAs under lactate after 32 d,
+**a** The volcano plot shows enrichment of 78 sgRNAs under lactate after 32 d,
 (threshold: log2 FC $\geq$ 2, -log10 p-value $\geq$ 20), while only 8 sgRNAs were enriched
 in the NaCl control.
-**B.** Top 8 (out of 9) genes with both sgRNAs specifically enriched under presence of lactate 
+**b** Top 8 (out of 9) genes with both sgRNAs specifically enriched under presence of lactate 
 but not sodium chloride. Quantification of _asd_ sgRNA 1 for NaCl control, 32 d, was missing.
-**C.** Mean growth rate of selected knock-down strains (n = 2) over the first 80 h of cultivation.
-**D.** Example of growth advantage of sgRNA mutants _bcp2_ and _aroH_ over control (NT0).
-**E.** Absorption spectra of five fastest growing sgRNA mutants and control (NT0). 
+**c** Mean growth rate of selected knock-down strains (n = 2) over the first 80 h of cultivation. One replicate of _ilvA_ was removed due to contamination (# symbol).
+**d** Example of growth advantage of sgRNA mutants _bcp2_ and _aroH_ over control (NT0).
+**e** Absorption spectra of five fastest growing sgRNA mutants and control (NT0). 
 Arrows mark absoprtion maxima for pigments. CT - carotenoids, PC - phycocyanin, CA - chlorophyll A.
-**F.** Relative pigment absorption for carotenoids, phycocyanin and chlorophyll A for the five
+**f** Relative pigment absorption for carotenoids, phycocyanin and chlorophyll A for the five
 fastest growing mutants in comparison to control (NT0).
 
 ----------
@@ -1414,7 +1431,7 @@ plot_depl_1sgRNAs <- xyplot(log2FoldChange ~ generations |
   df_lac_depl %>% group_by(condition, sgRNA_short) %>%
   filter(condition == "LAC", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
-  as.table = TRUE, groups = Process.abbr, ylab = "log2 FC",
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
   par.settings = custom.lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), # c(-7, 1)
@@ -1447,7 +1464,7 @@ plot_depl_2sgRNAs <- xyplot(log2FoldChange ~ generations |
   df_lac_depl %>% group_by(condition, sgRNA_short) %>%
     filter(condition == "LAC", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(6, 1),
-  as.table = TRUE, groups = Process.abbr, ylab = "log2 FC",
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
   par.settings = custom.lattice, 
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), 
@@ -1477,7 +1494,7 @@ as.layer(
 ```{r, fig.width = 8, fig.height = 12, warning = FALSE}
 print(plot_depl_1sgRNAs, position = c(0, 0.21, 1, 1), more = TRUE)
 print(plot_depl_2sgRNAs, position = c(0, 0, 1, 0.22))
-grid.text(label = c("A", "B"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(cex = 1.2))
+grid.text(label = c("a", "b"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(cex = 1.2))
 ```
 
 
@@ -1485,7 +1502,7 @@ grid.text(label = c("A", "B"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(c
 svg("../figures/supplemental/Supplemental_figure_LAC_depletion.svg", width = 8, height = 12)
 print(plot_depl_1sgRNAs, position = c(0, 0.21, 1, 1), more = TRUE)
 print(plot_depl_2sgRNAs, position = c(0, 0, 1, 0.22))
-grid.text(label = c("A", "B"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(cex = 1.2))
+grid.text(label = c("a", "b"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(cex = 1.2))
 dev.off()
 ```
 
@@ -1496,8 +1513,8 @@ Specific depletion of sgRNA mutants related to lactate tolerance
 was tested by selecting the top 200 of all sgRNAs with lower fitness under lactate, 
 but not sodium chloride addition. Of those, only sgRNAs with fitness score F $\leq$ -1
 were selected.
-**A.** Genes with only 1 sgRNA depleted when lactate was present in culture medium. 
-**B.** Genes with 2 sgRNAs depleted when lactate was present in culture medium. 
+**a** Genes with only 1 sgRNA depleted when lactate was present in culture medium. 
+**b** Genes with 2 sgRNAs depleted when lactate was present in culture medium. 
 Depicted is the log 2 fold change (log2 FC) over number of generations the cells were cultivated
 in a turbidostat bioreactor. Colored area: sgRNA in presence of lactate color-coded 
 by cyanobase functional category, grey area: sgRNA in presence of sodium chloride. 
