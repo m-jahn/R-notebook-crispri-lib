@@ -992,3 +992,75 @@ grid.text(label = c("a", "b", "c", "d"), x = rep(0.03, 4),
 dev.off()
 ```
 
+
+## Droplet sorting of lactate over-producing strains
+
+The sgRNA mutant library was grown in presence of inducer, encapsulated in 
+microfluidic droplets and injected with a fluorecent reagent to monitor
+lactate production over time. Highly fluorescent droplets were then sorted
+and recovered, the sgRNA amplified by PCR and sequenced by NGS. The following
+plot shows lactate production over time by selected over-producing sgRNA mutants.
+
+
+```{r, message = FALSE, error = FALSE}
+# original data was re-organized to long format
+df_lac_prod <- read_csv("../raw_data/lactate_measurement_mutants.csv")
+
+# add µmol/L*OD720 and per gDCW (using 0.4 gDCW/OD720)
+df_lac_prod <- df_lac_prod %>%
+  
+  mutate(
+    lactate_µmol_L_OD = lactate_µmol_L / OD_720,
+    lactate_µmol_L_gDCW = lactate_µmol_L_OD * 0.4
+  ) %>%
+  
+  # turn strain into factor for re-ordering
+  mutate(strain = factor(strain, unique(strain)[c(9,1,2:5,7,6,8)]))
+
+# preview data
+df_lac_prod
+```
+
+```{r, fig.width = 3.5, fig.height = 3}
+# dot plot
+plot_lac_prod1 <- xyplot(lactate_µmol_L_OD ~ factor(time_h), df_lac_prod,
+  groups = strain, as.table = TRUE,
+  col = colorspace::rainbow_hcl(9, l = 50),
+  xlab = "time [h]",
+  ylab = bquote(µmol ~ L^-1 ~ OD720^-1),
+  par.settings = custom.lattice, type = "b", pch = 19,
+  scales = list(alternating = FALSE),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.superpose(x, y, ...)
+    panel.key(levels(df_lac_prod$strain), 
+      col = colorspace::rainbow_hcl(9, l = 50), points = FALSE)
+  },
+  panel.groups = function(x, y, ...) {
+    panel.errbars(x, y, ewidth = 0, ...)
+  }
+)
+
+print(plot_lac_prod1)
+```
+
+
+```{r, fig.width = 4.5, fig.height = 3}
+# bar plot
+plot_lac_prod2 <- xyplot(lactate_µmol_L_OD ~ factor(strain) | paste(time_h, "h"),
+  filter(df_lac_prod, time_h != 0),
+  as.table = TRUE, ylim = c(0, 2700),
+  xlab = "strain", 
+  ylab = bquote(µmol ~ L^-1 ~ OD720^-1),
+  par.settings = custom.lattice, col = 1,
+  scales = list(alternating = FALSE, x = list(rot = 35, cex = 0.7)),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.barplot(x, y, ewidth = 0.3, ...)
+    panel.pvalue(x, y, symbol = TRUE, cex_symbol = 1.6, offset = 0.2)
+  }
+)
+
+print(plot_lac_prod2)
+```
+
