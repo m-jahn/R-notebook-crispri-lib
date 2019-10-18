@@ -1,6 +1,8 @@
 ---
 title: "CRISPRi library additional tests"
-output: html_notebook
+output:
+  html_notebook:
+    toc: yes
 ---
 
 
@@ -290,15 +292,15 @@ R's standard non-linear fitting system `nls()` can be used.
 
 #### Implementation
 
+We prepare a reduced data frame with time in days being converted to time in 
+hours (to match growth rate per hour).
+
 ```{r}
-# prepare reduced data frame
-# time in days has has to be converted to time in hours (to match growth rate per hour)
 df_mu <- df %>% ungroup %>% 
   mutate(timepoint = timepoint * 24) %>%
   select(condition, timepoint, induction, sgRNA, sgRNA_short, sgRNA_index, locus, 
     FC, average_growth_rate, Process.abbr)
   
-
 # use a wrapper function for nls() that we can apply on whole data frame
 fit_mu <- function(time, pop_mu, FC) {
   # wrap function in a tryCatch statement to handle max iteration errors
@@ -330,6 +332,7 @@ df_mu %>% head
 
 # save the data
 write_csv(df_mu, "../processed_data/CRISPRi_library_df_growthrates.csv")
+
 ```
 
 
