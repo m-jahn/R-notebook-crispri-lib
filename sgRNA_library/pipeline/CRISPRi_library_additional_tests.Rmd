@@ -233,7 +233,7 @@ print(plot_fitness_ANOVA_pw)
 svg("../figures/supplemental/Supplemental_figure_prot_regulation_light.svg", width = 5, height = 7)
 print(plot_fitness_ANOVA_bw, position = c(0, 0.48, 1, 1.04), more = TRUE)
 print(plot_fitness_ANOVA_pw, position = c(0, 0, 1, 0.53))
-grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03), y = c(0.98, 0.5), gp = gpar(cex = 1.3))
+grid.text(label = c("a", "b"), x = c(0.03, 0.03), y = c(0.98, 0.5), gp = gpar(cex = 1.3))
 dev.off()
 ```
 
@@ -716,11 +716,8 @@ df_rnaseq %>%
   group_by(Name) %>% 
   summarize(
     hits = Condition[which(Significance == "Yes")] %>% stringr::str_flatten(collapse = ", ")
-  ) %>% pull %>% table %>% sort(decreasing = TRUE)
+  ) %>% pull %>% table %>% sort(decreasing = TRUE) %>% enframe
 ```
-
-
-
 
 ----------
 
@@ -842,7 +839,7 @@ df_sig_genes <- clusters %>%
   
   arrange(cluster, Condition, log2FoldChange)
 
-write_csv(df_sig_genes, "../processed_data/Supplemental_data_S6.csv")
+#write_csv(df_sig_genes, "../processed_data/Supplemental_data_S6.csv")
 ```
 
 
@@ -850,7 +847,35 @@ write_csv(df_sig_genes, "../processed_data/Supplemental_data_S6.csv")
 
 #### Differential expression of selected genes
 
-Here the purpose is simply to plot the most interesting genes as heatmap
+First we can make a table of the genes that are down-regulated in several 
+conditions, in the same direction. This requires to omit the p-value criterium
+for now, as many genes might have the same direction of regulation 
+(as shown in heat map) but are not significant as the fold change is too little.
+
+```{r}
+df_sig_genes_filtered <- df_sig_genes %>%
+  
+  # summarize number of conditions (mutants) where gene appears to be regulated
+  group_by(locus) %>%
+  summarize(
+    up_reg = sum(log2FoldChange >= log2(1.5)),
+    down_reg = sum(log2FoldChange <= log2(1/1.5)),
+    mean_log2_FC = mean(log2FoldChange),
+    Gene.names = Gene.names[1] %>% gsub("s[sl][rl][0-9]{4}", "", .),
+    Protein = Protein[1] %>% substr(1, 50)
+  ) %>%
+  
+  # sort by number of down-regulated samples
+  filter(up_reg >= 3 | down_reg >= 3) %>%
+  arrange(desc(up_reg), desc(down_reg), desc(mean_log2_FC))
+
+df_sig_genes_filtered
+#   write_csv(df_sig_genes_filtered, "~/Desktop/reg_genes_FC1_5.csv")
+```
+
+----------
+
+Next, we simply plot the most interesting genes as heatmap
 or correlation plot using the `corrplot` package. 
 
 
@@ -1007,7 +1032,10 @@ plot shows lactate production over time by selected over-producing sgRNA mutants
 
 ```{r, message = FALSE, error = FALSE}
 # original data was re-organized to long format
-df_lac_prod <- read_csv("../raw_data/lactate_measurement_mutants.csv")
+df_lac_prod <- bind_rows(.id = "setup",
+  read_csv("../raw_data/lactate_measurement_mutants.csv"),
+  read_csv("../raw_data/lactate_measurement_mutants_2.csv")
+)
 
 # add µmol/L*OD720 and per gDCW (using 0.4 gDCW/OD720)
 df_lac_prod <- df_lac_prod %>%
@@ -1017,53 +1045,104 @@ df_lac_prod <- df_lac_prod %>%
     lactate_µmol_L_gDCW = lactate_µmol_L_OD * 0.4
   ) %>%
   
-  # turn strain into factor for re-ordering
-  mutate(strain = factor(strain, unique(strain)[c(9,1,2:5,7,6,8)]))
-
+  mutate(setup = recode(setup, 
+    `1` = "shake flask", 
+    `2` = "photonfluxostat"))
+  
 # preview data
 df_lac_prod
 ```
 
-```{r, fig.width = 3.5, fig.height = 3}
-# dot plot
-plot_lac_prod1 <- xyplot(lactate_µmol_L_OD ~ factor(time_h), df_lac_prod,
-  groups = strain, as.table = TRUE,
-  col = colorspace::rainbow_hcl(9, l = 50),
-  xlab = "time [h]",
-  ylab = bquote(µmol ~ L^-1 ~ OD720^-1),
-  par.settings = custom.lattice, type = "b", pch = 19,
-  scales = list(alternating = FALSE),
-  panel = function(x, y, ...) {
-    panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.superpose(x, y, ...)
-    panel.key(levels(df_lac_prod$strain), 
-      col = colorspace::rainbow_hcl(9, l = 50), points = FALSE)
-  },
-  panel.groups = function(x, y, ...) {
-    panel.errbars(x, y, ewidth = 0, ...)
-  }
+
+```{r, fig.width = 5.5, fig.height = 5.5}
+# list of combinations
+combinations <- list(
+  unit = rep(c("lactate_µmol_L", "lactate_µmol_L_OD"), 2),
+  setup = rep(c("shake flask", "photonfluxostat"), each = 2)
 )
 
-print(plot_lac_prod1)
+# dot plot
+plot_lac_prod <- lapply(1:4, function(i) {
+  
+  # color depending on number of strains
+  df <- filter(df_lac_prod, setup == combinations$setup[i])
+  col = colorspace::rainbow_hcl(8,  start = 30, l = 50, c = 60)
+  if (i %in% c(1,2)) {
+    col = c(col, grey(0.5))
+  } else {
+    col = c(col[c(5,1,8)], grey(0.5))
+  }
+  
+  xyplot(get(combinations$unit[i]) ~ factor(time_h), df,
+    groups = factor(strain, unique(strain)), as.table = TRUE,
+    col = col,
+    xlab = ifelse(i %in% c(3, 4), "time [h]", ""), 
+    ylab = ifelse(i %in% c(1, 3), "µmol L-1", "µmol L-1 OD720-1"),
+    par.settings = custom.lattice, type = "b", pch = 19,
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.superpose(x, y, ...)
+      if (i %in% c(1, 3)) {
+        panel.key(unique(df$strain), col = col, points = FALSE, cex = 0.7)
+      }
+    },
+    panel.groups = function(x, y, ...) {
+      panel.errbars(x, y, ewidth = 0, ...)
+    }
+  )
+})
+
+print(plot_lac_prod[[1]], position = c(0,0.49,0.53,1), more = TRUE)
+print(plot_lac_prod[[2]], position = c(0.47,0.49,1,1), more = TRUE)
+print(plot_lac_prod[[3]], position = c(0.015,0,0.53,0.53), more = TRUE)
+print(plot_lac_prod[[4]], position = c(0.47,0,1,0.53))
+grid.text(label = c("shake flask", "'photonfluxostat'"), x = c(0.5, 0.5),
+  y = c(0.97, 0.5), gp = gpar(cex = 1))
+grid.text(label = c("a", "b"), x = c(0.03, 0.03), 
+  y = c(0.97, 0.5), gp = gpar(cex = 1.3))
+```
+
+----------
+
+**Figure 6. Strains with increased lactate production.**
+Strains with potentially increased lactate productivity were discovered
+using a fluorescence activated droplet sorting assay. Selected mutants were 
+re-constructed, cultivated, and product titer determined in µmol per Liter, and 
+µmol per Liter per biomass (OD720).
+**a** Top eight enriched mutants cultivated in axenic shake flask cultures. 
+Lactate concentration was measured after 24 and 48 hours. 
+NT0 - control with sgRNA targeting neutral region.
+**b** A subset of three mutants (excluding the known over-producer _gltA_) was cultivated 
+in axenic 'photonfluxostat' cultures (light intensity proportional to cell density).
+Lactate concentration was measured after 18 and 30 hours. 
+
+----------
+
+```{r, eval = FALSE, include = FALSE}
+# export potential Figure 6
+svg("../figures/main/Figure6.svg", width = 5.5, height = 5.5)
+print(plot_lac_prod[[1]], position = c(0,0.49,0.53,1), more = TRUE)
+print(plot_lac_prod[[2]], position = c(0.47,0.49,1,1), more = TRUE)
+print(plot_lac_prod[[3]], position = c(0.015,0,0.53,0.53), more = TRUE)
+print(plot_lac_prod[[4]], position = c(0.47,0,1,0.53))
+grid.text(label = c("shake flask", "'photonfluxostat'"), x = c(0.5, 0.5),
+  y = c(0.97, 0.5), gp = gpar(cex = 1))
+grid.text(label = c("a", "b"), x = c(0.03, 0.03), 
+  y = c(0.97, 0.5), gp = gpar(cex = 1.3))
+dev.off()
 ```
 
 
-```{r, fig.width = 4.5, fig.height = 3}
-# bar plot
-plot_lac_prod2 <- xyplot(lactate_µmol_L_OD ~ factor(strain) | paste(time_h, "h"),
-  filter(df_lac_prod, time_h != 0),
-  as.table = TRUE, ylim = c(0, 2700),
-  xlab = "strain", 
-  ylab = bquote(µmol ~ L^-1 ~ OD720^-1),
-  par.settings = custom.lattice, col = 1,
-  scales = list(alternating = FALSE, x = list(rot = 35, cex = 0.7)),
-  panel = function(x, y, ...) {
-    panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.barplot(x, y, ewidth = 0.3, ...)
-    panel.pvalue(x, y, symbol = TRUE, cex_symbol = 1.6, offset = 0.2)
-  }
-)
+We can also have a look at relative increase in % productivity compared to NT0
+control.
 
-print(plot_lac_prod2)
+
+```{r}
+df_lac_prod %>% filter(time_h != 0) %>%
+  
+  group_by(setup, time_h, strain) %>%
+  summarize(mean_lac = mean(lactate_µmol_L_OD)) %>%
+  mutate(mean_lac_percent = mean_lac/mean_lac[1])
 ```
 
