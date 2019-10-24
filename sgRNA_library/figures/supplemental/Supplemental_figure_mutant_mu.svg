@@ -13,8 +13,11 @@
    viewBox="0 0 390 412.5"
    version="1.1"
    id="svg2447"
-   sodipodi:docname="MUplot.svg"
-   inkscape:version="0.92.3 (2405546, 2018-03-11)">
+   sodipodi:docname="Supplemental_figure_mutant_mu.svg"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   inkscape:export-filename="/home/michael/Documents/SciLifeLab/Resources/R_projects/R-notebooks/sgRNA_library/figures/supplemental/Supplemental_figure_mutant_mu.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300">
   <metadata
      id="metadata2451">
     <rdf:RDF>
@@ -23,7 +26,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -45,9 +48,9 @@
      fit-margin-right="0"
      fit-margin-bottom="0"
      units="px"
-     inkscape:zoom="2.5799696"
-     inkscape:cx="186.18199"
-     inkscape:cy="413.00445"
+     inkscape:zoom="1.0153591"
+     inkscape:cx="303.7159"
+     inkscape:cy="286.51551"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -11845,12 +11848,12 @@
        d="M 57.007812,129.73828 H 158 V 57.507812 H 57.007812 Z m 0,0"
        id="path8987" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip32-0)"
        id="g8991">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,57.507812 H 158 V 45.988281 H 57.007812 Z m 0,0"
          id="path8989" />
     </g>
@@ -12349,12 +12352,12 @@
        d="M 57.007812,213.48828 H 158 V 141.25781 H 57.007812 Z m 0,0"
        id="path9343" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip98-4)"
        id="g9347">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,141.25781 H 158 V 129.73828 H 57.007812 Z m 0,0"
          id="path9345" />
     </g>
@@ -12848,12 +12851,12 @@
        d="M 57.007812,297.24219 H 158 V 225.01172 H 57.007812 Z m 0,0"
        id="path9687" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip164-8)"
        id="g9691">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,225.01172 H 158 V 213.49219 H 57.007812 Z m 0,0"
          id="path9689" />
     </g>
@@ -13449,12 +13452,12 @@
        d="M 57.007812,380.99219 H 158 V 308.76172 H 57.007812 Z m 0,0"
        id="path10067" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip230-0)"
        id="g10071">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,308.76172 H 158 V 297.24219 H 57.007812 Z m 0,0"
          id="path10069" />
     </g>
@@ -13890,13 +13893,13 @@
        d="M 273.45822,129.73828 H 374.45041 V 57.507812 H 273.45822 Z m 0,0"
        id="path18335" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip65-7)"
        id="g18339"
        transform="translate(115.45822)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 158,57.507812 H 258.99219 V 45.988281 H 158 Z m 0,0"
          id="path18337" />
     </g>
@@ -14282,13 +14285,13 @@
        d="M 273.45822,213.48828 H 374.45041 V 141.25781 H 273.45822 Z m 0,0"
        id="path18679" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip131-62)"
        id="g18683"
        transform="translate(115.45822)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 158,141.25781 H 258.99219 V 129.73828 H 158 Z m 0,0"
          id="path18681" />
     </g>
@@ -14674,13 +14677,13 @@
        d="M 273.45822,297.24219 H 374.45041 V 225.01172 H 273.45822 Z m 0,0"
        id="path19023" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip197-93)"
        id="g19027"
        transform="translate(115.45822)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 158,225.01172 H 258.99219 V 213.49219 H 158 Z m 0,0"
          id="path19025" />
     </g>
@@ -15177,13 +15180,13 @@
        d="M 273.45822,380.99219 H 374.45041 V 308.76172 H 273.45822 Z m 0,0"
        id="path19439" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip263-5)"
        id="g19443"
        transform="translate(115.45822)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 158,308.76172 H 258.99219 V 297.24219 H 158 Z m 0,0"
          id="path19441" />
     </g>
@@ -15602,13 +15605,13 @@
        d="M 165.37024,129.73828 H 266.36243 V 57.507812 H 165.37024 Z m 0,0"
        id="path12811" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip32-47)"
        id="g12815"
        transform="translate(108.36243)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,57.507812 H 158 V 45.988281 H 57.007812 Z m 0,0"
          id="path12813" />
     </g>
@@ -15969,13 +15972,13 @@
        d="M 165.37024,213.48828 H 266.36243 V 141.25781 H 165.37024 Z m 0,0"
        id="path13167" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip98-6)"
        id="g13171"
        transform="translate(108.36243)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,141.25781 H 158 V 129.73828 H 57.007812 Z m 0,0"
          id="path13169" />
     </g>
@@ -16331,13 +16334,13 @@
        d="M 165.37024,297.24219 H 266.36243 V 225.01172 H 165.37024 Z m 0,0"
        id="path13511" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip164-9)"
        id="g13515"
        transform="translate(108.36243)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,225.01172 H 158 V 213.49219 H 57.007812 Z m 0,0"
          id="path13513" />
     </g>
@@ -16799,13 +16802,13 @@
        d="M 165.37024,380.99219 H 266.36243 V 308.76172 H 165.37024 Z m 0,0"
        id="path13891" />
     <g
-       style="clip-rule:nonzero"
+       style="clip-rule:nonzero;fill:#ececec"
        clip-path="url(#clip230-5)"
        id="g13895"
        transform="translate(108.36243)">
       <path
          inkscape:connector-curvature="0"
-         style="fill:#d9d9d9;fill-opacity:1;fill-rule:nonzero;stroke:none"
+         style="fill:#ececec;fill-opacity:1;fill-rule:nonzero;stroke:none"
          d="M 57.007812,308.76172 H 158 V 297.24219 H 57.007812 Z m 0,0"
          id="path13893" />
     </g>
