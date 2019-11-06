@@ -1,0 +1,1221 @@
+locus,cluster,Condition,log2FoldChange,padj,Pathway,Protein,Process,Process.abbr,Gene.names
+ssr2016,1,sll1969,-0.389235319402674,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr2016
+ssr2595,1,sll1969,-0.331090064142581,0.670295364387521,Adaptations and atypical conditions,"high light-inducible polypeptide HliB, CAB/ELIP/HLIP superfamily",Other categories,Other,ssr2595
+ssl2542,1,sll1969,-0.327308653654882,0.739318761178103,Adaptations and atypical conditions,"high light-inducible polypeptide HliA, CAB/ELIP/HLIP superfamily",Other categories,Other,ssl2542
+sll1541,1,sll1969,-0.277818516388769,0.722018100293683,Carotenoid,"Apocarotenoid-15,15-oxygenase (ACO)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1541
+sll1853,1,sll1969,-0.277448041287254,0.685015343550542,NA,unknown protein,Unknown,Unknown,sll1853
+slr5037,1,sll1969,-0.258240739680749,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr5037
+slr1544,1,sll1969,-0.257282975627865,0.721643219531227,NA,unknown protein,Unknown,Unknown,slr1544
+sll1852,1,sll1969,-0.218578487000832,0.777939072615615,Interconversions and salvage of nucleosides and nucleotides,nucleoside diphosphate kinase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,ndk ndkR sll1852
+slr1687,1,sll1969,-0.213062141939855,0.823560389872269,NA,hypothetical protein,Hypothetical,Hypoth,slr1687
+sll1483,1,sll1969,-0.201674837284799,0.872536993634387,"Membranes, lipoproteins, and porins","periplasmic protein, similar to transforming growth factor induced protein",Cell envelope,Envelope,sll1483
+sll1072,1,sll1969,-0.189006504410767,0.736251012565475,NA,hypothetical protein,Hypothetical,Hypoth,sll1072
+slr2006,1,sll1969,-0.184438545200957,0.915562569326311,NA,hypothetical protein,Hypothetical,Hypoth,slr2006
+sll0759,1,sll1969,-0.172403173241911,0.810819193028268,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll0759
+sll1450,1,sll1969,-0.162184263686695,0.84652323814627,NA,nitrate/nitrite transport system substrate-binding protein,Transport and binding proteins,Transport,nrtA sll1450
+sll1071,1,sll1969,-0.153886483671425,0.913205372236487,NA,hypothetical protein,Hypothetical,Hypoth,sll1071
+slr1105,1,sll1969,-0.103373155599147,0.876316457368716,Protein modification and translation factors,GTP-binding protein TypA/BipA homolog,Translation,Translat,typA slr1105
+slr1350,1,sll1969,-0.079448334092381,0.894578843597453,NA,acyl-lipid desaturase (delta 12),"Fatty acid, phospholipid and sterol metabolism",FattyAcids,desA slr1350
+slr1919,1,sll1969,-0.063077830853918,0.949137435185377,NA,putative protein kinase,Regulatory functions,Regul,slr1919
+slr0529,1,sll1969,-0.059207054220976,0.90655731329599,NA,glucosylglycerol transport system substrate-binding protein,Transport and binding proteins,Transport,slr0529
+sll0157,1,sll1969,-0.048440688437777,0.957633702551168,NA,hypothetical protein,Hypothetical,Hypoth,sll0157
+slr0320,1,sll1969,-0.047053169335586,0.949137435185377,NA,hypothetical protein,Hypothetical,Hypoth,slr0320
+slr1884,1,sll1969,-0.0383278947339,0.958841178563973,Aminoacyl tRNA synthetases and tRNA modification,tryptophanyl-tRNA synthetase,Translation,Translat,trpS slr1884
+slr0601,1,sll1969,-0.019125438134823,0.961445848891558,NA,unknown protein,Unknown,Unknown,slr0601
+sll0185,1,sll1969,0.013162425396954,0.984346718755935,"RNA synthesis, modification, and DNA transcription","putative Rho-like protein, DNA-templated transcription, termination",Transcription,Transcript,sll0185
+slr0193,1,sll1969,0.024652346830443,0.963184783247351,Nucleoproteins,RNA-binding protein,Translation,Translat,slr0193
+sll0141,1,sll1969,0.051153776457243,0.966888023801119,NA,hypothetical protein,Hypothetical,Hypoth,sll0141
+slr1291,1,sll1969,0.059121405810913,0.948717374138197,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,ndhD2 slr1291
+slr1254,1,sll1969,0.063287773490286,0.93992996918324,Carotenoid,phytoene dehydrogenase (phytoene desaturase),"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,pds crtD slr1254
+slr2034,1,sll1969,0.08198639454467,0.88115196478768,Photosystem II,"putative homolog of plant HCF136, which is essential for stability or assembly of photosystem II",Photosynthesis and respiration,Photosynth,slr2034
+slr0602,1,sll1969,0.082896313396121,0.917098278707033,NA,unknown protein,Unknown,Unknown,slr0602
+slr6040,1,sll1969,0.095430307043473,0.822607678148398,NA,two-component response regulator,Regulatory functions,Regul,slr6040
+sll0689,1,sll1969,0.096505371787829,0.890174938032855,NA,Na+/H+ antiporter,Transport and binding proteins,Transport,nhaS3 sll0689
+slr0228,1,sll1969,0.096904201291124,0.819590794251096,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH2 slr0228
+sll1867,1,sll1969,0.096938701414302,0.848354178368354,Photosystem II,photosystem II D1 protein,Photosynthesis and respiration,Photosynth,sll1867
+sll0749,1,sll1969,0.098137370040432,0.890174938032855,NA,hypothetical protein,Hypothetical,Hypoth,sll0749
+slr0940,1,sll1969,0.100939272024972,0.920335419448119,Carotenoid,zeta-carotene desaturase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,crtQ slr0940
+slr1322,1,sll1969,0.101872550823031,0.879787876317022,NA,putative modulator of DNA gyrase; TldD,"DNA replication, restriction, modification, recombination, and repair",DNArep,slr1322
+sll0529,1,sll1969,0.102526665934401,0.84652323814627,Pentose phosphate pathway,"putative phospho-ketolase, transketolase",Energy metabolism,Energy,sll0529
+sll0102,1,sll1969,0.124377482774896,0.758703830411428,NA,hypothetical protein,Hypothetical,Hypoth,sll0102
+sll0789,1,sll1969,0.125815881812618,0.771298581561797,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,sll0789
+slr0838,1,sll1969,0.150220083086671,0.819236643199954,Purine ribonucleotide biosynthesis,phosphoribosyl formylglycinamidine cyclo-ligase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,purM slr0838
+ssl2250,1,sll1969,0.167464477202844,0.758703830411428,Drug and analog sensitivity,bacterioferritin-associated ferredoxin,Other categories,Other,ssl2250
+slr6039,1,sll1969,0.170018944307082,0.741421222796504,NA,hypothetical protein,Hypothetical,Hypoth,slr6039
+sll2012,1,sll1969,0.173313655769147,0.823149950378216,"RNA synthesis, modification, and DNA transcription",group2 RNA polymerase sigma factor SigD,Transcription,Transcript,sll2012
+slr0947,1,sll1969,0.18062669377216,0.779192181017941,NA,response regulator for energy transfer from phycobilisomes to photosystems,Regulatory functions,Regul,slr0947
+sll1682,1,sll1969,0.181315668160461,0.706589179722348,Amino acids and amines,alanine dehydrogenase,Energy metabolism,Energy,sll1682
+sll1316,1,sll1969,0.181800254899016,0.619728392923069,Cytochrome b6/f complex,cytochrome b6-f complex iron-sulfur subunit (Rieske iron sulfur protein),Photosynthesis and respiration,Photosynth,petC2 sll1316
+sll0108,1,sll1969,0.182573242042142,0.45658835967443,NA,ammonium/methylammonium permease,Transport and binding proteins,Transport,sll0108
+sll0330,1,sll1969,0.185303636811888,0.948250380210559,NA,sepiapterine reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,sll0330
+sll1566,1,sll1969,0.19575471654622,0.674347428193009,Polysaccharides and glycoproteins,glucosylglycerolphosphate synthase,Central intermediary metabolism,CentralMet,ggpS sll1566
+slr1783,1,sll1969,0.201616213033196,0.540885166536556,NA,two-component response regulator NarL subfamily,Regulatory functions,Regul,slr1783
+slr1531,1,sll1969,0.202803581518768,0.63164841981226,Protein and peptide secretion,signal recognition particle protein,Cellular processes,CellProc,ffh slr1531
+sll0788,1,sll1969,0.204785588510848,0.686500854376624,NA,hypothetical protein,Hypothetical,Hypoth,sll0788
+slr0841,1,sll1969,0.21180986742342,0.580991740066096,NA,"periplasmic protein, function unknown",Unknown,Unknown,slr0841
+sll0834,1,sll1969,0.222931896271803,0.799911200413523,NA,low affinity sulfate transporter,Transport and binding proteins,Transport,sll0834
+sll1915,1,sll1969,0.225941875291758,0.568711399065453,Drug and analog sensitivity,"putative glyoxalase, antibiotic resistance, or dioxygenase protein",Other categories,Other,sll1915
+ssl7039,1,sll1969,0.226393901299672,0.646744790512879,NA,hypothetical protein,Hypothetical,Hypoth,ssl7039
+slr1208,1,sll1969,0.226737251782538,0.594915559182937,Other,probable oxidoreductase,Other categories,Other,slr1208
+slr0927,1,sll1969,0.228651462058258,0.484055575774819,Photosystem II,photosystem II reaction center D2 protein,Photosynthesis and respiration,Photosynth,slr0927
+ssl1263,1,sll1969,0.233735066093621,0.594091774077221,NA,hypothetical protein,Hypothetical,Hypoth,ssl1263
+slr1928,1,sll1969,0.235370192102245,0.726315430728052,NA,type 4 pilin-like protein,Unknown,Unknown,slr1928
+slr1051,1,sll1969,0.239450163008851,0.586328721664259,NA,enoyl-[acyl-carrier-protein] reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,fabI envM slr1051
+slr2007,1,sll1969,0.239606907425852,0.856821394322269,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,slr2007
+sll1267,1,sll1969,0.241756709348036,0.416610047372678,NA,unknown protein,Unknown,Unknown,sll1267
+slr1604,1,sll1969,0.24267347474631,0.646744790512879,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH3 slr1604
+sll1425,1,sll1969,0.244173601284585,0.554011638317244,Aminoacyl tRNA synthetases and tRNA modification,proline-tRNA ligase,Translation,Translat,proS sll1425
+sll1390,1,sll1969,0.245010743169033,0.468534366460192,NA,hypothetical protein,Hypothetical,Hypoth,sll1390
+slr2051,1,sll1969,0.252321646588168,0.385985241628764,Phycobilisome,phycobilisome rod-core linker polypeptide,Photosynthesis and respiration,Photosynth,slr2051
+sll0616,1,sll1969,0.256539271835203,0.560875377264511,Protein and peptide secretion,preprotein translocase SecA subunit,Cellular processes,CellProc,secA sll0616
+ssl0511,1,sll1969,0.259173268976029,0.71845405969724,NA,hypothetical protein,Hypothetical,Hypoth,ssl0511
+slr0455,1,sll1969,0.259376593212127,0.613150716566252,NA,hypothetical protein,Hypothetical,Hypoth,slr0455
+sll1194,1,sll1969,0.263310640272097,0.463972547088527,Photosystem II,photosystem II 12 kDa extrinsic protein,Photosynthesis and respiration,Photosynth,psbU sll1194
+sll0645,1,sll1969,0.265138821238744,0.568711399065453,NA,unknown protein,Unknown,Unknown,sll0645
+slr0355,1,sll1969,0.284188252783091,0.586328721664259,NA,hypothetical protein,Hypothetical,Hypoth,slr0355
+sll0615,1,sll1969,0.288798728756323,0.576301489016097,NA,hypothetical protein,Hypothetical,Hypoth,sll0615
+ssl0294,1,sll1969,0.29625185191638,0.375510049539544,NA,hypothetical protein,Hypothetical,Hypoth,ssl0294
+sll1732,1,sll1969,0.302989952628829,0.739318761178103,NADH dehydrogenase,"NADH dehydrogenase subunit 5 (involved in low CO2-inducible, high affinity CO2 uptake)",Photosynthesis and respiration,Photosynth,sll1732
+ssr2723,1,sll1969,0.307903113917002,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,ssr2723
+sll0909,1,sll1969,0.310549164564402,0.728972899516512,NA,unknown protein,Unknown,Unknown,sll0909
+slr0093,1,sll1969,0.323310070371352,0.596943088370523,Chaperones,"DnaJ protein, heat shock protein 40, molecular chaperone",Cellular processes,CellProc,slr0093
+slr1440,1,sll1969,0.3314630593812,0.618350089052469,NA,hypothetical protein,Hypothetical,Hypoth,slr1440
+sll0761,1,sll1969,0.337343532207201,0.460925220985353,NA,unknown protein,Unknown,Unknown,sll0761
+sll0944,1,sll1969,0.339794518128873,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,sll0944
+ssr2194,1,sll1969,0.342256256774873,0.885501971753292,NA,unknown protein,Unknown,Unknown,ssr2194
+slr2024,1,sll1969,0.347246088910981,0.461653786480456,NA,two-component response regulator CheY subfamily,Regulatory functions,Regul,slr2024
+sll1796,1,sll1969,0.34917330329269,0.405174319206551,Soluble electron carriers,cytochrome c553,Photosynthesis and respiration,Photosynth,petJ sll1796
+slr1133,1,sll1969,0.351183345083703,0.407609697359728,Glutamate family / Nitrogen assimilation,L-argininosuccinate lyase,Amino acid biosynthesis,AminoAcids,argH slr1133
+ssr2831,1,sll1969,0.355084246254861,0.407609697359728,Photosystem I,photosystem I subunit IV,Photosynthesis and respiration,Photosynth,psaE ssr2831
+slr1704,1,sll1969,0.366271768737245,0.853891641285139,NA,hypothetical protein,Hypothetical,Hypoth,slr1704
+sll1561,1,sll1969,0.376182996471415,0.341072525905081,Amino acids and amines,proline oxidase,Energy metabolism,Energy,sll1561
+slr0925,1,sll1969,0.386790621357867,0.460925220985353,NA,single-stranded DNA-binding protein,"DNA replication, restriction, modification, recombination, and repair",DNArep,ssb slr0925
+sll0662,1,sll1969,0.390387287301471,0.407609697359728,"Thioredoxin, glutaredoxin, and glutathione","4Fe-4S type iron-sulfur protein, probable glutaredoxin","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll0662
+sll0858,1,sll1969,0.399142469857853,0.756733072512235,NA,hypothetical protein,Hypothetical,Hypoth,sll0858
+slr0818,1,sll1969,0.411255421830526,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,slr0818
+slr2070,1,sll1969,0.412259186134263,0.388066056871306,NA,hypothetical protein,Hypothetical,Hypoth,slr2070
+sll1891,1,sll1969,0.420194657045089,0.463360809618855,NA,unknown protein,Unknown,Unknown,sll1891
+slr1811,1,sll1969,0.427573295998225,0.407609697359728,NA,hypothetical protein,Hypothetical,Hypoth,slr1811
+sll1119,1,sll1969,0.431552627660854,0.535892869512435,NA,hypothetical protein,Hypothetical,Hypoth,sll1119
+sll1426,1,sll1969,0.435785678971186,0.45658835967443,NA,unknown protein,Unknown,Unknown,sll1426
+slr0081,1,sll1969,0.44142375080599,0.540885166536556,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,slr0081
+ssl2501,1,sll1969,0.445371095723347,0.407609697359728,NA,unknown protein,Unknown,Unknown,ssl2501
+slr1734,1,sll1969,0.450007842816073,0.407609697359728,Pentose phosphate pathway,glucose 6-phosphate dehydrogenase assembly protein,Energy metabolism,Energy,opcA slr1734
+slr1993,1,sll1969,0.459224987595702,0.238056032838682,NA,PHA-specific beta-ketothiolase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,slr1993
+sll0550,1,sll1969,0.46354122702425,0.289140731723552,Other,flavoprotein,Other categories,Other,dfa1 sll0550
+slr0681,1,sll1969,0.471344512189449,0.437018309428036,NA,probable sodium/calcium exchanger protein,Transport and binding proteins,Transport,slr0681
+slr0967,1,sll1969,0.471755059546059,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,slr0967
+sll0661,1,sll1969,0.473909619120458,0.416610047372678,NA,hypothetical protein YCF35,Hypothetical,Hypoth,sll0661
+sll0426,1,sll1969,0.48587016479356,0.407609697359728,NA,unknown protein,Unknown,Unknown,sll0426
+sll1774,1,sll1969,0.497915990930911,0.407609697359728,NA,hypothetical protein,Hypothetical,Hypoth,sll1774
+sll1835,1,sll1969,0.509504269012961,0.488464921148694,"Membranes, lipoproteins, and porins","putative curli production assembly/transport component, periplasmic protein",Cell envelope,Envelope,sll1835
+slr1137,1,sll1969,0.510767375744503,0.059228208828034,Respiratory terminal oxidases,cytochrome c oxidase subunit I,Photosynthesis and respiration,Photosynth,ctaD slr1137
+sll0103,1,sll1969,0.5249770346575,0.341072525905081,NA,hypothetical protein,Hypothetical,Hypoth,sll0103
+slr1136,1,sll1969,0.535646940153888,0.228022362945361,Respiratory terminal oxidases,cytochrome c oxidase subunit II,Photosynthesis and respiration,Photosynth,ctaC coxB slr1136
+sll0617,1,sll1969,0.536864368195001,0.330148532844613,"Membranes, lipoproteins, and porins",plasma membrane protein essential for thylakoid formation,Cell envelope,Envelope,sll0617
+ssl0832,1,sll1969,0.545342699412685,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,ssl0832
+ssr1853,1,sll1969,0.551983919717809,0.468534366460192,NA,unknown protein,Unknown,Unknown,ssr1853
+sll1692,1,sll1969,0.560760611787403,0.460925220985353,NA,hypothetical protein,Hypothetical,Hypoth,sll1692
+ssr2153,1,sll1969,0.610932839272094,0.707492500545593,NA,unknown protein,Unknown,Unknown,ssr2153
+sll1011,1,sll1969,0.6118305434475,0.390768871367088,NA,hypothetical protein,Hypothetical,Hypoth,sll1011
+sll0493,1,sll1969,0.685939522907558,0.405530986027319,NA,hypothetical protein,Hypothetical,Hypoth,sll0493
+sll1691,1,sll1969,0.882690609926158,0.560875377264511,NA,hypothetical protein,Hypothetical,Hypoth,sll1691
+ssr2194,1,slr1340,-0.412746395157565,0.792917056615115,NA,unknown protein,Unknown,Unknown,ssr2194
+slr0681,1,slr1340,-0.361681520363154,0.343620391882403,NA,probable sodium/calcium exchanger protein,Transport and binding proteins,Transport,slr0681
+slr5037,1,slr1340,-0.204929626793698,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr5037
+slr0602,1,slr1340,-0.175234444553663,0.70805349834969,NA,unknown protein,Unknown,Unknown,slr0602
+sll0330,1,slr1340,-0.132730615430368,0.94113343733803,NA,sepiapterine reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,sll0330
+slr1704,1,slr1340,-0.053075190447922,0.976652338439403,NA,hypothetical protein,Hypothetical,Hypoth,slr1704
+slr0601,1,slr1340,-0.013922426552932,0.966145587236824,NA,unknown protein,Unknown,Unknown,slr0601
+sll0788,1,slr1340,0.008774337419142,0.987402961175449,NA,hypothetical protein,Hypothetical,Hypoth,sll0788
+slr6040,1,slr1340,0.031568126891469,0.926579026433584,NA,two-component response regulator,Regulatory functions,Regul,slr6040
+sll0789,1,slr1340,0.051446481487653,0.880052041377636,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,sll0789
+slr1440,1,slr1340,0.061468659894281,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr1440
+slr0529,1,slr1340,0.07190805683161,0.835227546501602,NA,glucosylglycerol transport system substrate-binding protein,Transport and binding proteins,Transport,slr0529
+sll0108,1,slr1340,0.096298171682576,0.548732504272607,NA,ammonium/methylammonium permease,Transport and binding proteins,Transport,sll0108
+ssr2831,1,slr1340,0.119578454750895,0.681938573495732,Photosystem I,photosystem I subunit IV,Photosynthesis and respiration,Photosynth,psaE ssr2831
+slr1928,1,slr1340,0.12986764848634,0.795931091628416,NA,type 4 pilin-like protein,Unknown,Unknown,slr1928
+slr0841,1,slr1340,0.131793936724414,0.635053645570899,NA,"periplasmic protein, function unknown",Unknown,Unknown,slr0841
+slr2051,1,slr1340,0.141732983514107,0.410672633927738,Phycobilisome,phycobilisome rod-core linker polypeptide,Photosynthesis and respiration,Photosynth,slr2051
+sll0749,1,slr1340,0.144013662888726,0.74938727138677,NA,hypothetical protein,Hypothetical,Hypoth,sll0749
+slr1350,1,slr1340,0.159743660812823,0.658908730177839,NA,acyl-lipid desaturase (delta 12),"Fatty acid, phospholipid and sterol metabolism",FattyAcids,desA slr1350
+sll0426,1,slr1340,0.162851460433717,0.672292827372194,NA,unknown protein,Unknown,Unknown,sll0426
+slr6039,1,slr1340,0.163380896717142,0.639639537043259,NA,hypothetical protein,Hypothetical,Hypoth,slr6039
+ssl2501,1,slr1340,0.170661932136138,0.640427903917227,NA,unknown protein,Unknown,Unknown,ssl2501
+sll1267,1,slr1340,0.186672199636545,0.324240735325385,NA,unknown protein,Unknown,Unknown,sll1267
+slr1544,1,slr1340,0.192972280758099,0.696659319552782,NA,unknown protein,Unknown,Unknown,slr1544
+sll1390,1,slr1340,0.198958010581869,0.369776571091152,NA,hypothetical protein,Hypothetical,Hypoth,sll1390
+slr0927,1,slr1340,0.20084187470653,0.340548924336622,Photosystem II,photosystem II reaction center D2 protein,Photosynthesis and respiration,Photosynth,slr0927
+slr1051,1,slr1340,0.201606810696958,0.51236991675646,NA,enoyl-[acyl-carrier-protein] reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,fabI envM slr1051
+slr1208,1,slr1340,0.21151347733972,0.469955622909681,Other,probable oxidoreductase,Other categories,Other,slr1208
+sll1796,1,slr1340,0.219420461749977,0.400023358995083,Soluble electron carriers,cytochrome c553,Photosynthesis and respiration,Photosynth,petJ sll1796
+slr1531,1,slr1340,0.219530414112915,0.437918226415085,Protein and peptide secretion,signal recognition particle protein,Cellular processes,CellProc,ffh slr1531
+sll1566,1,slr1340,0.220580145419785,0.482834731159381,Polysaccharides and glycoproteins,glucosylglycerolphosphate synthase,Central intermediary metabolism,CentralMet,ggpS sll1566
+sll0102,1,slr1340,0.222407099758762,0.383786912241144,NA,hypothetical protein,Hypothetical,Hypoth,sll0102
+sll0157,1,slr1340,0.223209854402773,0.663287610423607,NA,hypothetical protein,Hypothetical,Hypoth,sll0157
+slr0355,1,slr1340,0.230614231455896,0.525807917141442,NA,hypothetical protein,Hypothetical,Hypoth,slr0355
+sll1483,1,slr1340,0.2406667294535,0.769679877717897,"Membranes, lipoproteins, and porins","periplasmic protein, similar to transforming growth factor induced protein",Cell envelope,Envelope,sll1483
+sll1915,1,slr1340,0.269958114190924,0.313776070041908,Drug and analog sensitivity,"putative glyoxalase, antibiotic resistance, or dioxygenase protein",Other categories,Other,sll1915
+ssr2595,1,slr1340,0.278104935880044,0.608014511367565,Adaptations and atypical conditions,"high light-inducible polypeptide HliB, CAB/ELIP/HLIP superfamily",Other categories,Other,ssr2595
+sll1425,1,slr1340,0.279453507303986,0.283270403807435,Aminoacyl tRNA synthetases and tRNA modification,proline-tRNA ligase,Translation,Translat,proS sll1425
+ssl0294,1,slr1340,0.284387536746001,0.143292281208803,NA,hypothetical protein,Hypothetical,Hypoth,ssl0294
+ssl7039,1,slr1340,0.291205351469898,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssl7039
+sll0615,1,slr1340,0.293161319402789,0.403839338236428,NA,hypothetical protein,Hypothetical,Hypoth,sll0615
+slr1783,1,slr1340,0.298499182871907,0.144568689082283,NA,two-component response regulator NarL subfamily,Regulatory functions,Regul,slr1783
+ssr2153,1,slr1340,0.30394833503735,0.806543029521991,NA,unknown protein,Unknown,Unknown,ssr2153
+slr0455,1,slr1340,0.326542407657929,0.334684437476576,NA,hypothetical protein,Hypothetical,Hypoth,slr0455
+sll0645,1,slr1340,0.328134582150419,0.294352465245939,NA,unknown protein,Unknown,Unknown,sll0645
+sll1561,1,slr1340,0.333087544624095,0.159142793185991,Amino acids and amines,proline oxidase,Energy metabolism,Energy,sll1561
+sll1194,1,slr1340,0.334953508044125,0.14240170592324,Photosystem II,photosystem II 12 kDa extrinsic protein,Photosynthesis and respiration,Photosynth,psbU sll1194
+slr1137,1,slr1340,0.344565049356799,0.105698558703729,Respiratory terminal oxidases,cytochrome c oxidase subunit I,Photosynthesis and respiration,Photosynth,ctaD slr1137
+sll1426,1,slr1340,0.350094123000456,0.335703862305187,NA,unknown protein,Unknown,Unknown,sll1426
+sll1316,1,slr1340,0.358793255192061,0.131101991899944,Cytochrome b6/f complex,cytochrome b6-f complex iron-sulfur subunit (Rieske iron sulfur protein),Photosynthesis and respiration,Photosynth,petC2 sll1316
+slr0838,1,slr1340,0.369034851064972,0.351563875596612,Purine ribonucleotide biosynthesis,phosphoribosyl formylglycinamidine cyclo-ligase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,purM slr0838
+sll0103,1,slr1340,0.386749367275799,0.251566759168394,NA,hypothetical protein,Hypothetical,Hypoth,sll0103
+sll0858,1,slr1340,0.396712529797643,0.645309187444908,NA,hypothetical protein,Hypothetical,Hypoth,sll0858
+sll0550,1,slr1340,0.401026483201217,0.136186717357743,Other,flavoprotein,Other categories,Other,dfa1 sll0550
+sll0529,1,slr1340,0.403652783553777,0.212082892819537,Pentose phosphate pathway,"putative phospho-ketolase, transketolase",Energy metabolism,Energy,sll0529
+slr0228,1,slr1340,0.408312290575369,0.105698558703729,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH2 slr0228
+slr0818,1,slr1340,0.419925195756508,0.366809892233167,NA,hypothetical protein,Hypothetical,Hypoth,slr0818
+ssr1853,1,slr1340,0.42416039469316,0.397888273036982,NA,unknown protein,Unknown,Unknown,ssr1853
+sll0761,1,slr1340,0.431463317430665,0.1245690848056,NA,unknown protein,Unknown,Unknown,sll0761
+slr2070,1,slr1340,0.432082092554072,0.136186717357743,NA,hypothetical protein,Hypothetical,Hypoth,slr2070
+sll0616,1,slr1340,0.437255071606806,0.1245690848056,Protein and peptide secretion,preprotein translocase SecA subunit,Cellular processes,CellProc,secA sll0616
+ssr2723,1,slr1340,0.442414394342326,0.206904714161408,NA,hypothetical protein,Hypothetical,Hypoth,ssr2723
+sll1867,1,slr1340,0.448992863338894,0.140864517837908,Photosystem II,photosystem II D1 protein,Photosynthesis and respiration,Photosynth,sll1867
+slr1734,1,slr1340,0.454082548871166,0.182975254884636,Pentose phosphate pathway,glucose 6-phosphate dehydrogenase assembly protein,Energy metabolism,Energy,opcA slr1734
+sll1774,1,slr1340,0.457059046361068,0.227040448651474,NA,hypothetical protein,Hypothetical,Hypoth,sll1774
+ssl0832,1,slr1340,0.459997173776701,0.441650712814179,NA,hypothetical protein,Hypothetical,Hypoth,ssl0832
+sll1891,1,slr1340,0.462363763784957,0.212854890030167,NA,unknown protein,Unknown,Unknown,sll1891
+slr1687,1,slr1340,0.469186426002955,0.433187265957655,NA,hypothetical protein,Hypothetical,Hypoth,slr1687
+slr0093,1,slr1340,0.472732338795214,0.252361592278123,Chaperones,"DnaJ protein, heat shock protein 40, molecular chaperone",Cellular processes,CellProc,slr0093
+sll1119,1,slr1340,0.474791047852708,0.283571563371748,NA,hypothetical protein,Hypothetical,Hypoth,sll1119
+slr2034,1,slr1340,0.485661092759421,0.105698558703729,Photosystem II,"putative homolog of plant HCF136, which is essential for stability or assembly of photosystem II",Photosynthesis and respiration,Photosynth,slr2034
+slr1811,1,slr1340,0.490132737713094,0.134356263422356,NA,hypothetical protein,Hypothetical,Hypoth,slr1811
+sll1541,1,slr1340,0.497049318304675,0.31457726376595,Carotenoid,"Apocarotenoid-15,15-oxygenase (ACO)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1541
+ssl2542,1,slr1340,0.501565167477739,0.415058044635059,Adaptations and atypical conditions,"high light-inducible polypeptide HliA, CAB/ELIP/HLIP superfamily",Other categories,Other,ssl2542
+slr0193,1,slr1340,0.504608768518186,0.106577661936533,Nucleoproteins,RNA-binding protein,Translation,Translat,slr0193
+slr2024,1,slr1340,0.51045274993644,0.086402266282577,NA,two-component response regulator CheY subfamily,Regulatory functions,Regul,slr2024
+slr1105,1,slr1340,0.517629247543785,0.164571072998884,Protein modification and translation factors,GTP-binding protein TypA/BipA homolog,Translation,Translat,typA slr1105
+sll1682,1,slr1340,0.51830008240277,0.089055892888743,Amino acids and amines,alanine dehydrogenase,Energy metabolism,Energy,sll1682
+slr1993,1,slr1340,0.519277905109687,0.032682495917107,NA,PHA-specific beta-ketothiolase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,slr1993
+slr0925,1,slr1340,0.523370991099282,0.105698558703729,NA,single-stranded DNA-binding protein,"DNA replication, restriction, modification, recombination, and repair",DNArep,ssb slr0925
+sll0759,1,slr1340,0.54409702200885,0.208726554447065,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll0759
+slr1604,1,slr1340,0.558055031973051,0.102640678989127,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH3 slr1604
+ssl0511,1,slr1340,0.560262758899184,0.224407850323113,NA,hypothetical protein,Hypothetical,Hypoth,ssl0511
+slr1133,1,slr1340,0.567710938638967,0.026813915712662,Glutamate family / Nitrogen assimilation,L-argininosuccinate lyase,Amino acid biosynthesis,AminoAcids,argH slr1133
+slr1136,1,slr1340,0.571098316363521,0.041498095625005,Respiratory terminal oxidases,cytochrome c oxidase subunit II,Photosynthesis and respiration,Photosynth,ctaC coxB slr1136
+sll0909,1,slr1340,0.576130231771152,NA,NA,unknown protein,Unknown,Unknown,sll0909
+sll1692,1,slr1340,0.580114364823665,0.228837841407385,NA,hypothetical protein,Hypothetical,Hypoth,sll1692
+sll1011,1,slr1340,0.589207692102764,0.177750088113506,NA,hypothetical protein,Hypothetical,Hypoth,sll1011
+sll1852,1,slr1340,0.608941938066812,0.206904714161408,Interconversions and salvage of nucleosides and nucleotides,nucleoside diphosphate kinase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,ndk ndkR sll1852
+ssl1263,1,slr1340,0.611277162701956,0.032682495917107,NA,hypothetical protein,Hypothetical,Hypoth,ssl1263
+sll1853,1,slr1340,0.620676992951084,0.157281772168468,NA,unknown protein,Unknown,Unknown,sll1853
+slr0967,1,slr1340,0.621427301077713,0.24126760777315,NA,hypothetical protein,Hypothetical,Hypoth,slr0967
+slr0081,1,slr1340,0.686041129900598,0.123560936233821,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,slr0081
+slr1884,1,slr1340,0.694459092720885,0.080636404579938,Aminoacyl tRNA synthetases and tRNA modification,tryptophanyl-tRNA synthetase,Translation,Translat,trpS slr1884
+sll0493,1,slr1340,0.695441114812987,0.164746216652873,NA,hypothetical protein,Hypothetical,Hypoth,sll0493
+slr0320,1,slr1340,0.702073532193153,0.057479682206892,NA,hypothetical protein,Hypothetical,Hypoth,slr0320
+sll0944,1,slr1340,0.705700558931992,0.047965043954639,NA,hypothetical protein,Hypothetical,Hypoth,sll0944
+sll0617,1,slr1340,0.706274723328209,0.026813915712662,"Membranes, lipoproteins, and porins",plasma membrane protein essential for thylakoid formation,Cell envelope,Envelope,sll0617
+slr1322,1,slr1340,0.716595752341595,0.047965043954639,NA,putative modulator of DNA gyrase; TldD,"DNA replication, restriction, modification, recombination, and repair",DNArep,slr1322
+sll1072,1,slr1340,0.724158795228636,0.032682495917107,NA,hypothetical protein,Hypothetical,Hypoth,sll1072
+sll2012,1,slr1340,0.748251242342381,0.10571944484719,"RNA synthesis, modification, and DNA transcription",group2 RNA polymerase sigma factor SigD,Transcription,Transcript,sll2012
+ssl2250,1,slr1340,0.77199093569876,0.023107276191652,Drug and analog sensitivity,bacterioferritin-associated ferredoxin,Other categories,Other,ssl2250
+slr0947,1,slr1340,0.775375024729386,0.046734931472303,NA,response regulator for energy transfer from phycobilisomes to photosystems,Regulatory functions,Regul,slr0947
+sll0185,1,slr1340,0.782406155592382,0.068675764803461,"RNA synthesis, modification, and DNA transcription","putative Rho-like protein, DNA-templated transcription, termination",Transcription,Transcript,sll0185
+slr1254,1,slr1340,0.819156897939905,0.047965043954639,Carotenoid,phytoene dehydrogenase (phytoene desaturase),"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,pds crtD slr1254
+sll0662,1,slr1340,0.821947920418517,0.00244219402234,"Thioredoxin, glutaredoxin, and glutathione","4Fe-4S type iron-sulfur protein, probable glutaredoxin","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll0662
+ssr2016,1,slr1340,0.824630278248925,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr2016
+sll0661,1,slr1340,0.855127326626095,0.023107276191652,NA,hypothetical protein YCF35,Hypothetical,Hypoth,sll0661
+sll1071,1,slr1340,0.861533921687963,0.257415957973196,NA,hypothetical protein,Hypothetical,Hypoth,sll1071
+sll1835,1,slr1340,0.872078900377432,0.055318308317665,"Membranes, lipoproteins, and porins","putative curli production assembly/transport component, periplasmic protein",Cell envelope,Envelope,sll1835
+sll0141,1,slr1340,0.904366009004936,0.257415957973196,NA,hypothetical protein,Hypothetical,Hypoth,sll0141
+slr1291,1,slr1340,0.934372051518402,0.041498095625005,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,ndhD2 slr1291
+sll0689,1,slr1340,0.94691579219617406,0.018171871246441,NA,Na+/H+ antiporter,Transport and binding proteins,Transport,nhaS3 sll0689
+sll1450,1,slr1340,0.967201982727662,0.046734931472303,NA,nitrate/nitrite transport system substrate-binding protein,Transport and binding proteins,Transport,nrtA sll1450
+sll1691,1,slr1340,0.976380135965082,0.318482757619997,NA,hypothetical protein,Hypothetical,Hypoth,sll1691
+slr0940,1,slr1340,1.00931614294932,0.05029223631324,Carotenoid,zeta-carotene desaturase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,crtQ slr0940
+slr2007,1,slr1340,1.06565132415733,0.177384183919228,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,slr2007
+sll0834,1,slr1340,1.06799782098084,0.040369161395938,NA,low affinity sulfate transporter,Transport and binding proteins,Transport,sll0834
+sll1732,1,slr1340,1.11040877194372,0.042700646832233,NADH dehydrogenase,"NADH dehydrogenase subunit 5 (involved in low CO2-inducible, high affinity CO2 uptake)",Photosynthesis and respiration,Photosynth,sll1732
+slr1919,1,slr1340,1.32141645645671,0.010139917554711,NA,putative protein kinase,Regulatory functions,Regul,slr1919
+slr2006,1,slr1340,1.32147464868776,0.14240170592324,NA,hypothetical protein,Hypothetical,Hypoth,slr2006
+slr1137,1,slr1916,-0.12869733569609,0.450293644488028,Respiratory terminal oxidases,cytochrome c oxidase subunit I,Photosynthesis and respiration,Photosynth,ctaD slr1137
+sll1119,1,slr1916,-0.004667390016575,0.992145964187928,NA,hypothetical protein,Hypothetical,Hypoth,sll1119
+slr1734,1,slr1916,5.86570933841e-4,0.998996373008281,Pentose phosphate pathway,glucose 6-phosphate dehydrogenase assembly protein,Energy metabolism,Energy,opcA slr1734
+slr1440,1,slr1916,0.020921678561975,0.96233180300862,NA,hypothetical protein,Hypothetical,Hypoth,slr1440
+slr6040,1,slr1916,0.093245261783112,0.667991838260241,NA,two-component response regulator,Regulatory functions,Regul,slr6040
+slr0681,1,slr1916,0.095298440103366,0.773345564118333,NA,probable sodium/calcium exchanger protein,Transport and binding proteins,Transport,slr0681
+slr6039,1,slr1916,0.107952746115425,0.694094756626174,NA,hypothetical protein,Hypothetical,Hypoth,slr6039
+sll0789,1,slr1916,0.134492685604338,0.526887891452751,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,sll0789
+slr1136,1,slr1916,0.140594051237352,0.546019701045331,Respiratory terminal oxidases,cytochrome c oxidase subunit II,Photosynthesis and respiration,Photosynth,ctaC coxB slr1136
+ssr2831,1,slr1916,0.198884786858753,0.33701245100231,Photosystem I,photosystem I subunit IV,Photosynthesis and respiration,Photosynth,psaE ssr2831
+ssl2501,1,slr1916,0.259170023372717,0.317305432578956,NA,unknown protein,Unknown,Unknown,ssl2501
+sll0944,1,slr1916,0.266522269329506,0.357740729574099,NA,hypothetical protein,Hypothetical,Hypoth,sll0944
+sll1267,1,slr1916,0.332021995023244,0.010907177940482,NA,unknown protein,Unknown,Unknown,sll1267
+slr0967,1,slr1916,0.386436985904031,0.33306652988573,NA,hypothetical protein,Hypothetical,Hypoth,slr0967
+slr1811,1,slr1916,0.408015804417325,0.090386210532443,NA,hypothetical protein,Hypothetical,Hypoth,slr1811
+sll0426,1,slr1916,0.414351171959447,0.113076193948761,NA,unknown protein,Unknown,Unknown,sll0426
+sll0788,1,slr1916,0.418115322147353,0.078023667120057,NA,hypothetical protein,Hypothetical,Hypoth,sll0788
+slr1993,1,slr1916,0.463846902126142,0.007161904011698,NA,PHA-specific beta-ketothiolase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,slr1993
+slr2051,1,slr1916,0.465351446542052,3.9164994758359e-5,Phycobilisome,phycobilisome rod-core linker polypeptide,Photosynthesis and respiration,Photosynth,slr2051
+slr0818,1,slr1916,0.50500670096648,0.133370374848143,NA,hypothetical protein,Hypothetical,Hypoth,slr0818
+sll1891,1,slr1916,0.536765368504912,0.037610245961624,NA,unknown protein,Unknown,Unknown,sll1891
+ssr2194,1,slr1916,0.548146991862037,0.613033524168535,NA,unknown protein,Unknown,Unknown,ssr2194
+sll0645,1,slr1916,0.552963238756231,0.009323127618246,NA,unknown protein,Unknown,Unknown,sll0645
+sll1774,1,slr1916,0.56297899448388,0.031466206029752,NA,hypothetical protein,Hypothetical,Hypoth,sll1774
+slr0602,1,slr1916,0.569566392290004,0.058114057480111,NA,unknown protein,Unknown,Unknown,slr0602
+sll1561,1,slr1916,0.58637907287741,2.37268000049e-4,Amino acids and amines,proline oxidase,Energy metabolism,Energy,sll1561
+sll0749,1,slr1916,0.595985512104701,0.032295758766144,NA,hypothetical protein,Hypothetical,Hypoth,sll0749
+sll1426,1,slr1916,0.603888475163125,0.016420365217656,NA,unknown protein,Unknown,Unknown,sll1426
+slr1208,1,slr1916,0.608536413179467,0.001567788241767,Other,probable oxidoreductase,Other categories,Other,slr1208
+slr1544,1,slr1916,0.629639921918634,0.049254793757637,NA,unknown protein,Unknown,Unknown,slr1544
+sll1194,1,slr1916,0.632711928228255,3.85598927379741e-5,Photosystem II,photosystem II 12 kDa extrinsic protein,Photosynthesis and respiration,Photosynth,psbU sll1194
+sll1390,1,slr1916,0.648981427881715,8.00602943363844e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll1390
+ssl2250,1,slr1916,0.685368486908199,0.002910962848511,Drug and analog sensitivity,bacterioferritin-associated ferredoxin,Other categories,Other,ssl2250
+sll0858,1,slr1916,0.686399309115881,0.255382305525536,NA,hypothetical protein,Hypothetical,Hypoth,sll0858
+sll1915,1,slr1916,0.706853594825241,5.99507374322827e-5,Drug and analog sensitivity,"putative glyoxalase, antibiotic resistance, or dioxygenase protein",Other categories,Other,sll1915
+slr2070,1,slr1916,0.708635515709701,2.94345831778e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr2070
+slr1928,1,slr1916,0.73337087475485,0.011330361962695,NA,type 4 pilin-like protein,Unknown,Unknown,slr1928
+sll0761,1,slr1916,0.739346888900369,1.07279090561e-4,NA,unknown protein,Unknown,Unknown,sll0761
+sll1011,1,slr1916,0.748134687038589,0.013734692946389,NA,hypothetical protein,Hypothetical,Hypoth,sll1011
+sll1682,1,slr1916,0.750300199673425,3.00613787429e-4,Amino acids and amines,alanine dehydrogenase,Energy metabolism,Energy,sll1682
+slr0228,1,slr1916,0.760279363006088,9.17995654684648e-6,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH2 slr0228
+slr0529,1,slr1916,0.760812173012178,3.04208751348336e-5,NA,glucosylglycerol transport system substrate-binding protein,Transport and binding proteins,Transport,slr0529
+slr1604,1,slr1916,0.778212933689335,8.68850343884e-4,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH3 slr1604
+sll1425,1,slr1916,0.79862446684518,2.74967999337218e-6,Aminoacyl tRNA synthetases and tRNA modification,proline-tRNA ligase,Translation,Translat,proS sll1425
+ssl0294,1,slr1916,0.807755024399474,2.37325710726604e-10,NA,hypothetical protein,Hypothetical,Hypoth,ssl0294
+slr0841,1,slr1916,0.808262360794028,1.68336007406461e-6,NA,"periplasmic protein, function unknown",Unknown,Unknown,slr0841
+slr1704,1,slr1916,0.817003631853494,0.372579276366966,NA,hypothetical protein,Hypothetical,Hypoth,slr1704
+slr1133,1,slr1916,0.829825183985937,1.46849430235541e-6,Glutamate family / Nitrogen assimilation,L-argininosuccinate lyase,Amino acid biosynthesis,AminoAcids,argH slr1133
+sll1867,1,slr1916,0.870226855029321,2.12691417459773e-5,Photosystem II,photosystem II D1 protein,Photosynthesis and respiration,Photosynth,sll1867
+ssl0832,1,slr1916,0.871017814645838,0.03451303302677,NA,hypothetical protein,Hypothetical,Hypoth,ssl0832
+sll0157,1,slr1916,0.87252956974228,0.007485542528648,NA,hypothetical protein,Hypothetical,Hypoth,sll0157
+sll0102,1,slr1916,0.887545745810296,6.88166170297608e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll0102
+sll1566,1,slr1916,0.907263909353355,5.94454260111144e-6,Polysaccharides and glycoproteins,glucosylglycerolphosphate synthase,Central intermediary metabolism,CentralMet,ggpS sll1566
+slr0455,1,slr1916,0.920698528375884,4.01145695671647e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr0455
+slr0925,1,slr1916,0.931869540978447,2.29110403119541e-5,NA,single-stranded DNA-binding protein,"DNA replication, restriction, modification, recombination, and repair",DNArep,ssb slr0925
+ssr2723,1,slr1916,0.939708883294837,4.77801777202335e-5,NA,hypothetical protein,Hypothetical,Hypoth,ssr2723
+ssr2595,1,slr1916,0.940031055742482,0.006674875565239,Adaptations and atypical conditions,"high light-inducible polypeptide HliB, CAB/ELIP/HLIP superfamily",Other categories,Other,ssr2595
+slr0927,1,slr1916,0.944307561767174,3.84434032302785e-12,Photosystem II,photosystem II reaction center D2 protein,Photosynthesis and respiration,Photosynth,slr0927
+sll0759,1,slr1916,0.948264188295868,0.001060226026386,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll0759
+ssl1263,1,slr1916,0.951520602229209,7.79378725580396e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssl1263
+slr1783,1,slr1916,0.952533666420861,1.36590365269924e-12,NA,two-component response regulator NarL subfamily,Regulatory functions,Regul,slr1783
+slr2024,1,slr1916,0.968116864941922,1.20792489080426e-6,NA,two-component response regulator CheY subfamily,Regulatory functions,Regul,slr2024
+slr0193,1,slr1916,0.974136001299281,4.37658241128436e-6,Nucleoproteins,RNA-binding protein,Translation,Translat,slr0193
+sll2012,1,slr1916,0.978976944718704,0.002434668199867,"RNA synthesis, modification, and DNA transcription",group2 RNA polymerase sigma factor SigD,Transcription,Transcript,sll2012
+sll0103,1,slr1916,1.00180449106371,4.57157085530676e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll0103
+sll1732,1,slr1916,1.00299089670489,0.009808978064217,NADH dehydrogenase,"NADH dehydrogenase subunit 5 (involved in low CO2-inducible, high affinity CO2 uptake)",Photosynthesis and respiration,Photosynth,sll1732
+slr0838,1,slr1916,1.00445317465525,1.37351623445e-4,Purine ribonucleotide biosynthesis,phosphoribosyl formylglycinamidine cyclo-ligase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,purM slr0838
+sll1316,1,slr1916,1.01022116465753,8.62050442589161e-11,Cytochrome b6/f complex,cytochrome b6-f complex iron-sulfur subunit (Rieske iron sulfur protein),Photosynthesis and respiration,Photosynth,petC2 sll1316
+sll1483,1,slr1916,1.02054734104038,0.044094891401957,"Membranes, lipoproteins, and porins","periplasmic protein, similar to transforming growth factor induced protein",Cell envelope,Envelope,sll1483
+sll0108,1,slr1916,1.03724037004907,1.05766493219375e-27,NA,ammonium/methylammonium permease,Transport and binding proteins,Transport,sll0108
+slr0355,1,slr1916,1.03832514604986,6.37164753289312e-6,NA,hypothetical protein,Hypothetical,Hypoth,slr0355
+sll1852,1,slr1916,1.04310934589658,0.001253052617001,Interconversions and salvage of nucleosides and nucleotides,nucleoside diphosphate kinase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,ndk ndkR sll1852
+slr1350,1,slr1916,1.04370064687946,2.79171202352994e-6,NA,acyl-lipid desaturase (delta 12),"Fatty acid, phospholipid and sterol metabolism",FattyAcids,desA slr1350
+slr0320,1,slr1916,1.04539043364684,5.43029485853037e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr0320
+sll0550,1,slr1916,1.04857970520984,3.43782446281193e-9,Other,flavoprotein,Other categories,Other,dfa1 sll0550
+slr0093,1,slr1916,1.05060509219767,1.05359579725e-4,Chaperones,"DnaJ protein, heat shock protein 40, molecular chaperone",Cellular processes,CellProc,slr0093
+sll0330,1,slr1916,1.05390334764049,0.330860218668944,NA,sepiapterine reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,sll0330
+ssl7039,1,slr1916,1.06038120022164,4.4153609925872e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssl7039
+slr0601,1,slr1916,1.06081677872579,2.96408034002188e-12,NA,unknown protein,Unknown,Unknown,slr0601
+sll0529,1,slr1916,1.06433972149162,4.46215290641563e-7,Pentose phosphate pathway,"putative phospho-ketolase, transketolase",Energy metabolism,Energy,sll0529
+slr1051,1,slr1916,1.06634847411882,2.62491817656225e-8,NA,enoyl-[acyl-carrier-protein] reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,fabI envM slr1051
+slr1531,1,slr1916,1.06654900249378,3.97489457829072e-9,Protein and peptide secretion,signal recognition particle protein,Cellular processes,CellProc,ffh slr1531
+sll0185,1,slr1916,1.07300609494326,3.25226595354e-4,"RNA synthesis, modification, and DNA transcription","putative Rho-like protein, DNA-templated transcription, termination",Transcription,Transcript,sll0185
+slr1884,1,slr1916,1.08089297648616,6.38227756657225e-5,Aminoacyl tRNA synthetases and tRNA modification,tryptophanyl-tRNA synthetase,Translation,Translat,trpS slr1884
+sll1853,1,slr1916,1.08697222787552,2.37268000049e-4,NA,unknown protein,Unknown,Unknown,sll1853
+sll1541,1,slr1916,1.09777812893319,8.36264113886e-4,Carotenoid,"Apocarotenoid-15,15-oxygenase (ACO)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1541
+sll0834,1,slr1916,1.11583113955322,0.002086470679076,NA,low affinity sulfate transporter,Transport and binding proteins,Transport,sll0834
+slr2034,1,slr1916,1.13276613583025,1.88711766541527e-8,Photosystem II,"putative homolog of plant HCF136, which is essential for stability or assembly of photosystem II",Photosynthesis and respiration,Photosynth,slr2034
+slr1105,1,slr1916,1.14119303868984,3.94263021674489e-6,Protein modification and translation factors,GTP-binding protein TypA/BipA homolog,Translation,Translat,typA slr1105
+sll0493,1,slr1916,1.15413569003412,6.58008087828e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll0493
+sll0616,1,slr1916,1.1702505970428,5.05498761477501e-10,Protein and peptide secretion,preprotein translocase SecA subunit,Cellular processes,CellProc,secA sll0616
+sll1450,1,slr1916,1.17296111127444,5.67760808898e-4,NA,nitrate/nitrite transport system substrate-binding protein,Transport and binding proteins,Transport,nrtA sll1450
+sll1692,1,slr1916,1.1871664903457,1.75125377456e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll1692
+sll0662,1,slr1916,1.19494382958549,2.50773286423105e-10,"Thioredoxin, glutaredoxin, and glutathione","4Fe-4S type iron-sulfur protein, probable glutaredoxin","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll0662
+sll0141,1,slr1916,1.2243600752413,0.026750322759079,NA,hypothetical protein,Hypothetical,Hypoth,sll0141
+slr0947,1,slr1916,1.22848400179898,3.65637109999989e-6,NA,response regulator for energy transfer from phycobilisomes to photosystems,Regulatory functions,Regul,slr0947
+sll0615,1,slr1916,1.2361621689788,5.26314407291817e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll0615
+ssr1853,1,slr1916,1.24423896206611,1.52004605857e-4,NA,unknown protein,Unknown,Unknown,ssr1853
+slr1687,1,slr1916,1.24450970653352,0.001779569726612,NA,hypothetical protein,Hypothetical,Hypoth,slr1687
+slr1322,1,slr1916,1.26867154761941,3.99478413711878e-7,NA,putative modulator of DNA gyrase; TldD,"DNA replication, restriction, modification, recombination, and repair",DNArep,slr1322
+sll1835,1,slr1916,1.26869204944731,6.8343606500021e-5,"Membranes, lipoproteins, and porins","putative curli production assembly/transport component, periplasmic protein",Cell envelope,Envelope,sll1835
+sll0689,1,slr1916,1.28236365385652,7.79378725580396e-7,NA,Na+/H+ antiporter,Transport and binding proteins,Transport,nhaS3 sll0689
+sll1072,1,slr1916,1.29122921556776,1.15385936919614e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll1072
+sll0661,1,slr1916,1.32416840525506,4.5636626679868e-8,NA,hypothetical protein YCF35,Hypothetical,Hypoth,sll0661
+slr0081,1,slr1916,1.38074908205767,3.92365748137098e-6,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,slr0081
+sll0909,1,slr1916,1.39104657716621,2.04570068711e-4,NA,unknown protein,Unknown,Unknown,sll0909
+sll1796,1,slr1916,1.40454256954566,2.91497349469214e-18,Soluble electron carriers,cytochrome c553,Photosynthesis and respiration,Photosynth,petJ sll1796
+slr1254,1,slr1916,1.41697447021426,7.79378725580396e-7,Carotenoid,phytoene dehydrogenase (phytoene desaturase),"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,pds crtD slr1254
+ssl2542,1,slr1916,1.42318700194921,4.53818811705e-4,Adaptations and atypical conditions,"high light-inducible polypeptide HliA, CAB/ELIP/HLIP superfamily",Other categories,Other,ssl2542
+ssl0511,1,slr1916,1.46488762573868,7.63101958699536e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssl0511
+ssr2153,1,slr1916,1.51700036636702,0.039041654251024,NA,unknown protein,Unknown,Unknown,ssr2153
+sll0617,1,slr1916,1.52393351481358,5.05722214494065e-13,"Membranes, lipoproteins, and porins",plasma membrane protein essential for thylakoid formation,Cell envelope,Envelope,sll0617
+slr2007,1,slr1916,1.6393578840029,0.002238940124135,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,slr2007
+sll1071,1,slr1916,1.65050322468659,0.001207213307926,NA,hypothetical protein,Hypothetical,Hypoth,sll1071
+sll1691,1,slr1916,1.67962537553853,0.01202131251022,NA,hypothetical protein,Hypothetical,Hypoth,sll1691
+slr1291,1,slr1916,1.68489105886505,5.29080914664824e-8,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,ndhD2 slr1291
+ssr2016,1,slr1916,1.76095622551108,0.004416748563802,NA,hypothetical protein,Hypothetical,Hypoth,ssr2016
+slr0940,1,slr1916,1.76547893680379,8.27392715617679e-7,Carotenoid,zeta-carotene desaturase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,crtQ slr0940
+slr5037,1,slr1916,1.94271812578735,6.57326788777822e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr5037
+slr1919,1,slr1916,1.99062094588388,4.97519187450145e-9,NA,putative protein kinase,Regulatory functions,Regul,slr1919
+slr2006,1,slr1916,2.17418043213078,3.79187178499e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr2006
+slr1350,1,ssl2982,0.309050657570806,0.191876232296317,NA,acyl-lipid desaturase (delta 12),"Fatty acid, phospholipid and sterol metabolism",FattyAcids,desA slr1350
+slr0355,1,ssl2982,0.491333767516257,0.03735260917129,NA,hypothetical protein,Hypothetical,Hypoth,slr0355
+sll1732,1,ssl2982,0.521043851069498,0.188250020579518,NADH dehydrogenase,"NADH dehydrogenase subunit 5 (involved in low CO2-inducible, high affinity CO2 uptake)",Photosynthesis and respiration,Photosynth,sll1732
+sll0108,1,ssl2982,0.626732693825681,1.25665213560442e-10,NA,ammonium/methylammonium permease,Transport and binding proteins,Transport,sll0108
+slr2007,1,ssl2982,0.6593092002596,0.238984413184806,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,slr2007
+sll0834,1,ssl2982,0.714000632013079,0.049508605437827,NA,low affinity sulfate transporter,Transport and binding proteins,Transport,sll0834
+slr1051,1,ssl2982,0.719794856812963,1.78709726539e-4,NA,enoyl-[acyl-carrier-protein] reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,fabI envM slr1051
+sll0689,1,ssl2982,0.71990092377596,0.006032902708067,NA,Na+/H+ antiporter,Transport and binding proteins,Transport,nhaS3 sll0689
+sll0529,1,ssl2982,0.824324298608195,8.02944063651502e-5,Pentose phosphate pathway,"putative phospho-ketolase, transketolase",Energy metabolism,Energy,sll0529
+slr0093,1,ssl2982,0.857885501775447,0.001359651563903,Chaperones,"DnaJ protein, heat shock protein 40, molecular chaperone",Cellular processes,CellProc,slr0093
+sll1316,1,ssl2982,0.884329904454048,9.63823797594998e-9,Cytochrome b6/f complex,cytochrome b6-f complex iron-sulfur subunit (Rieske iron sulfur protein),Photosynthesis and respiration,Photosynth,petC2 sll1316
+ssr1853,1,ssl2982,0.916566029461388,0.005016622288107,NA,unknown protein,Unknown,Unknown,ssr1853
+slr2034,1,ssl2982,0.956002739487974,1.63787418835936e-6,Photosystem II,"putative homolog of plant HCF136, which is essential for stability or assembly of photosystem II",Photosynthesis and respiration,Photosynth,slr2034
+slr1531,1,ssl2982,0.958211444282671,8.07676127747581e-8,Protein and peptide secretion,signal recognition particle protein,Cellular processes,CellProc,ffh slr1531
+sll0141,1,ssl2982,0.975877896825741,0.071612753403199,NA,hypothetical protein,Hypothetical,Hypoth,sll0141
+slr0838,1,ssl2982,0.986039956822874,1.31996231968e-4,Purine ribonucleotide biosynthesis,phosphoribosyl formylglycinamidine cyclo-ligase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,purM slr0838
+sll0493,1,ssl2982,0.988662934660721,0.00300403871883,NA,hypothetical protein,Hypothetical,Hypoth,sll0493
+sll0759,1,ssl2982,1.00147290471304,3.86410491123e-4,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll0759
+sll1450,1,ssl2982,1.00423881988393,0.002686211824176,NA,nitrate/nitrite transport system substrate-binding protein,Transport and binding proteins,Transport,nrtA sll1450
+slr0320,1,ssl2982,1.00551270056607,7.62748739442077e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr0320
+sll1561,1,ssl2982,1.01165725561619,3.13890806665073e-11,Amino acids and amines,proline oxidase,Energy metabolism,Energy,sll1561
+slr0193,1,ssl2982,1.01167532512703,1.11618625529321e-6,Nucleoproteins,RNA-binding protein,Translation,Translat,slr0193
+slr0529,1,ssl2982,1.01237086433041,6.15535171552818e-9,NA,glucosylglycerol transport system substrate-binding protein,Transport and binding proteins,Transport,slr0529
+slr1993,1,ssl2982,1.01241467388953,3.02864516449218e-10,NA,PHA-specific beta-ketothiolase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,slr1993
+slr1208,1,ssl2982,1.01269401607426,2.8686078328976e-8,Other,probable oxidoreductase,Other categories,Other,slr1208
+sll1267,1,ssl2982,1.01369927266246,2.02690374767016e-17,NA,unknown protein,Unknown,Unknown,sll1267
+sll1119,1,ssl2982,1.0145171342141,4.51654578744e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll1119
+ssl7039,1,ssl2982,1.02054695801193,7.0695497534731e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssl7039
+sll0157,1,ssl2982,1.02108400787603,0.001094714827685,NA,hypothetical protein,Hypothetical,Hypoth,sll0157
+slr0841,1,ssl2982,1.02192156039178,4.71888049589091e-10,NA,"periplasmic protein, function unknown",Unknown,Unknown,slr0841
+sll1915,1,ssl2982,1.02289808531095,1.48200756717369e-9,Drug and analog sensitivity,"putative glyoxalase, antibiotic resistance, or dioxygenase protein",Other categories,Other,sll1915
+sll0616,1,ssl2982,1.02361935361268,3.92542970698426e-8,Protein and peptide secretion,preprotein translocase SecA subunit,Cellular processes,CellProc,secA sll0616
+sll1390,1,ssl2982,1.02880572315676,1.59481349914303e-13,NA,hypothetical protein,Hypothetical,Hypoth,sll1390
+slr1884,1,ssl2982,1.02940445231282,1.06835596629e-4,Aminoacyl tRNA synthetases and tRNA modification,tryptophanyl-tRNA synthetase,Translation,Translat,trpS slr1884
+slr0228,1,ssl2982,1.03110424805575,5.66256476108758e-10,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH2 slr0228
+sll0426,1,ssl2982,1.04033161886957,8.53796447467547e-6,NA,unknown protein,Unknown,Unknown,sll0426
+sll0761,1,ssl2982,1.04308584070967,1.31305844349283e-8,NA,unknown protein,Unknown,Unknown,sll0761
+slr1105,1,ssl2982,1.04386847759306,1.83314065630967e-5,Protein modification and translation factors,GTP-binding protein TypA/BipA homolog,Translation,Translat,typA slr1105
+slr2070,1,ssl2982,1.04530468224427,2.43944898873408e-8,NA,hypothetical protein,Hypothetical,Hypoth,slr2070
+sll0550,1,ssl2982,1.0465076905821,1.930229523943e-9,Other,flavoprotein,Other categories,Other,dfa1 sll0550
+slr1137,1,ssl2982,1.0567256455003,2.39585301189766e-14,Respiratory terminal oxidases,cytochrome c oxidase subunit I,Photosynthesis and respiration,Photosynth,ctaD slr1137
+slr0455,1,ssl2982,1.06200404207589,1.09572311715909e-6,NA,hypothetical protein,Hypothetical,Hypoth,slr0455
+sll1692,1,ssl2982,1.0647344718404,6.43733770243e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll1692
+ssl0294,1,ssl2982,1.07063102670717,2.57303108388573e-18,NA,hypothetical protein,Hypothetical,Hypoth,ssl0294
+sll0615,1,ssl2982,1.07312711334654,1.711159080473e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll0615
+slr0602,1,ssl2982,1.07330361231501,9.69849061610684e-5,NA,unknown protein,Unknown,Unknown,slr0602
+sll0102,1,ssl2982,1.07393792905117,1.95812285832875e-11,NA,hypothetical protein,Hypothetical,Hypoth,sll0102
+slr2024,1,ssl2982,1.0790543496704,2.97635916356851e-8,NA,two-component response regulator CheY subfamily,Regulatory functions,Regul,slr2024
+slr1687,1,ssl2982,1.07957008152828,0.00571938261583,NA,hypothetical protein,Hypothetical,Hypoth,slr1687
+sll1194,1,ssl2982,1.07988634216862,1.94170988285952e-13,Photosystem II,photosystem II 12 kDa extrinsic protein,Photosynthesis and respiration,Photosynth,psbU sll1194
+sll1853,1,ssl2982,1.08185344574338,1.85267268722e-4,NA,unknown protein,Unknown,Unknown,sll1853
+sll0749,1,ssl2982,1.08494660045308,2.65255598608513e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll0749
+sll1891,1,ssl2982,1.09354314175541,4.43018521141294e-6,NA,unknown protein,Unknown,Unknown,sll1891
+slr1604,1,ssl2982,1.10142263753294,8.74930539000989e-7,Cell division,cell division protein FtsH,Cellular processes,CellProc,ftsH3 slr1604
+slr0818,1,ssl2982,1.11137404582609,2.31421871051e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr0818
+slr0947,1,ssl2982,1.1120357396021,2.09472779541359e-5,NA,response regulator for energy transfer from phycobilisomes to photosystems,Regulatory functions,Regul,slr0947
+ssr2831,1,ssl2982,1.11207257878761,1.50149094112601e-10,Photosystem I,photosystem I subunit IV,Photosynthesis and respiration,Photosynth,psaE ssr2831
+sll1072,1,ssl2982,1.12248851510363,5.28064225666407e-7,NA,hypothetical protein,Hypothetical,Hypoth,sll1072
+slr2051,1,ssl2982,1.12802907754213,1.25188071330044e-26,Phycobilisome,phycobilisome rod-core linker polypeptide,Photosynthesis and respiration,Photosynth,slr2051
+slr1734,1,ssl2982,1.13058948522478,2.77892031846594e-7,Pentose phosphate pathway,glucose 6-phosphate dehydrogenase assembly protein,Energy metabolism,Energy,opcA slr1734
+sll2012,1,ssl2982,1.13355002061225,2.83729261043e-4,"RNA synthesis, modification, and DNA transcription",group2 RNA polymerase sigma factor SigD,Transcription,Transcript,sll2012
+sll1541,1,ssl2982,1.1417494290959,3.68404408329e-4,Carotenoid,"Apocarotenoid-15,15-oxygenase (ACO)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1541
+sll0944,1,ssl2982,1.14226673780048,2.21262017797532e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll0944
+sll1774,1,ssl2982,1.15065316717971,1.47677040875982e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll1774
+ssr2595,1,ssl2982,1.1509477079488,5.38306873223e-4,Adaptations and atypical conditions,"high light-inducible polypeptide HliB, CAB/ELIP/HLIP superfamily",Other categories,Other,ssr2595
+sll1425,1,ssl2982,1.15193055953259,2.30055782023564e-12,Aminoacyl tRNA synthetases and tRNA modification,proline-tRNA ligase,Translation,Translat,proS sll1425
+slr1783,1,ssl2982,1.15597455830745,6.38687635095054e-19,NA,two-component response regulator NarL subfamily,Regulatory functions,Regul,slr1783
+slr1544,1,ssl2982,1.15707822115008,8.62176468228875e-5,NA,unknown protein,Unknown,Unknown,slr1544
+sll1835,1,ssl2982,1.15723265334214,2.30038606599e-4,"Membranes, lipoproteins, and porins","putative curli production assembly/transport component, periplasmic protein",Cell envelope,Envelope,sll1835
+slr6040,1,ssl2982,1.16146990565973,1.73383298975721e-12,NA,two-component response regulator,Regulatory functions,Regul,slr6040
+sll0645,1,ssl2982,1.16165270660169,4.16408977319242e-9,NA,unknown protein,Unknown,Unknown,sll0645
+sll1852,1,ssl2982,1.17287603667002,1.79688999828e-4,Interconversions and salvage of nucleosides and nucleotides,nucleoside diphosphate kinase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,ndk ndkR sll1852
+sll1011,1,ssl2982,1.17744103830136,3.45778199130027e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll1011
+ssl2250,1,ssl2982,1.18011010633693,5.15617614930174e-8,Drug and analog sensitivity,bacterioferritin-associated ferredoxin,Other categories,Other,ssl2250
+slr0081,1,ssl2982,1.18675944396249,5.94724926461146e-5,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,slr0081
+slr0927,1,ssl2982,1.19333561953299,1.76055688199519e-19,Photosystem II,photosystem II reaction center D2 protein,Photosynthesis and respiration,Photosynth,slr0927
+ssl0511,1,ssl2982,1.1990364464621,4.55020800307482e-5,NA,hypothetical protein,Hypothetical,Hypoth,ssl0511
+slr2006,1,ssl2982,1.20121063365829,0.053595168598606,NA,hypothetical protein,Hypothetical,Hypoth,slr2006
+sll1682,1,ssl2982,1.20124981446899,1.29687165497217e-9,Amino acids and amines,alanine dehydrogenase,Energy metabolism,Energy,sll1682
+sll0789,1,ssl2982,1.2157322724033,3.32349293168657e-13,NA,two-component response regulator OmpR subfamily,Regulatory functions,Regul,sll0789
+slr0967,1,ssl2982,1.24891743144709,2.738563402e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr0967
+sll0858,1,ssl2982,1.2591530818665,0.019258996056496,NA,hypothetical protein,Hypothetical,Hypoth,sll0858
+slr0681,1,ssl2982,1.26025212250519,2.61270783536169e-7,NA,probable sodium/calcium exchanger protein,Transport and binding proteins,Transport,slr0681
+slr1928,1,ssl2982,1.2616669317159,3.60060871568295e-6,NA,type 4 pilin-like protein,Unknown,Unknown,slr1928
+slr1811,1,ssl2982,1.264525632053,1.26223053406365e-9,NA,hypothetical protein,Hypothetical,Hypoth,slr1811
+sll1867,1,ssl2982,1.27763618121507,1.00509403944912e-10,Photosystem II,photosystem II D1 protein,Photosynthesis and respiration,Photosynth,sll1867
+ssl2501,1,ssl2982,1.2903621891726,3.38204766966579e-9,NA,unknown protein,Unknown,Unknown,ssl2501
+slr0925,1,ssl2982,1.30762907698997,7.54103029875465e-10,NA,single-stranded DNA-binding protein,"DNA replication, restriction, modification, recombination, and repair",DNArep,ssb slr0925
+ssl2542,1,ssl2982,1.31869665989011,9.1965373385e-4,Adaptations and atypical conditions,"high light-inducible polypeptide HliA, CAB/ELIP/HLIP superfamily",Other categories,Other,ssl2542
+ssr2723,1,ssl2982,1.32814736143985,2.48241838291619e-9,NA,hypothetical protein,Hypothetical,Hypoth,ssr2723
+sll0909,1,ssl2982,1.3345153791898,2.88775860956e-4,NA,unknown protein,Unknown,Unknown,sll0909
+sll1483,1,ssl2982,1.35628629175633,0.004431652551681,"Membranes, lipoproteins, and porins","periplasmic protein, similar to transforming growth factor induced protein",Cell envelope,Envelope,sll1483
+sll1426,1,ssl2982,1.37026648039359,4.07798502653609e-9,NA,unknown protein,Unknown,Unknown,sll1426
+sll0185,1,ssl2982,1.37168633626129,1.93310303656731e-6,"RNA synthesis, modification, and DNA transcription","putative Rho-like protein, DNA-templated transcription, termination",Transcription,Transcript,sll0185
+slr0601,1,ssl2982,1.3744219237394,5.65460797191401e-21,NA,unknown protein,Unknown,Unknown,slr0601
+slr1440,1,ssl2982,1.38603566232651,4.49039618100239e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1440
+slr1136,1,ssl2982,1.39504591347224,2.64455055201469e-14,Respiratory terminal oxidases,cytochrome c oxidase subunit II,Photosynthesis and respiration,Photosynth,ctaC coxB slr1136
+sll0103,1,ssl2982,1.41400980679891,2.27994842869164e-11,NA,hypothetical protein,Hypothetical,Hypoth,sll0103
+sll1691,1,ssl2982,1.42238537935334,0.030085757938298,NA,hypothetical protein,Hypothetical,Hypoth,sll1691
+sll1071,1,ssl2982,1.43866564412458,0.003999474170661,NA,hypothetical protein,Hypothetical,Hypoth,sll1071
+slr1133,1,ssl2982,1.45246773603019,9.7595973448235e-19,Glutamate family / Nitrogen assimilation,L-argininosuccinate lyase,Amino acid biosynthesis,AminoAcids,argH slr1133
+slr6039,1,ssl2982,1.46084215494083,9.65652808752951e-13,NA,hypothetical protein,Hypothetical,Hypoth,slr6039
+slr0940,1,ssl2982,1.46521637653495,3.64714128399147e-5,Carotenoid,zeta-carotene desaturase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,crtQ slr0940
+slr5037,1,ssl2982,1.4845487580164,1.88693104399e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr5037
+sll0617,1,ssl2982,1.49410444295614,5.24251604512806e-13,"Membranes, lipoproteins, and porins",plasma membrane protein essential for thylakoid formation,Cell envelope,Envelope,sll0617
+slr1322,1,ssl2982,1.49457999784394,8.86781167241134e-10,NA,putative modulator of DNA gyrase; TldD,"DNA replication, restriction, modification, recombination, and repair",DNArep,slr1322
+sll0788,1,ssl2982,1.54697683880928,1.0308004448931e-13,NA,hypothetical protein,Hypothetical,Hypoth,sll0788
+sll1566,1,ssl2982,1.56484724506583,2.50742580731564e-16,Polysaccharides and glycoproteins,glucosylglycerolphosphate synthase,Central intermediary metabolism,CentralMet,ggpS sll1566
+slr1254,1,ssl2982,1.59438352164449,1.19262999533369e-8,Carotenoid,phytoene dehydrogenase (phytoene desaturase),"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,pds crtD slr1254
+slr1291,1,ssl2982,1.77277926195651,5.02830315268988e-9,NADH dehydrogenase,NADH dehydrogenase subunit 4,Photosynthesis and respiration,Photosynth,ndhD2 slr1291
+ssl0832,1,ssl2982,1.81527532900389,1.711159080473e-6,NA,hypothetical protein,Hypothetical,Hypoth,ssl0832
+slr1919,1,ssl2982,1.81871373579529,5.78421572218637e-8,NA,putative protein kinase,Regulatory functions,Regul,slr1919
+ssr2016,1,ssl2982,1.89773134294399,0.001434680184792,NA,hypothetical protein,Hypothetical,Hypoth,ssr2016
+sll1796,1,ssl2982,1.96958039213965,1.20063533973802e-37,Soluble electron carriers,cytochrome c553,Photosynthesis and respiration,Photosynth,petJ sll1796
+sll0662,1,ssl2982,2.38271331558793,5.22400492505235e-41,"Thioredoxin, glutaredoxin, and glutathione","4Fe-4S type iron-sulfur protein, probable glutaredoxin","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll0662
+ssl1263,1,ssl2982,2.3901615682023,6.47850874966713e-41,NA,hypothetical protein,Hypothetical,Hypoth,ssl1263
+sll0330,1,ssl2982,2.3993385508572,0.011285961859462,NA,sepiapterine reductase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,sll0330
+ssr2194,1,ssl2982,2.61583794968856,0.002672007658778,NA,unknown protein,Unknown,Unknown,ssr2194
+ssr2153,1,ssl2982,2.65808706388451,1.01781929172e-4,NA,unknown protein,Unknown,Unknown,ssr2153
+sll0661,1,ssl2982,2.72579843421551,3.03370077890469e-33,NA,hypothetical protein YCF35,Hypothetical,Hypoth,sll0661
+slr1704,1,ssl2982,2.93146171328065,1.69923262731e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr1704
+sll1969,2,sll1969,-1.6704124615619,3.90184510001332e-15,NA,ppnK NAD+ kinase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,ppnK sll1969
+slr5085,2,sll1969,-1.36964213227821,NA,NA,unknown protein,Unknown,Unknown,slr5085
+sll1851,2,sll1969,-1.07864133769529,NA,NA,unknown protein,Unknown,Unknown,sll1851
+slr0797,2,sll1969,-0.867858483562989,0.211383195486469,NA,cobalt-transporting P-type ATPase (cobalt efflux pump) involved in cobalt tolerance,Transport and binding proteins,Transport,slr0797
+sll0846,2,sll1969,-0.800840843458638,0.289140731723552,NA,hypothetical protein,Hypothetical,Hypoth,sll0846
+sll1710,2,sll1969,-0.68892087339854,0.442029508572785,Transposon-related functions,putative transposase [ISY523b: 1275354 - 1276224],Other categories,Other,sll1710
+slr1927,2,sll1969,-0.687255888186021,0.385985241628764,NA,hypothetical protein,Hypothetical,Hypoth,slr1927
+sll1319,2,sll1969,-0.679649197318911,0.385985241628764,NA,uncharacterized transporter,Transport and binding proteins,Transport,sll1319
+sll1917,2,sll1969,-0.650046250288777,0.405530986027319,"Cobalamin, heme, phycobilin and porphyrin","coproporphyrinogen III oxidase, anaerobic (oxygen-independent)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1917
+sll0378,2,sll1969,-0.594970000292007,0.487373777782441,"Cobalamin, heme, phycobilin and porphyrin",uroporphyrin-III C-methyltransferase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobA sll0378
+slr2077,2,sll1969,-0.587674336914558,0.089079671899765,NA,"probable ABC transporter, periplasmic binding protein",Transport and binding proteins,Transport,slr2077
+ssr5074,2,sll1969,-0.582233314954232,NA,NA,unknown protein,Unknown,Unknown,ssr5074
+slr1285,2,sll1969,-0.566656424062227,0.460925220985353,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr1285
+slr5022,2,sll1969,-0.557059266036407,0.385985241628764,Other,probable aminotransferase,Other categories,Other,slr5022
+slr0199,2,sll1969,-0.556884996705877,0.460925220985353,Aromatic amino acid family,"putative glutamine amidotransferase, ergothioneine biosynthesis",Amino acid biosynthesis,AminoAcids,slr0199
+slr1222,2,sll1969,-0.538253628799278,0.340278347338122,NA,unknown protein,Unknown,Unknown,slr1222
+slr0640,2,sll1969,-0.527114730234099,0.089079671899765,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr0640
+sll0864,2,sll1969,-0.5231012062924,0.484055575774819,NA,hypothetical protein,Hypothetical,Hypoth,sll0864
+slr0231,2,sll1969,-0.52140208033191,NA,Other,probable DNA-3-methyladenine glycosylase,Other categories,Other,slr0231
+slr5112,2,sll1969,-0.513013420235772,NA,NA,unknown protein,Unknown,Unknown,slr5112
+sll0792,2,sll1969,-0.510669520552428,0.375510049539544,NA,Zinc-responsive repressor ZiaR,Regulatory functions,Regul,ziaR smtB sll0792
+sll1634,2,sll1969,-0.505806127711833,0.289140731723552,NA,hypothetical protein,Hypothetical,Hypoth,sll1634
+ssr1499,2,sll1969,-0.503802053100289,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr1499
+sll1231,2,sll1969,-0.481554587247577,0.407609697359728,Sugars,mannosyltransferase,Energy metabolism,Energy,sll1231
+slr0755,2,sll1969,-0.480468029355868,0.680423754376789,NA,hypothetical protein,Hypothetical,Hypoth,slr0755
+sll1258,2,sll1969,-0.479443170885752,0.416610047372678,Pyrimidine ribonucleotide biosynthesis,dCTP deaminase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,sll1258
+slr7052,2,sll1969,-0.477944610797447,NA,NA,unknown protein,Unknown,Unknown,slr7052
+slr6045,2,sll1969,-0.477720293062779,0.485803345173828,NA,unknown protein,Unknown,Unknown,slr6045
+sll0825,2,sll1969,-0.473065981809562,0.541239847453943,Ribosomal proteins: synthesis and modification,polyA polymerase,Translation,Translat,sll0825
+slr0639,2,sll1969,-0.470977929338472,0.527383176762954,NA,mechanosensitive ion channel homolog,Transport and binding proteins,Transport,slr0639
+sll1611,2,sll1969,-0.470508617620508,0.463972547088527,NA,unknown protein,Unknown,Unknown,sll1611
+slr2118,2,sll1969,-0.469668967718652,0.442029508572785,NA,unknown protein,Unknown,Unknown,slr2118
+sll5003,2,sll1969,-0.466328406935915,0.460925220985353,NA,hypothetical protein,Hypothetical,Hypoth,sll5003
+slr0108,2,sll1969,-0.464352683892551,0.52476676408392,NA,unknown protein,Unknown,Unknown,slr0108
+slr1963,2,sll1969,-0.463576717647831,0.488464921148694,Adaptations and atypical conditions,Orange carotenoid-binding protein,Other categories,Other,slr1963
+ssr1258,2,sll1969,-0.457117397923463,0.572488564128448,NA,hypothetical protein,Hypothetical,Hypoth,ssr1258
+slr0913,2,sll1969,-0.453338572702778,0.388066056871306,NA,unknown protein,Unknown,Unknown,slr0913
+slr1827,2,sll1969,-0.432417393131331,0.460402326858319,NA,hypothetical protein,Hypothetical,Hypoth,slr1827
+slr5012,2,sll1969,-0.429487230154916,0.488464921148694,NA,hypothetical protein,Hypothetical,Hypoth,slr5012
+sll5062,2,sll1969,-0.425717919649069,0.553809843056452,NA,unknown protein,Unknown,Unknown,sll5062
+sll0494,2,sll1969,-0.422868824247804,0.560875377264511,NA,unknown protein,Unknown,Unknown,sll0494
+sll1900,2,sll1969,-0.417708526090149,0.385985241628764,Other,acetyltransferase,Other categories,Other,sll1900
+slr0023,2,sll1969,-0.40767562015522,0.355740969262174,NA,unknown protein,Unknown,Unknown,slr0023
+slr1862,2,sll1969,-0.403321218536148,0.568711399065453,NA,unknown protein,Unknown,Unknown,slr1862
+ssr2848,2,sll1969,-0.396047367804446,0.560875377264511,NA,unknown protein,Unknown,Unknown,ssr2848
+sll0085,2,sll1969,-0.377124946210281,0.407609697359728,NA,unknown protein,Unknown,Unknown,sll0085
+slr6106,2,sll1969,-0.373982546724161,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6106
+sll0448,2,sll1969,-0.371350554393696,NA,NA,unknown protein,Unknown,Unknown,sll0448
+sll5028,2,sll1969,-0.368743183334347,0.619476407943595,NA,hypothetical protein,Hypothetical,Hypoth,sll5028
+sll5046,2,sll1969,-0.364639672263217,0.407609697359728,NA,unknown protein,Unknown,Unknown,sll5046
+slr0510,2,sll1969,-0.364209628500804,0.438419155251893,NA,hypothetical protein,Hypothetical,Hypoth,slr0510
+sll0360,2,sll1969,-0.363684720116684,0.468534366460192,NA,hypothetical protein,Hypothetical,Hypoth,sll0360
+slr0813,2,sll1969,-0.363659829954759,0.558250052140159,NA,yidC YidC/Oxa1 family membrane protein insertase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,yidC slr0813
+sll1318,2,sll1969,-0.362950892004508,0.588572639020839,NA,hypothetical protein,Hypothetical,Hypoth,sll1318
+slr0272,2,sll1969,-0.349464190653009,NA,NA,unknown protein,Unknown,Unknown,slr0272
+sll5057,2,sll1969,-0.349079435062793,0.483438372198192,Other,probable glycosyltransferase,Other categories,Other,sll5057
+slr1074,2,sll1969,-0.345386500994955,0.460925220985353,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,slr1074
+ssl3177,2,sll1969,-0.341324690044955,0.407609697359728,NA,hypothetical protein,Hypothetical,Hypoth,ssl3177
+sll5047,2,sll1969,-0.338595203548128,0.385985241628764,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,sll5047
+slr1552,2,sll1969,-0.335412082272393,0.460925220985353,NA,unknown protein,Unknown,Unknown,slr1552
+slr0142,2,sll1969,-0.334067467561671,0.506242660231697,NA,hypothetical protein,Hypothetical,Hypoth,slr0142
+slr0914,2,sll1969,-0.329514422609278,0.437018309428036,NA,unknown protein,Unknown,Unknown,slr0914
+slr5013,2,sll1969,-0.329047661666598,0.535892869512435,NA,unknown protein,Unknown,Unknown,slr5013
+slr2121,2,sll1969,-0.322880150376877,0.560875377264511,Glycolate pathway,TSPO translocator protein,Energy metabolism,Energy,TSPO slr2121
+slr1547,2,sll1969,-0.316035112541231,0.568711399065453,NA,hypothetical protein,Hypothetical,Hypoth,slr1547
+sll1531,2,sll1969,-0.31326208569004,0.385985241628764,NA,unknown protein,Unknown,Unknown,sll1531
+slr1974,2,sll1969,-0.311576544376308,0.506242660231697,Other,GTP binding protein,Other categories,Other,der engA slr1974
+slr6090,2,sll1969,-0.295109867993868,0.385985241628764,NA,unknown protein,Unknown,Unknown,slr6090
+ssr5019,2,sll1969,-0.289072950466283,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5019
+sll1095,2,sll1969,-0.284314854194904,0.55631696239068,NA,hypothetical protein,Hypothetical,Hypoth,sll1095
+slr1495,2,sll1969,-0.283886784766814,0.540885166536556,NA,hypothetical protein,Hypothetical,Hypoth,slr1495
+sll1003,2,sll1969,-0.282531403539569,0.649635036182511,NA,two-component sensor histidine kinase,Regulatory functions,Regul,sll1003
+slr7102,2,sll1969,-0.276568673994267,0.619476407943595,NA,hypothetical protein,Hypothetical,Hypoth,slr7102
+slr0286,2,sll1969,-0.275845974091515,NA,NA,protein involved in functional assembly of photosystem II,Unknown,Unknown,slr0286
+slr1262,2,sll1969,-0.273361081492239,0.620741977140249,NA,hypothetical protein,Hypothetical,Hypoth,slr1262
+sll0686,2,sll1969,-0.27315780759922,0.560875377264511,Other,probable cytochrome c-type biogenesis protein,Other categories,Other,sll0686
+slr1163,2,sll1969,-0.271589738265617,0.407609697359728,NA,unknown protein,Unknown,Unknown,slr1163
+slr5053,2,sll1969,-0.271248163062134,NA,NA,unknown protein,Unknown,Unknown,slr5053
+slr6058,2,sll1969,-0.267389375278309,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6058
+slr1025,2,sll1969,-0.267296803944662,0.698225622947766,NA,hypothetical protein,Hypothetical,Hypoth,slr1025
+ssl5129,2,sll1969,-0.266753204504937,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssl5129
+ssl3580,2,sll1969,-0.263773446131271,0.460925220985353,Hydrogenase,putative hydrogenase expression/formation protein HypC,Other categories,Other,hypC ssl3580
+slr0689,2,sll1969,-0.26180803724987,0.385985241628764,NA,hypothetical protein,Hypothetical,Hypoth,slr0689
+slr0572,2,sll1969,-0.257287362715616,NA,NA,unknown protein,Unknown,Unknown,slr0572
+sll5026,2,sll1969,-0.255112285252455,0.479499729321389,NA,hypothetical protein,Hypothetical,Hypoth,sll5026
+sll0848,2,sll1969,-0.254651599199462,0.639249415531752,NA,chromosomal replication initiator protein DnaA,"DNA replication, restriction, modification, recombination, and repair",DNArep,dnaA sll0848
+slr0554,2,sll1969,-0.253666494948196,0.487373777782441,NA,hypothetical protein,Hypothetical,Hypoth,slr0554
+sll0181,2,sll1969,-0.251369728319496,0.608638493898884,NA,unknown protein,Unknown,Unknown,sll0181
+sll0922,2,sll1969,-0.249295397216788,NA,NA,unknown protein,Unknown,Unknown,sll0922
+sll0474,2,sll1969,-0.242429163354987,0.658171196368298,NA,two-component hybrid sensor and regulator,Regulatory functions,Regul,sll0474
+slr1261,2,sll1969,-0.229528678433872,0.698510187384861,NA,hypothetical protein,Hypothetical,Hypoth,slr1261
+slr8038,2,sll1969,-0.21638342127286,0.460925220985353,WD repeat proteins,WD-repeat protein,Other categories,Other,slr8038
+sll0793,2,sll1969,-0.20446503798461,0.677376143097261,NA,hypothetical protein,Hypothetical,Hypoth,sll0793
+sll7027,2,sll1969,-0.201199906314217,0.754594460687331,NA,unknown protein,Unknown,Unknown,sll7027
+slr7098,2,sll1969,-0.191506215901048,NA,NA,unknown protein,Unknown,Unknown,slr7098
+slr1077,2,sll1969,-0.190402578969107,0.723388755630051,Other,probable glycosyltransferase,Other categories,Other,slr1077
+ssl7042,2,sll1969,-0.188767575629579,0.776925631276813,NA,hypothetical protein,Hypothetical,Hypoth,ssl7042
+sll1240,2,sll1969,-0.188736380150572,0.7844369808848,NA,unknown protein,Unknown,Unknown,sll1240
+slr1259,2,sll1969,-0.184546529913861,0.689537963130983,NA,hypothetical protein,Hypothetical,Hypoth,slr1259
+sll0924,2,sll1969,-0.182876338636947,0.619476407943595,NA,hypothetical protein,Hypothetical,Hypoth,sll0924
+sll1623,2,sll1969,-0.172233602770159,0.677376143097261,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll1623
+sll1469,2,sll1969,-0.17167161412156,0.798146343478806,NA,hypothetical protein,Hypothetical,Hypoth,sll1469
+sll8048,2,sll1969,-0.170078999837017,0.658171196368298,NA,hypothetical protein,Hypothetical,Hypoth,sll8048
+ssr7093,2,sll1969,-0.161237493649524,NA,Other,CRISPR-associated endoribonuclease Cas2 3,Other categories,Other,cas2-3 ssr7093
+sll1830,2,sll1969,-0.160250320276212,0.726377714100922,NA,unknown protein,Unknown,Unknown,sll1830
+slr0955,2,sll1969,-0.158971878888391,0.777505010465729,Aminoacyl tRNA synthetases and tRNA modification,probable tRNA/rRNA methyltransferase,Translation,Translat,slr0955
+slr1260,2,sll1969,-0.145842602930679,0.796777289144777,NA,hypothetical protein,Hypothetical,Hypoth,slr1260
+sll1510,2,sll1969,-0.139179114134645,0.817355731484595,NA,unknown protein,Unknown,Unknown,sll1510
+slr7049,2,sll1969,-0.127778930830736,0.817355731484595,Transposon-related functions,resolvase,Other categories,Other,slr7049
+slr0321,2,sll1969,-0.126902077428924,0.823149950378216,NA,GTP-binding protein ERA homolog,Regulatory functions,Regul,era slr0321
+slr8044,2,sll1969,-0.126098641214722,0.819236643199954,NA,unknown protein,Unknown,Unknown,slr8044
+sll0644,2,sll1969,-0.121214292935431,0.766743223111439,Other,probable esterase,Other categories,Other,sll0644
+sll8019,2,sll1969,-0.118756771662242,0.829233562460404,NA,hypothetical protein,Hypothetical,Hypoth,sll8019
+sll5063,2,sll1969,-0.111607481847075,0.872935091515933,NA,unknown protein,Unknown,Unknown,sll5063
+slr1958,2,sll1969,-0.103879689001077,0.944444703085386,NA,unknown protein,Unknown,Unknown,slr1958
+slr5111,2,sll1969,-0.102957491728503,0.90927327720493,NA,unknown protein,Unknown,Unknown,slr5111
+slr1536,2,sll1969,-0.102230198352712,0.890174938032855,NA,ATP-dependent DNA helicase RecQ,"DNA replication, restriction, modification, recombination, and repair",DNArep,recQ slr1536
+slr1591,2,sll1969,-0.095194631415594,0.819236643199954,NA,hypothetical protein,Hypothetical,Hypoth,slr1591
+slr6107,2,sll1969,-0.089353547807361,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6107
+sll8017,2,sll1969,-0.088133562331841,0.826518376954891,NA,unknown protein,Unknown,Unknown,sll8017
+ssl5098,2,sll1969,-0.082495718188207,0.90655731329599,NA,unknown protein,Unknown,Unknown,ssl5098
+slr2132,2,sll1969,-0.067928090736858,0.958841178563973,Pyruvate and acetyl-CoA metabolism,phosphotransacetylase,Energy metabolism,Energy,pta slr2132
+sll8020,2,sll1969,-0.055003443776344,0.921858560565343,NA,hypothetical protein,Hypothetical,Hypoth,sll8020
+slr0773,2,sll1969,-0.049527680529266,0.94447765656885,NA,hypothetical protein,Hypothetical,Hypoth,slr0773
+sll1584,2,sll1969,-0.047756194942359,0.944444703085386,Soluble electron carriers,ferredoxin like protein,Photosynthesis and respiration,Photosynth,sll1584
+slr1535,2,sll1969,-0.043222626214301,0.969237353739042,NA,hypothetical protein,Hypothetical,Hypoth,slr1535
+ssr6002,2,sll1969,-0.038075824583807,NA,NA,unknown protein,Unknown,Unknown,ssr6002
+ssr5092,2,sll1969,-0.032460133066434,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5092
+slr1916,2,sll1969,-0.032353542397041,0.944444703085386,Other,probable esterase,Other categories,Other,slr1916
+sll5090,2,sll1969,-0.029103375565995,0.961445848891558,NA,unknown protein,Unknown,Unknown,sll5090
+sll5089,2,sll1969,-0.029090894797987,0.958841178563973,NA,unknown protein,Unknown,Unknown,sll5089
+slr1340,2,sll1969,-0.026642538264495,0.959111817420471,NA,unknown protein,Unknown,Unknown,slr1340
+ssl7045,2,sll1969,-0.026525651981255,NA,NA,unknown protein,Unknown,Unknown,ssl7045
+slr0868,2,sll1969,-0.007698310936124,0.99482671587912,NA,unknown protein,Unknown,Unknown,slr0868
+sll1716,2,sll1969,-0.005987299926623,NA,Transposon-related functions,putative transposase [ISY523a: 967549 - 968419],Other categories,Other,sll1716
+sll7055,2,sll1969,-0.005617694617749,NA,NA,unknown protein,Unknown,Unknown,sll7055
+sll8034,2,sll1969,-0.004811748456505,0.99482671587912,Other,2-nitropropane dioxygenase,Other categories,Other,sll8034
+slr0636,2,sll1969,-0.004544827924329,0.996721598830978,"Cobalamin, heme, phycobilin and porphyrin",probable cobalamin [5&#x27;-phosphate] synthase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobS slr0636
+sll5049,2,sll1969,0.010393221541526,0.972022011555316,NA,"polysaccharide transmembrane transporter Wzx, flippase",Transport and binding proteins,Transport,sll5049
+slr7096,2,sll1969,0.011059271190577,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7096
+sll8040,2,sll1969,0.021895252901854,NA,NA,unknown protein,Unknown,Unknown,sll8040
+ssl5039,2,sll1969,0.023815337971967,NA,NA,unknown protein,Unknown,Unknown,ssl5039
+slr6063,2,sll1969,0.029129200470661,NA,NA,unknown protein,Unknown,Unknown,slr6063
+sll7044,2,sll1969,0.036216826462444,0.934081819479197,Other,plasmid partition protein ParA homolog,Other categories,Other,sll7044
+sll1532,2,sll1969,0.042409243431268,0.917098278707033,NA,hypothetical protein,Hypothetical,Hypoth,sll1532
+ssr7017,2,sll1969,0.043378859952677,NA,Other,CRISPR-associated endoribonuclease Cas2 1,NA,NA,NA
+sll7050,2,sll1969,0.053651909282626,NA,NA,unknown protein,Unknown,Unknown,sll7050
+slr7100,2,sll1969,0.053991572199633,0.93014834119642,NA,unknown protein,Unknown,Unknown,slr7100
+sll1308,2,sll1969,0.05784857136848,0.940700719792837,Other,probable oxidoreductase,Other categories,Other,sll1308
+slr2053,2,sll1969,0.059805158818421,0.907110642618353,Other,putative hydrolase,Other categories,Other,slr2053
+ndhK2,2,sll1969,0.083302487376614,0.894578843597453,NA,NA,NA,NA,NA
+slr7099,2,sll1969,0.086413282150211,NA,NA,unknown protein,Unknown,Unknown,slr7099
+slr7016,2,sll1969,0.088351596173113,0.87581522966253,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7016
+ssl2982,2,sll1969,0.110372078417152,0.700045156317735,"RNA synthesis, modification, and DNA transcription",DNA-directed RNA polymerase omega subunit rpoZ,Transcription,Transcript,rpoZ ssl2982
+slr1173,2,sll1969,0.124465100701811,0.826518376954891,NA,hypothetical protein,Hypothetical,Hypoth,slr1173
+sll8032,2,sll1969,0.127571279965968,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8032
+sll7069,2,sll1969,0.144529855517168,0.806038178118883,NA,hypothetical protein,Hypothetical,Hypoth,sll7069
+slr1957,2,sll1969,0.149022213301471,0.920335419448119,NA,hypothetical protein,Hypothetical,Hypoth,slr1957
+ssr5121,2,sll1969,0.167938622186391,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5121
+sll5006,2,sll1969,0.20200428432877,0.707492500545593,NA,unknown protein,Unknown,Unknown,sll5006
+ssr6046,2,sll1969,0.207993902564803,0.784262502625974,NA,hypothetical protein,Hypothetical,Hypoth,ssr6046
+sll0024,2,sll1969,0.263273592423313,0.72646775782615,NA,unknown protein,Unknown,Unknown,sll0024
+sll0283,2,sll1969,0.285440930084721,0.82407585670361,NA,hypothetical protein,Hypothetical,Hypoth,sll0283
+slr7095,2,sll1969,0.302419270249732,0.624410761992521,NA,hypothetical protein,Hypothetical,Hypoth,slr7095
+sll0543,2,sll1969,0.308973410952009,0.582165813400706,NA,hypothetical protein,Hypothetical,Hypoth,sll0543
+slr0889,2,sll1969,0.316117097362969,0.786380825538538,NA,putative proteinkinase,Regulatory functions,Regul,slr0889
+sll0572,2,sll1969,0.347867854691759,0.76611582462886,NA,hypothetical protein,Hypothetical,Hypoth,sll0572
+slr0750,2,sll1969,0.414820886036109,0.826518376954891,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase subunit ChlN,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlN slr0750
+slr7097,2,sll1969,0.419585369440244,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7097
+sll8035,2,sll1969,0.44358071075939,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8035
+slr0474,2,sll1969,0.452054405882774,0.700173882620779,NA,"two-component response regulator CheY subfamily,  regulator for phytochrome 1 (Cph1)",Regulatory functions,Regul,rcp1 slr0474
+slr1634,2,sll1969,0.487092992443363,0.461653786480456,NA,hypothetical protein,Hypothetical,Hypoth,slr1634
+slr0749,2,sll1969,0.49792377300894203,0.774239410361058,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase iron protein subunit ChlL,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlL frxC slr0749
+slr1152,2,sll1969,0.502800129397843,0.697517556318009,NA,hypothetical protein,Hypothetical,Hypoth,slr1152
+sll7090,2,sll1969,0.526400220375083,0.560875377264511,NA,unknown protein,Unknown,Unknown,sll7090
+slr8022,2,sll1969,0.557282126000347,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr8022
+sll0573,2,sll1969,0.564791883267464,0.649702285645341,Amino acids and amines,carbamate kinase,Energy metabolism,Energy,arcC sll0573
+sll7085,2,sll1969,0.572992374059597,0.488464921148694,NA,unknown protein,Unknown,Unknown,sll7085
+slr0888,2,sll1969,0.680949116111031,0.646744790512879,NA,hypothetical protein,Hypothetical,Hypoth,slr0888
+sll7067,2,sll1969,0.681555779824627,0.416610047372678,NA,unknown protein,Unknown,Unknown,sll7067
+sll7087,2,sll1969,0.737946901290749,0.460925220985353,NA,unknown protein,Unknown,Unknown,sll7087
+slr7092,2,sll1969,0.745494370329375,0.460925220985353,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7092
+slr7091,2,sll1969,0.970718106873244,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7091
+sll7086,2,sll1969,0.9984985903404,NA,NA,unknown protein,Unknown,Unknown,sll7086
+slr1340,2,slr1340,-2.5729525137146,5.26448877337332e-28,NA,unknown protein,Unknown,Unknown,slr1340
+slr0750,2,slr1340,-2.55260606990974,0.028613024047355,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase subunit ChlN,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlN slr0750
+ssr1499,2,slr1340,-1.58653398797495,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr1499
+slr1535,2,slr1340,-1.46236097822993,0.035511231316476,NA,hypothetical protein,Hypothetical,Hypoth,slr1535
+slr0474,2,slr1340,-1.38522948052685,0.055318308317665,NA,"two-component response regulator CheY subfamily,  regulator for phytochrome 1 (Cph1)",Regulatory functions,Regul,rcp1 slr0474
+slr5112,2,slr1340,-1.35790622905094,NA,NA,unknown protein,Unknown,Unknown,slr5112
+sll1851,2,slr1340,-1.08084994914768,NA,NA,unknown protein,Unknown,Unknown,sll1851
+slr0749,2,slr1340,-1.04027272296817,0.324240735325385,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase iron protein subunit ChlL,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlL frxC slr0749
+slr0889,2,slr1340,-1.03665865913761,0.150540786922664,NA,putative proteinkinase,Regulatory functions,Regul,slr0889
+slr0773,2,slr1340,-1.00250442294623,0.002675993131527,NA,hypothetical protein,Hypothetical,Hypoth,slr0773
+sll0024,2,slr1340,-0.98072279590291,0.03793957234289,NA,unknown protein,Unknown,Unknown,sll0024
+slr1536,2,slr1340,-0.969673220396018,0.023107276191652,NA,ATP-dependent DNA helicase RecQ,"DNA replication, restriction, modification, recombination, and repair",DNArep,recQ slr1536
+slr0888,2,slr1340,-0.968259064537126,0.322357544866932,NA,hypothetical protein,Hypothetical,Hypoth,slr0888
+slr1152,2,slr1340,-0.950741810337118,0.258906756914901,NA,hypothetical protein,Hypothetical,Hypoth,slr1152
+slr0797,2,slr1340,-0.888225076915112,0.046734931472303,NA,cobalt-transporting P-type ATPase (cobalt efflux pump) involved in cobalt tolerance,Transport and binding proteins,Transport,slr0797
+sll1003,2,slr1340,-0.882682894067585,0.031103511135776,NA,two-component sensor histidine kinase,Regulatory functions,Regul,sll1003
+slr6106,2,slr1340,-0.879136378051103,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6106
+slr1927,2,slr1340,-0.875219005641402,0.055318308317665,NA,hypothetical protein,Hypothetical,Hypoth,slr1927
+sll0573,2,slr1340,-0.874419888138615,0.298065758557765,Amino acids and amines,carbamate kinase,Energy metabolism,Energy,arcC sll0573
+slr5085,2,slr1340,-0.872081809679789,NA,NA,unknown protein,Unknown,Unknown,slr5085
+sll1710,2,slr1340,-0.865883070901251,NA,Transposon-related functions,putative transposase [ISY523b: 1275354 - 1276224],Other categories,Other,sll1710
+slr5012,2,slr1340,-0.852773952596534,0.032682495917107,NA,hypothetical protein,Hypothetical,Hypoth,slr5012
+slr5111,2,slr1340,-0.842939242022137,NA,NA,unknown protein,Unknown,Unknown,slr5111
+sll1917,2,slr1340,-0.831084084662948,0.074295420872405,"Cobalamin, heme, phycobilin and porphyrin","coproporphyrinogen III oxidase, anaerobic (oxygen-independent)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1917
+slr2132,2,slr1340,-0.80982774801107,0.268666357193026,Pyruvate and acetyl-CoA metabolism,phosphotransacetylase,Energy metabolism,Energy,pta slr2132
+slr0955,2,slr1340,-0.806104509326538,0.023107276191652,Aminoacyl tRNA synthetases and tRNA modification,probable tRNA/rRNA methyltransferase,Translation,Translat,slr0955
+sll1584,2,slr1340,-0.805103837320208,0.021940030057301,Soluble electron carriers,ferredoxin like protein,Photosynthesis and respiration,Photosynth,sll1584
+sll0474,2,slr1340,-0.801187744682745,NA,NA,two-component hybrid sensor and regulator,Regulatory functions,Regul,sll0474
+sll1240,2,slr1340,-0.788671650388149,NA,NA,unknown protein,Unknown,Unknown,sll1240
+ssl5098,2,slr1340,-0.787261155529783,NA,NA,unknown protein,Unknown,Unknown,ssl5098
+slr1958,2,slr1340,-0.763693237343951,0.312180365368307,NA,unknown protein,Unknown,Unknown,slr1958
+sll0283,2,slr1340,-0.756684982045559,0.344103946768933,NA,hypothetical protein,Hypothetical,Hypoth,sll0283
+slr0199,2,slr1340,-0.754148457523514,0.105698558703729,Aromatic amino acid family,"putative glutamine amidotransferase, ergothioneine biosynthesis",Amino acid biosynthesis,AminoAcids,slr0199
+slr0868,2,slr1340,-0.75225024825747,NA,NA,unknown protein,Unknown,Unknown,slr0868
+sll0825,2,slr1340,-0.744503972950928,0.121170269140575,Ribosomal proteins: synthesis and modification,polyA polymerase,Translation,Translat,sll0825
+sll1469,2,slr1340,-0.727050796562195,0.070025336235867,NA,hypothetical protein,Hypothetical,Hypoth,sll1469
+slr0755,2,slr1340,-0.720841350426523,0.344103946768933,NA,hypothetical protein,Hypothetical,Hypoth,slr0755
+slr5022,2,slr1340,-0.714025575697752,0.047965043954639,Other,probable aminotransferase,Other categories,Other,slr5022
+slr1547,2,slr1340,-0.694450238125858,0.04872843663184,NA,hypothetical protein,Hypothetical,Hypoth,slr1547
+slr1262,2,slr1340,-0.692781554936133,0.046734931472303,NA,hypothetical protein,Hypothetical,Hypoth,slr1262
+sll1319,2,slr1340,-0.686068179654559,NA,NA,uncharacterized transporter,Transport and binding proteins,Transport,sll1319
+slr5013,2,slr1340,-0.681826248200885,0.03793957234289,NA,unknown protein,Unknown,Unknown,slr5013
+slr1974,2,slr1340,-0.663405797949924,0.025677200985788,Other,GTP binding protein,Other categories,Other,der engA slr1974
+sll5028,2,slr1340,-0.658299121728857,0.177750088113506,NA,hypothetical protein,Hypothetical,Hypoth,sll5028
+sll1830,2,slr1340,-0.647382889080632,0.023891995368561,NA,unknown protein,Unknown,Unknown,sll1830
+slr0108,2,slr1340,-0.645790498229944,0.159142793185991,NA,unknown protein,Unknown,Unknown,slr0108
+sll0846,2,slr1340,-0.639669988849231,0.167464307653326,NA,hypothetical protein,Hypothetical,Hypoth,sll0846
+slr2121,2,slr1340,-0.63712286716689,0.061291908351029,Glycolate pathway,TSPO translocator protein,Energy metabolism,Energy,TSPO slr2121
+slr1634,2,slr1340,-0.601407137126121,0.150540786922664,NA,hypothetical protein,Hypothetical,Hypoth,slr1634
+slr2118,2,slr1340,-0.60053909180687,NA,NA,unknown protein,Unknown,Unknown,slr2118
+sll5063,2,slr1340,-0.586961112900492,0.140131430857823,NA,unknown protein,Unknown,Unknown,sll5063
+sll0864,2,slr1340,-0.57947213665625,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll0864
+sll0494,2,slr1340,-0.574654302946812,NA,NA,unknown protein,Unknown,Unknown,sll0494
+ssr6046,2,slr1340,-0.571963329052288,0.239338092677852,NA,hypothetical protein,Hypothetical,Hypoth,ssr6046
+sll0572,2,slr1340,-0.565281754487587,0.43660499067981,NA,hypothetical protein,Hypothetical,Hypoth,sll0572
+sll0792,2,slr1340,-0.5605154772868,NA,NA,Zinc-responsive repressor ZiaR,Regulatory functions,Regul,ziaR smtB sll0792
+slr5053,2,slr1340,-0.55794830780824,NA,NA,unknown protein,Unknown,Unknown,slr5053
+slr2077,2,slr1340,-0.557338223269166,0.041498095625005,NA,"probable ABC transporter, periplasmic binding protein",Transport and binding proteins,Transport,slr2077
+sll0181,2,slr1340,-0.557004760070356,0.081286821650052,NA,unknown protein,Unknown,Unknown,sll0181
+ssr5074,2,slr1340,-0.556149316714637,NA,NA,unknown protein,Unknown,Unknown,ssr5074
+slr1957,2,slr1340,-0.543055735112678,0.518537889879722,NA,hypothetical protein,Hypothetical,Hypoth,slr1957
+sll0360,2,slr1340,-0.536251222848486,0.097567992340434,NA,hypothetical protein,Hypothetical,Hypoth,sll0360
+ssr1258,2,slr1340,-0.522344147031732,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr1258
+sll5062,2,slr1340,-0.516123841321735,NA,NA,unknown protein,Unknown,Unknown,sll5062
+slr2053,2,slr1340,-0.507072430479434,0.063704974394448,Other,putative hydrolase,Other categories,Other,slr2053
+sll0793,2,slr1340,-0.496788043555968,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll0793
+slr1025,2,slr1340,-0.484795853692236,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr1025
+slr0321,2,slr1340,-0.47908598870422,0.172375180797114,NA,GTP-binding protein ERA homolog,Regulatory functions,Regul,era slr0321
+sll0848,2,slr1340,-0.478774167037976,0.18003452090809,NA,chromosomal replication initiator protein DnaA,"DNA replication, restriction, modification, recombination, and repair",DNArep,dnaA sll0848
+sll7067,2,slr1340,-0.478062583137276,0.380379328918502,NA,unknown protein,Unknown,Unknown,sll7067
+slr1261,2,slr1340,-0.476035891557664,0.222883939217755,NA,hypothetical protein,Hypothetical,Hypoth,slr1261
+sll1611,2,slr1340,-0.468127893377261,0.262318954263002,NA,unknown protein,Unknown,Unknown,sll1611
+slr0272,2,slr1340,-0.467581809127629,NA,NA,unknown protein,Unknown,Unknown,slr0272
+slr0231,2,slr1340,-0.463482547709766,NA,Other,probable DNA-3-methyladenine glycosylase,Other categories,Other,slr0231
+slr0640,2,slr1340,-0.455773147512553,0.055318308317665,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr0640
+sll1231,2,slr1340,-0.439067763983372,0.243648362274312,Sugars,mannosyltransferase,Energy metabolism,Energy,sll1231
+slr0142,2,slr1340,-0.437794021432519,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr0142
+slr1163,2,slr1340,-0.432417988617146,0.032682495917107,NA,unknown protein,Unknown,Unknown,slr1163
+slr1260,2,slr1340,-0.413697356006685,0.239702278603053,NA,hypothetical protein,Hypothetical,Hypoth,slr1260
+sll5047,2,slr1340,-0.400314850545611,0.093374258055372,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,sll5047
+sll0686,2,slr1340,-0.394904103404465,NA,Other,probable cytochrome c-type biogenesis protein,Other categories,Other,sll0686
+ssr2848,2,slr1340,-0.388418585992417,NA,NA,unknown protein,Unknown,Unknown,ssr2848
+slr1827,2,slr1340,-0.385178820335973,0.292780543000074,NA,hypothetical protein,Hypothetical,Hypoth,slr1827
+ssr5019,2,slr1340,-0.384543127258974,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5019
+slr1222,2,slr1340,-0.38046868954505,0.262318954263002,NA,unknown protein,Unknown,Unknown,slr1222
+slr0572,2,slr1340,-0.380258694117903,NA,NA,unknown protein,Unknown,Unknown,slr0572
+slr7052,2,slr1340,-0.371297590681818,NA,NA,unknown protein,Unknown,Unknown,slr7052
+slr1285,2,slr1340,-0.36469705738494,0.456967799271457,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr1285
+slr7098,2,slr1340,-0.363299852299241,NA,NA,unknown protein,Unknown,Unknown,slr7098
+sll0924,2,slr1340,-0.360551281072178,0.137199813216684,NA,hypothetical protein,Hypothetical,Hypoth,sll0924
+slr7097,2,slr1340,-0.360229863671229,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7097
+sll0378,2,slr1340,-0.356904083713542,0.539866009030242,"Cobalamin, heme, phycobilin and porphyrin",uroporphyrin-III C-methyltransferase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobA sll0378
+slr1074,2,slr1340,-0.35365570880468,0.24234354882113401,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,slr1074
+sll1095,2,slr1340,-0.350466233545049,0.255441054309094,NA,hypothetical protein,Hypothetical,Hypoth,sll1095
+slr1173,2,slr1340,-0.349063135346292,0.322591914260644,NA,hypothetical protein,Hypothetical,Hypoth,slr1173
+sll5046,2,slr1340,-0.337772154328961,0.229919107182279,NA,unknown protein,Unknown,Unknown,sll5046
+slr1862,2,slr1340,-0.337693814517232,NA,NA,unknown protein,Unknown,Unknown,slr1862
+slr1591,2,slr1340,-0.334845037894642,0.195830733135367,NA,hypothetical protein,Hypothetical,Hypoth,slr1591
+slr0813,2,slr1340,-0.331108242228946,0.401024003360977,NA,yidC YidC/Oxa1 family membrane protein insertase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,yidC slr0813
+ssr7093,2,slr1340,-0.328555607428761,NA,Other,CRISPR-associated endoribonuclease Cas2 3,Other categories,Other,cas2-3 ssr7093
+slr0639,2,slr1340,-0.327946462865463,0.502747798444511,NA,mechanosensitive ion channel homolog,Transport and binding proteins,Transport,slr0639
+ssl7042,2,slr1340,-0.322509267684356,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssl7042
+sll0085,2,slr1340,-0.3202172210084,0.27302738139218,NA,unknown protein,Unknown,Unknown,sll0085
+slr1259,2,slr1340,-0.314456953980859,0.300658117762559,NA,hypothetical protein,Hypothetical,Hypoth,slr1259
+sll5003,2,slr1340,-0.303940735275271,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll5003
+sll1318,2,slr1340,-0.303089516701773,0.517110180526457,NA,hypothetical protein,Hypothetical,Hypoth,sll1318
+sll1900,2,slr1340,-0.301333702981185,0.312627964240382,Other,acetyltransferase,Other categories,Other,sll1900
+sll0644,2,slr1340,-0.299685053201239,0.243433503998568,Other,probable esterase,Other categories,Other,sll0644
+sll7090,2,slr1340,-0.297113537881001,0.635608979852888,NA,unknown protein,Unknown,Unknown,sll7090
+slr0510,2,slr1340,-0.277612267780285,0.351563875596612,NA,hypothetical protein,Hypothetical,Hypoth,slr0510
+slr1963,2,slr1340,-0.262334587803449,0.568931455425549,Adaptations and atypical conditions,Orange carotenoid-binding protein,Other categories,Other,slr1963
+slr1495,2,slr1340,-0.257400850301402,0.386333066268317,NA,hypothetical protein,Hypothetical,Hypoth,slr1495
+sll1258,2,slr1340,-0.257160736181165,0.512915429345823,Pyrimidine ribonucleotide biosynthesis,dCTP deaminase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,sll1258
+sll1308,2,slr1340,-0.255224180829873,0.548732504272607,Other,probable oxidoreductase,Other categories,Other,sll1308
+slr7091,2,slr1340,-0.24916950153358,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7091
+sll1531,2,slr1340,-0.247750799422372,0.264213906774471,NA,unknown protein,Unknown,Unknown,sll1531
+sll1510,2,slr1340,-0.238451497992644,NA,NA,unknown protein,Unknown,Unknown,sll1510
+slr7049,2,slr1340,-0.232485637348452,NA,Transposon-related functions,resolvase,Other categories,Other,slr7049
+sll0543,2,slr1340,-0.228442736353933,0.567225354731534,NA,hypothetical protein,Hypothetical,Hypoth,sll0543
+slr7092,2,slr1340,-0.223574216965558,NA,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7092
+slr0689,2,slr1340,-0.220354490065841,0.239224815662084,NA,hypothetical protein,Hypothetical,Hypoth,slr0689
+slr6058,2,slr1340,-0.219370458926777,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6058
+slr8038,2,slr1340,-0.218303495999799,0.24126760777315,WD repeat proteins,WD-repeat protein,Other categories,Other,slr8038
+sll5026,2,slr1340,-0.21747947147978,0.351563875596612,NA,hypothetical protein,Hypothetical,Hypoth,sll5026
+sll1716,2,slr1340,-0.204143052738888,NA,Transposon-related functions,putative transposase [ISY523a: 967549 - 968419],Other categories,Other,sll1716
+slr8044,2,slr1340,-0.202724980682331,NA,NA,unknown protein,Unknown,Unknown,slr8044
+sll1623,2,slr1340,-0.201932146089036,0.469913916677327,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll1623
+ssl3580,2,slr1340,-0.195788431172314,0.394380868377737,Hydrogenase,putative hydrogenase expression/formation protein HypC,Other categories,Other,hypC ssl3580
+slr7096,2,slr1340,-0.18258156480134,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7096
+sll5057,2,slr1340,-0.177146171589277,NA,Other,probable glycosyltransferase,Other categories,Other,sll5057
+slr1077,2,slr1340,-0.172760659738634,0.635608979852888,Other,probable glycosyltransferase,Other categories,Other,slr1077
+sll8020,2,slr1340,-0.165632744427021,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8020
+slr6045,2,slr1340,-0.165189360951371,NA,NA,unknown protein,Unknown,Unknown,slr6045
+sll7069,2,slr1340,-0.143810798281107,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll7069
+sll8048,2,slr1340,-0.140521554935165,0.613034408627374,NA,hypothetical protein,Hypothetical,Hypoth,sll8048
+slr6090,2,slr1340,-0.123311773902519,0.567595692137712,NA,unknown protein,Unknown,Unknown,slr6090
+sll7055,2,slr1340,-0.123212618118852,NA,NA,unknown protein,Unknown,Unknown,sll7055
+slr7016,2,slr1340,-0.118905553061731,NA,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7016
+sll7027,2,slr1340,-0.094623778549329,NA,NA,unknown protein,Unknown,Unknown,sll7027
+sll0448,2,slr1340,-0.083411774416058,NA,NA,unknown protein,Unknown,Unknown,sll0448
+slr1916,2,slr1340,-0.074426026203817,0.788142903423301,Other,probable esterase,Other categories,Other,slr1916
+ssl5129,2,slr1340,-0.057606435379793,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssl5129
+slr8022,2,slr1340,-0.0544449653068,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr8022
+sll1634,2,slr1340,-0.049786288504523,0.895832045667504,NA,hypothetical protein,Hypothetical,Hypoth,sll1634
+slr7099,2,slr1340,-0.046740584096262,NA,NA,unknown protein,Unknown,Unknown,slr7099
+slr0914,2,slr1340,-0.039363615153754,0.906232647249279,NA,unknown protein,Unknown,Unknown,slr0914
+slr0913,2,slr1340,-0.038693774845752,0.926579026433584,NA,unknown protein,Unknown,Unknown,slr0913
+sll5049,2,slr1340,-0.031046676544061,0.905111518885808,NA,"polysaccharide transmembrane transporter Wzx, flippase",Transport and binding proteins,Transport,sll5049
+sll7050,2,slr1340,-0.026057166111868,NA,NA,unknown protein,Unknown,Unknown,sll7050
+slr0286,2,slr1340,-0.022288318663464,NA,NA,protein involved in functional assembly of photosystem II,Unknown,Unknown,slr0286
+ssl3177,2,slr1340,-0.011858197043899,0.976652338439403,NA,hypothetical protein,Hypothetical,Hypoth,ssl3177
+slr1552,2,slr1340,-0.010695508374569,0.979584256502811,NA,unknown protein,Unknown,Unknown,slr1552
+slr0554,2,slr1340,-0.010563051587158,0.976652338439403,NA,hypothetical protein,Hypothetical,Hypoth,slr0554
+sll1969,2,slr1340,0.004653411093738,0.991042909418427,NA,ppnK NAD+ kinase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,ppnK sll1969
+sll1532,2,slr1340,0.00931369301027,0.977931159996687,NA,hypothetical protein,Hypothetical,Hypoth,sll1532
+slr7100,2,slr1340,0.029897460550261,NA,NA,unknown protein,Unknown,Unknown,slr7100
+slr0023,2,slr1340,0.034410345198278,0.920247001456344,NA,unknown protein,Unknown,Unknown,slr0023
+slr0636,2,slr1340,0.056716468551214,NA,"Cobalamin, heme, phycobilin and porphyrin",probable cobalamin [5&#x27;-phosphate] synthase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobS slr0636
+sll0922,2,slr1340,0.083781181212316,NA,NA,unknown protein,Unknown,Unknown,sll0922
+ndhK2,2,slr1340,0.083876060219129,NA,NA,NA,NA,NA,NA
+slr7095,2,slr1340,0.093368139545176,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7095
+sll8032,2,slr1340,0.094460135774064,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8032
+ssl7045,2,slr1340,0.098860030980275,NA,NA,unknown protein,Unknown,Unknown,ssl7045
+slr6107,2,slr1340,0.107098191640821,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr6107
+slr7102,2,slr1340,0.109103775075737,NA,NA,hypothetical protein,Hypothetical,Hypoth,slr7102
+sll8034,2,slr1340,0.123425547293513,NA,Other,2-nitropropane dioxygenase,Other categories,Other,sll8034
+ssr5121,2,slr1340,0.126295194530294,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5121
+sll8017,2,slr1340,0.130698872023988,0.631037144966566,NA,unknown protein,Unknown,Unknown,sll8017
+ssl2982,2,slr1340,0.137468282190015,0.471237712819827,"RNA synthesis, modification, and DNA transcription",DNA-directed RNA polymerase omega subunit rpoZ,Transcription,Transcript,rpoZ ssl2982
+sll8019,2,slr1340,0.144926892639684,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8019
+ssr6002,2,slr1340,0.149666237100459,NA,NA,unknown protein,Unknown,Unknown,ssr6002
+sll5090,2,slr1340,0.174468510137146,NA,NA,unknown protein,Unknown,Unknown,sll5090
+slr6063,2,slr1340,0.179247351643694,NA,NA,unknown protein,Unknown,Unknown,slr6063
+sll7044,2,slr1340,0.20026505453739,0.392855392143621,Other,plasmid partition protein ParA homolog,Other categories,Other,sll7044
+ssl5039,2,slr1340,0.207698312182696,NA,NA,unknown protein,Unknown,Unknown,ssl5039
+sll8035,2,slr1340,0.226455008412277,NA,NA,hypothetical protein,Hypothetical,Hypoth,sll8035
+ssr5092,2,slr1340,0.259350906498609,NA,NA,hypothetical protein,Hypothetical,Hypoth,ssr5092
+sll5089,2,slr1340,0.271816931460694,NA,NA,unknown protein,Unknown,Unknown,sll5089
+ssr7017,2,slr1340,0.316969482648299,NA,Other,CRISPR-associated endoribonuclease Cas2 1,NA,NA,NA
+sll8040,2,slr1340,0.422551074271777,NA,NA,unknown protein,Unknown,Unknown,sll8040
+sll7087,2,slr1340,0.453786168307009,NA,NA,unknown protein,Unknown,Unknown,sll7087
+sll5006,2,slr1340,0.458904784190032,NA,NA,unknown protein,Unknown,Unknown,sll5006
+sll7085,2,slr1340,0.545911777837063,NA,NA,unknown protein,Unknown,Unknown,sll7085
+sll7086,2,slr1340,0.634015053189753,NA,NA,unknown protein,Unknown,Unknown,sll7086
+slr1916,2,slr1916,-5.37043401051723,1.54667957030204e-160,Other,probable esterase,Other categories,Other,slr1916
+slr5085,2,slr1916,-3.4115604831532,0.040407747861353,NA,unknown protein,Unknown,Unknown,slr5085
+slr0750,2,slr1916,-3.111153059661,8.2870210928958e-5,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase subunit ChlN,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlN slr0750
+sll1851,2,slr1916,-2.96747025388388,0.042815241113958,NA,unknown protein,Unknown,Unknown,sll1851
+slr7091,2,slr1916,-2.10148263501222,9.29222520346e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr7091
+slr0749,2,slr1916,-1.94509520552501,0.007216651313854,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase iron protein subunit ChlL,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlL frxC slr0749
+ssr1499,2,slr1916,-1.89070984276801,2.43113206787109e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssr1499
+slr1535,2,slr1916,-1.85214961057283,1.00225531692e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr1535
+slr5112,2,slr1916,-1.82514845933015,3.39580610029e-4,NA,unknown protein,Unknown,Unknown,slr5112
+slr1262,2,slr1916,-1.73830920339394,3.28677095539425e-13,NA,hypothetical protein,Hypothetical,Hypoth,slr1262
+slr2132,2,slr1916,-1.73770975368196,3.89967558416e-4,Pyruvate and acetyl-CoA metabolism,phosphotransacetylase,Energy metabolism,Energy,pta slr2132
+slr5053,2,slr1916,-1.6336414318366,0.014070403756134,NA,unknown protein,Unknown,Unknown,slr5053
+sll0573,2,slr1916,-1.61745022435185,0.004539175207994,Amino acids and amines,carbamate kinase,Energy metabolism,Energy,arcC sll0573
+slr0474,2,slr1916,-1.60940693185875,0.001839529218866,NA,"two-component response regulator CheY subfamily,  regulator for phytochrome 1 (Cph1)",Regulatory functions,Regul,rcp1 slr0474
+slr1260,2,slr1916,-1.53777220543793,1.357169471109e-11,NA,hypothetical protein,Hypothetical,Hypoth,slr1260
+slr1261,2,slr1916,-1.53239745151049,1.46114256470657e-9,NA,hypothetical protein,Hypothetical,Hypoth,slr1261
+sll0283,2,slr1916,-1.49358297170321,0.006750634304521,NA,hypothetical protein,Hypothetical,Hypoth,sll0283
+ssr6002,2,slr1916,-1.49324345832389,0.12181123959801,NA,unknown protein,Unknown,Unknown,ssr6002
+slr6063,2,slr1916,-1.48865308645627,0.004497229683933,NA,unknown protein,Unknown,Unknown,slr6063
+sll0024,2,slr1916,-1.48628222044097,6.87898913346264e-6,NA,unknown protein,Unknown,Unknown,sll0024
+sll5028,2,slr1916,-1.47453655289462,9.05442323738014e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll5028
+slr1152,2,slr1916,-1.46348277899792,0.010891026600168,NA,hypothetical protein,Hypothetical,Hypoth,slr1152
+sll5062,2,slr1916,-1.45285477302909,3.74262990615949e-6,NA,unknown protein,Unknown,Unknown,sll5062
+ssr7093,2,slr1916,-1.44519079210026,0.011548820464674,Other,CRISPR-associated endoribonuclease Cas2 3,Other categories,Other,cas2-3 ssr7093
+slr1634,2,slr1916,-1.43244513100788,2.79213770285602e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1634
+slr5012,2,slr1916,-1.42386206290129,1.79211502748524e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr5012
+slr7092,2,slr1916,-1.41004248345631,0.002685749591979,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7092
+slr0888,2,slr1916,-1.37843814547164,0.044776042495737,NA,hypothetical protein,Hypothetical,Hypoth,slr0888
+sll1469,2,slr1916,-1.36068148069654,1.46849430235541e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll1469
+slr0889,2,slr1916,-1.32284303392388,0.008347463673626,NA,putative proteinkinase,Regulatory functions,Regul,slr0889
+slr0773,2,slr1916,-1.31557477248234,4.54717368303161e-8,NA,hypothetical protein,Hypothetical,Hypoth,slr0773
+sll8035,2,slr1916,-1.30414768428618,0.049802587531683,NA,hypothetical protein,Hypothetical,Hypoth,sll8035
+sll7055,2,slr1916,-1.28911836767691,0.013897852594003,NA,unknown protein,Unknown,Unknown,sll7055
+slr1547,2,slr1916,-1.27556864515806,2.0391398783419e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1547
+ssr6046,2,slr1916,-1.27500659131802,8.59661835911144e-5,NA,hypothetical protein,Hypothetical,Hypoth,ssr6046
+sll1319,2,slr1916,-1.26826041942758,1.00225531692e-4,NA,uncharacterized transporter,Transport and binding proteins,Transport,sll1319
+slr1958,2,slr1916,-1.25683379726315,0.014463136699224,NA,unknown protein,Unknown,Unknown,slr1958
+slr1259,2,slr1916,-1.25575973796736,1.50086488456241e-10,NA,hypothetical protein,Hypothetical,Hypoth,slr1259
+slr6107,2,slr1916,-1.22967646774137,0.005931093308679,NA,hypothetical protein,Hypothetical,Hypoth,slr6107
+sll1830,2,slr1916,-1.21960153690947,6.53304341691449e-11,NA,unknown protein,Unknown,Unknown,sll1830
+sll5006,2,slr1916,-1.2140951387274,6.37164753289312e-6,NA,unknown protein,Unknown,Unknown,sll5006
+slr1536,2,slr1916,-1.20673254770336,1.79039268750729e-5,NA,ATP-dependent DNA helicase RecQ,"DNA replication, restriction, modification, recombination, and repair",DNArep,recQ slr1536
+sll0644,2,slr1916,-1.1798090730542,3.32224090219056e-11,Other,probable esterase,Other categories,Other,sll0644
+sll8040,2,slr1916,-1.17645622797986,1.83776299624e-4,NA,unknown protein,Unknown,Unknown,sll8040
+slr0955,2,slr1916,-1.17583965481072,2.61749335297163e-7,Aminoacyl tRNA synthetases and tRNA modification,probable tRNA/rRNA methyltransferase,Translation,Translat,slr0955
+sll5090,2,slr1916,-1.17549911331796,1.71101984088895e-5,NA,unknown protein,Unknown,Unknown,sll5090
+sll0846,2,slr1916,-1.1724162285876,1.74511485995e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll0846
+sll1308,2,slr1916,-1.16901238187273,1.42069537830751e-5,Other,probable oxidoreductase,Other categories,Other,sll1308
+slr1957,2,slr1916,-1.15528352878647,0.04210887324437,NA,hypothetical protein,Hypothetical,Hypoth,slr1957
+ssr2848,2,slr1916,-1.15405105059026,4.9950921979e-4,NA,unknown protein,Unknown,Unknown,ssr2848
+slr1173,2,slr1916,-1.14012223940875,9.27108865460374e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1173
+ssl5098,2,slr1916,-1.1400967411428,1.58805369561e-4,NA,unknown protein,Unknown,Unknown,ssl5098
+sll1003,2,slr1916,-1.1349465811192,5.12191199505777e-5,NA,two-component sensor histidine kinase,Regulatory functions,Regul,sll1003
+sll8034,2,slr1916,-1.12795218014828,2.65749398366794e-6,Other,2-nitropropane dioxygenase,Other categories,Other,sll8034
+slr0868,2,slr1916,-1.12706311083578,0.003294144226744,NA,unknown protein,Unknown,Unknown,slr0868
+ssr5019,2,slr1916,-1.12052416195482,0.01452436240077,NA,hypothetical protein,Hypothetical,Hypoth,ssr5019
+slr0286,2,slr1916,-1.10737833974099,0.002057914687132,NA,protein involved in functional assembly of photosystem II,Unknown,Unknown,slr0286
+slr1163,2,slr1916,-1.10673550387706,3.69006374379983e-16,NA,unknown protein,Unknown,Unknown,slr1163
+sll1623,2,slr1916,-1.10613992593343,1.84471248451037e-9,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll1623
+slr1074,2,slr1916,-1.09865963014456,8.59280785855913e-8,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,slr1074
+sll5089,2,slr1916,-1.09019722577052,1.41605302706808e-6,NA,unknown protein,Unknown,Unknown,sll5089
+sll8017,2,slr1916,-1.08728838793685,1.91297840873241e-9,NA,unknown protein,Unknown,Unknown,sll8017
+slr2121,2,slr1916,-1.0870338970605,8.46003597457288e-6,Glycolate pathway,TSPO translocator protein,Energy metabolism,Energy,TSPO slr2121
+sll8020,2,slr1916,-1.07753921089822,3.0059229859818e-6,NA,hypothetical protein,Hypothetical,Hypoth,sll8020
+sll8032,2,slr1916,-1.06912183062577,0.002658215629155,NA,hypothetical protein,Hypothetical,Hypoth,sll8032
+ssl3580,2,slr1916,-1.06548134674157,2.21174369108756e-12,Hydrogenase,putative hydrogenase expression/formation protein HypC,Other categories,Other,hypC ssl3580
+slr1285,2,slr1916,-1.06061678517858,0.001074280408075,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr1285
+sll1634,2,slr1916,-1.06035282196483,6.09393450508288e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll1634
+slr0689,2,slr1916,-1.05956597043876,3.36172232077706e-19,NA,hypothetical protein,Hypothetical,Hypoth,slr0689
+slr6045,2,slr1916,-1.05907011689652,8.03582852258e-4,NA,unknown protein,Unknown,Unknown,slr6045
+ssr5121,2,slr1916,-1.05532510335902,0.007175608354921,NA,hypothetical protein,Hypothetical,Hypoth,ssr5121
+sll0922,2,slr1916,-1.04738622900275,0.035005807727118,NA,unknown protein,Unknown,Unknown,sll0922
+slr0797,2,slr1916,-1.0417660088223,9.22455474326e-4,NA,cobalt-transporting P-type ATPase (cobalt efflux pump) involved in cobalt tolerance,Transport and binding proteins,Transport,slr0797
+ssl7045,2,slr1916,-1.03954787538792,0.002131411736032,NA,unknown protein,Unknown,Unknown,ssl7045
+sll1900,2,slr1916,-1.03280373931971,2.05884226110485e-7,Other,acetyltransferase,Other categories,Other,sll1900
+slr1963,2,slr1916,-1.03233120905624,3.89967558416e-4,Adaptations and atypical conditions,Orange carotenoid-binding protein,Other categories,Other,slr1963
+slr8022,2,slr1916,-1.03210159485192,0.042132569240736,NA,hypothetical protein,Hypothetical,Hypoth,slr8022
+slr1077,2,slr1916,-1.03038223221611,7.59233950238058e-6,Other,probable glycosyltransferase,Other categories,Other,slr1077
+sll0543,2,slr1916,-1.02956252020032,4.12835001130031e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll0543
+ndhK2,2,slr1916,-1.02869157664681,9.16534954039624e-5,NA,NA,NA,NA,NA
+slr5013,2,slr1916,-1.02847691848428,5.56379077735945e-6,NA,unknown protein,Unknown,Unknown,slr5013
+slr7098,2,slr1916,-1.02254343371136,0.124076604582942,NA,unknown protein,Unknown,Unknown,slr7098
+sll0572,2,slr1916,-1.01967631004813,0.042836874484011,NA,hypothetical protein,Hypothetical,Hypoth,sll0572
+slr0554,2,slr1916,-1.00684011860488,5.21584109967068e-11,NA,hypothetical protein,Hypothetical,Hypoth,slr0554
+slr0142,2,slr1916,-1.00424168367298,3.77806021076381e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr0142
+slr1552,2,slr1916,-0.99515736321983,2.28963950641019e-7,NA,unknown protein,Unknown,Unknown,slr1552
+slr1495,2,slr1916,-0.993170234251946,3.79400078198477e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1495
+sll1258,2,slr1916,-0.988548434092184,9.02774829667687e-5,Pyrimidine ribonucleotide biosynthesis,dCTP deaminase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,sll1258
+sll7090,2,slr1916,-0.988147571916544,0.014698703923284,NA,unknown protein,Unknown,Unknown,sll7090
+sll0494,2,slr1916,-0.98700425565049,0.002604551301699,NA,unknown protein,Unknown,Unknown,sll0494
+sll5047,2,slr1916,-0.984455026789272,6.17286307508383e-9,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,sll5047
+sll8048,2,slr1916,-0.951103442591202,1.66252612253762e-7,NA,hypothetical protein,Hypothetical,Hypoth,sll8048
+slr0813,2,slr1916,-0.950871342797546,3.00613787429e-4,NA,yidC YidC/Oxa1 family membrane protein insertase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,yidC slr0813
+slr8038,2,slr1916,-0.939886787753223,3.2041950370155e-15,WD repeat proteins,WD-repeat protein,Other categories,Other,slr8038
+ssl3177,2,slr1916,-0.937363197970905,6.28746912364782e-8,NA,hypothetical protein,Hypothetical,Hypoth,ssl3177
+slr2053,2,slr1916,-0.930178590270422,8.41758127058093e-7,Other,putative hydrolase,Other categories,Other,slr2053
+sll1611,2,slr1916,-0.925583473700827,9.56985531567e-4,NA,unknown protein,Unknown,Unknown,sll1611
+slr6090,2,slr1916,-0.924293844435058,1.18480524639926e-11,NA,unknown protein,Unknown,Unknown,slr6090
+slr6106,2,slr1916,-0.921127998294946,0.111022999973541,NA,hypothetical protein,Hypothetical,Hypoth,slr6106
+slr5022,2,slr1916,-0.914568327865474,4.40144647203e-4,Other,probable aminotransferase,Other categories,Other,slr5022
+sll1240,2,slr1916,-0.91449804663714,0.003013751283216,NA,unknown protein,Unknown,Unknown,sll1240
+ssr5074,2,slr1916,-0.913742486176758,0.021804653708482,NA,unknown protein,Unknown,Unknown,ssr5074
+sll5026,2,slr1916,-0.904695274637699,2.31218117046073e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll5026
+slr5111,2,slr1916,-0.901071892481588,0.011818768167198,NA,unknown protein,Unknown,Unknown,slr5111
+sll0825,2,slr1916,-0.898356135030957,0.007350430297004,Ribosomal proteins: synthesis and modification,polyA polymerase,Translation,Translat,sll0825
+slr0510,2,slr1916,-0.883701551724501,1.79039268750729e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr0510
+sll1231,2,slr1916,-0.882711028527624,6.44457283308e-4,Sugars,mannosyltransferase,Energy metabolism,Energy,sll1231
+sll0181,2,slr1916,-0.881141942074875,7.90724376977098e-5,NA,unknown protein,Unknown,Unknown,sll0181
+sll7027,2,slr1916,-0.875226602060064,0.003112582936174,NA,unknown protein,Unknown,Unknown,sll7027
+sll1318,2,slr1916,-0.866855061657663,0.005532629549784,NA,hypothetical protein,Hypothetical,Hypoth,sll1318
+sll1531,2,slr1916,-0.860768904919678,3.76887600021859e-9,NA,unknown protein,Unknown,Unknown,sll1531
+sll0924,2,slr1916,-0.858812465312036,6.2845032964873e-7,NA,hypothetical protein,Hypothetical,Hypoth,sll0924
+sll0448,2,slr1916,-0.857667542305307,0.087424171130335,NA,unknown protein,Unknown,Unknown,sll0448
+slr2118,2,slr1916,-0.856253112134207,0.001638419247071,NA,unknown protein,Unknown,Unknown,slr2118
+slr8044,2,slr1916,-0.849594417416598,3.89967558416e-4,NA,unknown protein,Unknown,Unknown,slr8044
+sll0848,2,slr1916,-0.848244097852128,4.87678265378e-4,NA,chromosomal replication initiator protein DnaA,"DNA replication, restriction, modification, recombination, and repair",DNArep,dnaA sll0848
+sll1095,2,slr1916,-0.835334489829788,6.44324668346038e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll1095
+slr2077,2,slr1916,-0.820538041299459,1.77946155535332e-5,NA,"probable ABC transporter, periplasmic binding protein",Transport and binding proteins,Transport,slr2077
+sll0474,2,slr1916,-0.819562908264175,0.001575730678783,NA,two-component hybrid sensor and regulator,Regulatory functions,Regul,sll0474
+sll7050,2,slr1916,-0.809397632891017,0.040238834979496,NA,unknown protein,Unknown,Unknown,sll7050
+sll7067,2,slr1916,-0.793596049069691,0.037346286101333,NA,unknown protein,Unknown,Unknown,sll7067
+slr1827,2,slr1916,-0.792190046594982,0.001386822862068,NA,hypothetical protein,Hypothetical,Hypoth,slr1827
+ssl7042,2,slr1916,-0.789954396767429,0.010214621900016,NA,hypothetical protein,Hypothetical,Hypoth,ssl7042
+sll7069,2,slr1916,-0.782976341790646,0.002131411736032,NA,hypothetical protein,Hypothetical,Hypoth,sll7069
+slr1862,2,slr1916,-0.772480229223082,0.021993605709245,NA,unknown protein,Unknown,Unknown,slr1862
+slr1974,2,slr1916,-0.766716998051265,1.48383638485e-4,Other,GTP binding protein,Other categories,Other,der engA slr1974
+sll1584,2,slr1916,-0.747235720217473,0.00130429475899,Soluble electron carriers,ferredoxin like protein,Photosynthesis and respiration,Photosynth,sll1584
+sll0864,2,slr1916,-0.743839237180551,0.032067223580163,NA,hypothetical protein,Hypothetical,Hypoth,sll0864
+sll0378,2,slr1916,-0.736630761617851,0.06117615247432,"Cobalamin, heme, phycobilin and porphyrin",uroporphyrin-III C-methyltransferase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobA sll0378
+slr0272,2,slr1916,-0.727372493801695,0.088371674746343,NA,unknown protein,Unknown,Unknown,slr0272
+sll1710,2,slr1916,-0.725686326064633,0.076195619299427,Transposon-related functions,putative transposase [ISY523b: 1275354 - 1276224],Other categories,Other,sll1710
+slr7052,2,slr1916,-0.70795535715195,0.086125397145587,NA,unknown protein,Unknown,Unknown,slr7052
+slr0023,2,slr1916,-0.691742675442469,1.52043694365e-4,NA,unknown protein,Unknown,Unknown,slr0023
+slr7097,2,slr1916,-0.688655979007054,0.10447023591774,NA,hypothetical protein,Hypothetical,Hypoth,slr7097
+sll1510,2,slr1916,-0.675273079015768,0.009949081882893,NA,unknown protein,Unknown,Unknown,sll1510
+slr1927,2,slr1916,-0.672402688088432,0.047177832116009,NA,hypothetical protein,Hypothetical,Hypoth,slr1927
+sll5049,2,slr1916,-0.659717563316552,1.88599561828088e-6,NA,"polysaccharide transmembrane transporter Wzx, flippase",Transport and binding proteins,Transport,sll5049
+sll0085,2,slr1916,-0.645147970846529,0.001118308056089,NA,unknown protein,Unknown,Unknown,sll0085
+slr1591,2,slr1916,-0.643134981091604,2.96239432702e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr1591
+slr7096,2,slr1916,-0.60422994593365,0.190334356027658,NA,hypothetical protein,Hypothetical,Hypoth,slr7096
+slr0640,2,slr1916,-0.600782028415934,4.0754820728e-4,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr0640
+slr7095,2,slr1916,-0.594419516093615,0.056818450990433,NA,hypothetical protein,Hypothetical,Hypoth,slr7095
+slr1025,2,slr1916,-0.581295687204374,0.082462428607476,NA,hypothetical protein,Hypothetical,Hypoth,slr1025
+slr1222,2,slr1916,-0.56438977001319,0.01655749497814,NA,unknown protein,Unknown,Unknown,slr1222
+slr0321,2,slr1916,-0.562574297275522,0.023360110446111,NA,GTP-binding protein ERA homolog,Regulatory functions,Regul,era slr0321
+sll5003,2,slr1916,-0.554433151814909,0.058295842578974,NA,hypothetical protein,Hypothetical,Hypoth,sll5003
+sll5063,2,slr1916,-0.548409107882438,0.05466129800461,NA,unknown protein,Unknown,Unknown,sll5063
+slr0914,2,slr1916,-0.546852744602552,0.002687637958193,NA,unknown protein,Unknown,Unknown,slr0914
+slr7102,2,slr1916,-0.538807355879232,0.050355750953756,NA,hypothetical protein,Hypothetical,Hypoth,slr7102
+ssl5129,2,slr1916,-0.525021185305397,0.233917183719468,NA,hypothetical protein,Hypothetical,Hypoth,ssl5129
+sll5046,2,slr1916,-0.515070435333498,0.00777623664105,NA,unknown protein,Unknown,Unknown,sll5046
+sll1917,2,slr1916,-0.503415164949179,0.152340804429168,"Cobalamin, heme, phycobilin and porphyrin","coproporphyrinogen III oxidase, anaerobic (oxygen-independent)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1917
+sll7087,2,slr1916,-0.500282615151536,0.30756251755207,NA,unknown protein,Unknown,Unknown,sll7087
+sll0686,2,slr1916,-0.487252619510862,0.025170014471623,Other,probable cytochrome c-type biogenesis protein,Other categories,Other,sll0686
+ssr7017,2,slr1916,-0.48116713180955,0.202710298951409,Other,CRISPR-associated endoribonuclease Cas2 1,NA,NA,NA
+slr7049,2,slr1916,-0.479738689726651,0.06196811544788,Transposon-related functions,resolvase,Other categories,Other,slr7049
+slr0639,2,slr1916,-0.474347786561154,0.172516081594715,NA,mechanosensitive ion channel homolog,Transport and binding proteins,Transport,slr0639
+ssr1258,2,slr1916,-0.468008989723202,0.259071844081389,NA,hypothetical protein,Hypothetical,Hypoth,ssr1258
+slr6058,2,slr1916,-0.46358182744518,0.212419572222028,NA,hypothetical protein,Hypothetical,Hypoth,slr6058
+sll0792,2,slr1916,-0.450554006045065,0.069390065447343,NA,Zinc-responsive repressor ZiaR,Regulatory functions,Regul,ziaR smtB sll0792
+sll8019,2,slr1916,-0.441024301405957,0.085439142640348,NA,hypothetical protein,Hypothetical,Hypoth,sll8019
+sll0360,2,slr1916,-0.428075389102951,0.065901748155973,NA,hypothetical protein,Hypothetical,Hypoth,sll0360
+ssl5039,2,slr1916,-0.427007510497979,0.320141170046379,NA,unknown protein,Unknown,Unknown,ssl5039
+slr0913,2,slr1916,-0.414629974355236,0.07635381772645,NA,unknown protein,Unknown,Unknown,slr0913
+slr0755,2,slr1916,-0.406217059328624,0.499623715660609,NA,hypothetical protein,Hypothetical,Hypoth,slr0755
+slr0636,2,slr1916,-0.338835331800052,0.312082105981859,"Cobalamin, heme, phycobilin and porphyrin",probable cobalamin [5&#x27;-phosphate] synthase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobS slr0636
+slr0572,2,slr1916,-0.333867618754033,0.459959477518059,NA,unknown protein,Unknown,Unknown,slr0572
+sll1716,2,slr1916,-0.327475323038671,0.369132795712511,Transposon-related functions,putative transposase [ISY523a: 967549 - 968419],Other categories,Other,sll1716
+slr7099,2,slr1916,-0.325312470527307,0.475139400373841,NA,unknown protein,Unknown,Unknown,slr7099
+ssr5092,2,slr1916,-0.309836788721253,0.638583888309873,NA,hypothetical protein,Hypothetical,Hypoth,ssr5092
+slr0199,2,slr1916,-0.306725914208214,0.404847672246089,Aromatic amino acid family,"putative glutamine amidotransferase, ergothioneine biosynthesis",Amino acid biosynthesis,AminoAcids,slr0199
+slr0108,2,slr1916,-0.266109982263207,0.459732623653588,NA,unknown protein,Unknown,Unknown,slr0108
+sll7044,2,slr1916,-0.237839419507385,0.170279785961928,Other,plasmid partition protein ParA homolog,Other categories,Other,sll7044
+slr7100,2,slr1916,-0.223970209106741,0.384379202976944,NA,unknown protein,Unknown,Unknown,slr7100
+slr1340,2,slr1916,-0.216074707448378,0.358966918702789,NA,unknown protein,Unknown,Unknown,slr1340
+slr0231,2,slr1916,-0.210899627956792,0.692563380852117,Other,probable DNA-3-methyladenine glycosylase,Other categories,Other,slr0231
+slr7016,2,slr1916,-0.182792898534568,0.490542999676305,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7016
+sll0793,2,slr1916,-0.142288136802101,0.598606254867671,NA,hypothetical protein,Hypothetical,Hypoth,sll0793
+sll7085,2,slr1916,-0.083353029363999,0.867769722606929,NA,unknown protein,Unknown,Unknown,sll7085
+sll7086,2,slr1916,0.048805612331079,0.947927028444287,NA,unknown protein,Unknown,Unknown,sll7086
+sll1969,2,slr1916,0.143690858658602,0.548819179129897,NA,ppnK NAD+ kinase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,ppnK sll1969
+sll1532,2,slr1916,0.256307391763424,0.104155190500703,NA,hypothetical protein,Hypothetical,Hypoth,sll1532
+ssl2982,2,slr1916,0.498748387347253,5.24230296801562e-5,"RNA synthesis, modification, and DNA transcription",DNA-directed RNA polymerase omega subunit rpoZ,Transcription,Transcript,rpoZ ssl2982
+sll5057,2,slr1916,1.34594231834548,3.84434032302785e-12,Other,probable glycosyltransferase,Other categories,Other,sll5057
+ssl2982,2,ssl2982,-4.84930041305876,4.72825068369746e-133,"RNA synthesis, modification, and DNA transcription",DNA-directed RNA polymerase omega subunit rpoZ,Transcription,Transcript,rpoZ ssl2982
+sll1851,2,ssl2982,-4.79344353437072,0.001450302250628,NA,unknown protein,Unknown,Unknown,sll1851
+sll1532,2,ssl2982,-3.49749621243283,2.11373144988775e-123,NA,hypothetical protein,Hypothetical,Hypoth,sll1532
+slr0750,2,ssl2982,-2.70174300550697,5.49948563694e-4,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase subunit ChlN,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlN slr0750
+slr5085,2,ssl2982,-2.61491602072373,0.078254422116966,NA,unknown protein,Unknown,Unknown,slr5085
+slr5112,2,ssl2982,-2.45456248963886,2.27825456963945e-6,NA,unknown protein,Unknown,Unknown,slr5112
+slr7098,2,ssl2982,-2.12371352695647,0.003861931202108,NA,unknown protein,Unknown,Unknown,slr7098
+ssr7093,2,ssl2982,-2.12144881731083,5.5685723602e-4,Other,CRISPR-associated endoribonuclease Cas2 3,Other categories,Other,cas2-3 ssr7093
+ssr6002,2,ssl2982,-2.09328791539218,0.039919003808982,NA,unknown protein,Unknown,Unknown,ssr6002
+sll7086,2,ssl2982,-1.87058727173741,0.0038249427078,NA,unknown protein,Unknown,Unknown,sll7086
+slr5111,2,ssl2982,-1.83869587129295,2.44193228265029e-7,NA,unknown protein,Unknown,Unknown,slr5111
+ssr1499,2,ssl2982,-1.80134741500563,3.26128805264964e-7,NA,hypothetical protein,Hypothetical,Hypoth,ssr1499
+slr7091,2,ssl2982,-1.79087174633392,0.003034462169502,NA,hypothetical protein,Hypothetical,Hypoth,slr7091
+slr0199,2,ssl2982,-1.77722321200913,1.54371873825282e-8,Aromatic amino acid family,"putative glutamine amidotransferase, ergothioneine biosynthesis",Amino acid biosynthesis,AminoAcids,slr0199
+sll8040,2,ssl2982,-1.76857553630107,1.42365831339404e-7,NA,unknown protein,Unknown,Unknown,sll8040
+sll5028,2,ssl2982,-1.76212927955157,6.27722365986513e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll5028
+sll5062,2,ssl2982,-1.75741692769926,1.54211980108434e-8,NA,unknown protein,Unknown,Unknown,sll5062
+sll1319,2,ssl2982,-1.71934660639838,8.85640965011201e-8,NA,uncharacterized transporter,Transport and binding proteins,Transport,sll1319
+sll8020,2,ssl2982,-1.71249554152132,1.76097691818215e-12,NA,hypothetical protein,Hypothetical,Hypoth,sll8020
+sll7055,2,ssl2982,-1.67374037266507,0.001738440397776,NA,unknown protein,Unknown,Unknown,sll7055
+sll8035,2,ssl2982,-1.6443315693819,0.012655764202598,NA,hypothetical protein,Hypothetical,Hypoth,sll8035
+sll1710,2,ssl2982,-1.64221929715698,1.90396826967766e-5,Transposon-related functions,putative transposase [ISY523b: 1275354 - 1276224],Other categories,Other,sll1710
+slr8044,2,ssl2982,-1.58931965426195,7.90684456602742e-11,NA,unknown protein,Unknown,Unknown,slr8044
+slr5012,2,ssl2982,-1.57201844226232,4.0335810680287e-9,NA,hypothetical protein,Hypothetical,Hypoth,slr5012
+slr6106,2,ssl2982,-1.5662066664003,0.006983736115074,NA,hypothetical protein,Hypothetical,Hypoth,slr6106
+slr0023,2,ssl2982,-1.54922028797566,3.12285820725591e-17,NA,unknown protein,Unknown,Unknown,slr0023
+slr0474,2,ssl2982,-1.54861633306586,0.002078828503606,NA,"two-component response regulator CheY subfamily,  regulator for phytochrome 1 (Cph1)",Regulatory functions,Regul,rcp1 slr0474
+sll8048,2,ssl2982,-1.53643554013145,4.64366422993584e-17,NA,hypothetical protein,Hypothetical,Hypoth,sll8048
+sll0474,2,ssl2982,-1.51330745500643,4.19014994802565e-9,NA,two-component hybrid sensor and regulator,Regulatory functions,Regul,sll0474
+ssl7042,2,ssl2982,-1.50815343481675,1.51636472334134e-6,NA,hypothetical protein,Hypothetical,Hypoth,ssl7042
+sll0448,2,ssl2982,-1.50554200214043,0.003156905224677,NA,unknown protein,Unknown,Unknown,sll0448
+sll8019,2,ssl2982,-1.4967353397075,1.33385633117153e-9,NA,hypothetical protein,Hypothetical,Hypoth,sll8019
+sll0825,2,ssl2982,-1.4865369194487,2.73399463548167e-6,Ribosomal proteins: synthesis and modification,polyA polymerase,Translation,Translat,sll0825
+slr7052,2,ssl2982,-1.48573967776268,5.64483703275e-4,NA,unknown protein,Unknown,Unknown,slr7052
+slr7102,2,ssl2982,-1.45917052873216,1.76113861098228e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr7102
+sll7090,2,ssl2982,-1.45609660419154,1.55591160502e-4,NA,unknown protein,Unknown,Unknown,sll7090
+slr7097,2,ssl2982,-1.43867627362885,7.33891921581e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr7097
+ssr1258,2,ssl2982,-1.43693380838433,1.17238030345e-4,NA,hypothetical protein,Hypothetical,Hypoth,ssr1258
+slr5053,2,ssl2982,-1.43402945435534,0.020844454644296,NA,unknown protein,Unknown,Unknown,slr5053
+slr0955,2,ssl2982,-1.42660666043653,1.46033376768565e-10,Aminoacyl tRNA synthetases and tRNA modification,probable tRNA/rRNA methyltransferase,Translation,Translat,slr0955
+sll8032,2,ssl2982,-1.41194968925682,8.14011811799892e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll8032
+slr5013,2,ssl2982,-1.40249850185622,2.6471056344881e-10,NA,unknown protein,Unknown,Unknown,slr5013
+sll1095,2,ssl2982,-1.3912804553825,1.88286108634439e-11,NA,hypothetical protein,Hypothetical,Hypoth,sll1095
+sll8034,2,ssl2982,-1.38331540510732,8.46542082665722e-9,Other,2-nitropropane dioxygenase,Other categories,Other,sll8034
+sll0864,2,ssl2982,-1.37636704365885,4.09890801675641e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll0864
+slr0321,2,ssl2982,-1.36927259267709,5.53062709067647e-9,NA,GTP-binding protein ERA homolog,Regulatory functions,Regul,era slr0321
+slr1634,2,ssl2982,-1.359934189743,6.71818569298253e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1634
+ssr5092,2,ssl2982,-1.35162948564719,0.03400898975812,NA,hypothetical protein,Hypothetical,Hypoth,ssr5092
+sll7050,2,ssl2982,-1.34977564056579,6.71782605713e-4,NA,unknown protein,Unknown,Unknown,sll7050
+slr0797,2,ssl2982,-1.34316094152286,1.05427013024056e-5,NA,cobalt-transporting P-type ATPase (cobalt efflux pump) involved in cobalt tolerance,Transport and binding proteins,Transport,slr0797
+slr7092,2,ssl2982,-1.34257780361948,0.003086912142849,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7092
+sll5026,2,ssl2982,-1.34014954029171,1.20825889202323e-16,NA,hypothetical protein,Hypothetical,Hypoth,sll5026
+slr0755,2,ssl2982,-1.3333509848466,0.008921196644647,NA,hypothetical protein,Hypothetical,Hypoth,slr0755
+ndhK2,2,ssl2982,-1.33268733366312,3.49844482343522e-7,NA,NA,NA,NA,NA
+sll5063,2,ssl2982,-1.32480901875926,4.30405960167092e-7,NA,unknown protein,Unknown,Unknown,sll5063
+sll0494,2,ssl2982,-1.32218108215723,3.36254229168975e-5,NA,unknown protein,Unknown,Unknown,sll0494
+slr7096,2,ssl2982,-1.31806128095603,0.003071235011654,NA,hypothetical protein,Hypothetical,Hypoth,slr7096
+slr1827,2,ssl2982,-1.31288510471383,3.63662234415391e-8,NA,hypothetical protein,Hypothetical,Hypoth,slr1827
+slr0142,2,ssl2982,-1.29985234554281,1.09704134712432e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr0142
+sll5047,2,ssl2982,-1.28737043802514,2.64455055201469e-14,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,sll5047
+slr1285,2,ssl2982,-1.28351752473401,4.23465598120439e-5,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr1285
+slr1163,2,ssl2982,-1.28152278605369,3.72858421348871e-22,NA,unknown protein,Unknown,Unknown,slr1163
+sll0378,2,ssl2982,-1.27222955839029,5.11700046635e-4,"Cobalamin, heme, phycobilin and porphyrin",uroporphyrin-III C-methyltransferase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobA sll0378
+sll0573,2,ssl2982,-1.2676960137434,0.023550701075437,Amino acids and amines,carbamate kinase,Energy metabolism,Energy,arcC sll0573
+slr0868,2,ssl2982,-1.26358822698539,7.29014226739e-4,NA,unknown protein,Unknown,Unknown,slr0868
+sll1258,2,ssl2982,-1.26257351704195,2.55184722790213e-7,Pyrimidine ribonucleotide biosynthesis,dCTP deaminase,"Purines, pyrimidines, nucleosides, and nucleotides",Nucleot,sll1258
+slr0639,2,ssl2982,-1.25844868140998,4.61885983418999e-5,NA,mechanosensitive ion channel homolog,Transport and binding proteins,Transport,slr0639
+slr0640,2,ssl2982,-1.25651457606393,1.60747772005733e-14,NA,two-component sensor histidine kinase,Regulatory functions,Regul,slr0640
+slr1547,2,ssl2982,-1.25570786860174,1.76113861098228e-7,NA,hypothetical protein,Hypothetical,Hypoth,slr1547
+sll7044,2,ssl2982,-1.24487483801021,1.37519033201245e-15,Other,plasmid partition protein ParA homolog,Other categories,Other,sll7044
+slr1927,2,ssl2982,-1.24414397700279,7.29391413372736e-5,NA,hypothetical protein,Hypothetical,Hypoth,slr1927
+slr2132,2,ssl2982,-1.24370081400068,0.01047723641028,Pyruvate and acetyl-CoA metabolism,phosphotransacetylase,Energy metabolism,Energy,pta slr2132
+sll5046,2,ssl2982,-1.24116798376847,3.01766412203527e-11,NA,unknown protein,Unknown,Unknown,sll5046
+slr0636,2,ssl2982,-1.24066315965378,3.42096456513225e-5,"Cobalamin, heme, phycobilin and porphyrin",probable cobalamin [5&#x27;-phosphate] synthase,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,cobS slr0636
+sll8017,2,ssl2982,-1.24021723135685,4.00079149258996e-12,NA,unknown protein,Unknown,Unknown,sll8017
+sll7087,2,ssl2982,-1.22570818296956,0.00540006448309,NA,unknown protein,Unknown,Unknown,sll7087
+sll1584,2,ssl2982,-1.22280290496346,4.04205169448815e-8,Soluble electron carriers,ferredoxin like protein,Photosynthesis and respiration,Photosynth,sll1584
+sll0686,2,ssl2982,-1.21534179054985,1.17448286587533e-8,Other,probable cytochrome c-type biogenesis protein,Other categories,Other,sll0686
+slr8038,2,ssl2982,-1.21397368771075,3.91413976984845e-26,WD repeat proteins,WD-repeat protein,Other categories,Other,slr8038
+ssl5039,2,ssl2982,-1.21283608142461,0.003443357537188,NA,unknown protein,Unknown,Unknown,ssl5039
+slr7049,2,ssl2982,-1.21200277248207,2.21262017797532e-6,Transposon-related functions,resolvase,Other categories,Other,slr7049
+sll0024,2,ssl2982,-1.20575725648507,1.9407212057e-4,NA,unknown protein,Unknown,Unknown,sll0024
+sll0181,2,ssl2982,-1.19489636900518,4.57362240542818e-8,NA,unknown protein,Unknown,Unknown,sll0181
+sll1510,2,ssl2982,-1.17727999378062,4.30600121832885e-6,NA,unknown protein,Unknown,Unknown,sll1510
+slr7099,2,ssl2982,-1.1739617782178,0.007544298427483,NA,unknown protein,Unknown,Unknown,slr7099
+sll0792,2,ssl2982,-1.17344184693055,5.30810057918768e-7,NA,Zinc-responsive repressor ZiaR,Regulatory functions,Regul,ziaR smtB sll0792
+sll1634,2,ssl2982,-1.17180873644725,1.03881768048055e-9,NA,hypothetical protein,Hypothetical,Hypoth,sll1634
+slr1974,2,ssl2982,-1.16819332453718,1.92481455468508e-9,Other,GTP binding protein,Other categories,Other,der engA slr1974
+sll0360,2,ssl2982,-1.15947766848474,5.02390626067089e-8,NA,hypothetical protein,Hypothetical,Hypoth,sll0360
+slr0510,2,ssl2982,-1.15339879094545,1.23077556846505e-8,NA,hypothetical protein,Hypothetical,Hypoth,slr0510
+slr0572,2,ssl2982,-1.15060784565779,0.007557054913334,NA,unknown protein,Unknown,Unknown,slr0572
+slr7016,2,ssl2982,-1.14796300209841,1.42892653553658e-6,Other,CRISPR-associated endonuclease Cas1,Other categories,Other,cas1 slr7016
+slr6058,2,ssl2982,-1.14035434583351,0.001312544102176,NA,hypothetical protein,Hypothetical,Hypoth,slr6058
+slr1862,2,ssl2982,-1.13824279634213,4.43475290643e-4,NA,unknown protein,Unknown,Unknown,slr1862
+sll7067,2,ssl2982,-1.13648181059022,0.00161776028649,NA,unknown protein,Unknown,Unknown,sll7067
+ssl5129,2,ssl2982,-1.12338399774117,0.007959364063481,NA,hypothetical protein,Hypothetical,Hypoth,ssl5129
+sll7027,2,ssl2982,-1.11820513017187,1.16077450855e-4,NA,unknown protein,Unknown,Unknown,sll7027
+slr0773,2,ssl2982,-1.11565447848419,2.62357133755637e-6,NA,hypothetical protein,Hypothetical,Hypoth,slr0773
+slr1958,2,ssl2982,-1.11389417904496,0.026034171395605,NA,unknown protein,Unknown,Unknown,slr1958
+ssr2848,2,ssl2982,-1.10965009252212,5.74542470779e-4,NA,unknown protein,Unknown,Unknown,ssr2848
+sll1318,2,ssl2982,-1.1090383210959,2.30038606599e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll1318
+slr5022,2,ssl2982,-1.10485668105364,1.36557564511117e-5,Other,probable aminotransferase,Other categories,Other,slr5022
+sll1469,2,ssl2982,-1.10035216364969,6.95938303770225e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll1469
+sll1003,2,ssl2982,-1.09843515336786,6.28120722416746e-5,NA,two-component sensor histidine kinase,Regulatory functions,Regul,sll1003
+slr0913,2,ssl2982,-1.09595831609623,4.45895412103678e-7,NA,unknown protein,Unknown,Unknown,slr0913
+sll0085,2,ssl2982,-1.09082487721955,8.83942874278031e-9,NA,unknown protein,Unknown,Unknown,sll0085
+sll5049,2,ssl2982,-1.08969364774544,1.37942901621948e-15,NA,"polysaccharide transmembrane transporter Wzx, flippase",Transport and binding proteins,Transport,sll5049
+slr0108,2,ssl2982,-1.08773708755723,3.63628310821e-4,NA,unknown protein,Unknown,Unknown,slr0108
+sll1531,2,ssl2982,-1.08554250570315,2.50295550448694e-14,NA,unknown protein,Unknown,Unknown,sll1531
+ssr7017,2,ssl2982,-1.08423929147804,0.00330382063138,Other,CRISPR-associated endoribonuclease Cas2 1,NA,NA,NA
+sll0644,2,ssl2982,-1.08351095661796,4.98309778090307e-10,Other,probable esterase,Other categories,Other,sll0644
+slr0231,2,ssl2982,-1.08154006809427,0.01945603042476,Other,probable DNA-3-methyladenine glycosylase,Other categories,Other,slr0231
+slr0813,2,ssl2982,-1.08066213604698,2.40474744326339e-5,NA,yidC YidC/Oxa1 family membrane protein insertase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,yidC slr0813
+sll1231,2,ssl2982,-1.07912734238846,1.83314065630967e-5,Sugars,mannosyltransferase,Energy metabolism,Energy,sll1231
+slr1552,2,ssl2982,-1.07551234696043,1.03778176259958e-8,NA,unknown protein,Unknown,Unknown,slr1552
+sll7069,2,ssl2982,-1.07535712306119,1.56235445642011e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll7069
+slr1025,2,ssl2982,-1.07474574865161,7.49517660638e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr1025
+slr1591,2,ssl2982,-1.07377521279012,7.54103029875465e-10,NA,hypothetical protein,Hypothetical,Hypoth,slr1591
+sll5003,2,ssl2982,-1.07343278671308,1.34995891934e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll5003
+slr1222,2,ssl2982,-1.07095162881166,1.60488886595283e-6,NA,unknown protein,Unknown,Unknown,slr1222
+slr2118,2,ssl2982,-1.07021937316683,5.36935397558345e-5,NA,unknown protein,Unknown,Unknown,slr2118
+slr0914,2,ssl2982,-1.06883289594613,1.02031848339764e-9,NA,unknown protein,Unknown,Unknown,slr0914
+slr1495,2,ssl2982,-1.0635733103313,2.56211489777247e-8,NA,hypothetical protein,Hypothetical,Hypoth,slr1495
+sll0283,2,ssl2982,-1.05856623167191,0.052147166239489,NA,hypothetical protein,Hypothetical,Hypoth,sll0283
+sll1611,2,ssl2982,-1.0577174997276,9.8722781399804e-5,NA,unknown protein,Unknown,Unknown,sll1611
+sll1716,2,ssl2982,-1.05182950597522,0.002289908208635,Transposon-related functions,putative transposase [ISY523a: 967549 - 968419],Other categories,Other,sll1716
+slr7095,2,ssl2982,-1.04752886958427,4.80698496008e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr7095
+sll0924,2,ssl2982,-1.04638064978995,8.29675999331756e-10,NA,hypothetical protein,Hypothetical,Hypoth,sll0924
+slr1173,2,ssl2982,-1.04598482943159,4.91109705206534e-6,NA,hypothetical protein,Hypothetical,Hypoth,slr1173
+ssl3177,2,ssl2982,-1.03536646630252,1.03277837616818e-9,NA,hypothetical protein,Hypothetical,Hypoth,ssl3177
+slr2053,2,ssl2982,-1.03455363225411,2.09587240858401e-8,Other,putative hydrolase,Other categories,Other,slr2053
+sll1623,2,ssl2982,-1.03245178980942,1.00671401620996e-8,NA,ABC transporter ATP-binding protein,Transport and binding proteins,Transport,sll1623
+ssr5074,2,ssl2982,-1.03196457576182,0.007491828182972,NA,unknown protein,Unknown,Unknown,ssr5074
+sll1240,2,ssl2982,-1.02553213955031,6.22632188732e-4,NA,unknown protein,Unknown,Unknown,sll1240
+sll0846,2,ssl2982,-1.02488601203193,8.53218410332e-4,NA,hypothetical protein,Hypothetical,Hypoth,sll0846
+slr2077,2,ssl2982,-1.01823065523094,5.38067967393341e-8,NA,"probable ABC transporter, periplasmic binding protein",Transport and binding proteins,Transport,slr2077
+slr6090,2,ssl2982,-1.01750349175127,2.65010155346196e-14,NA,unknown protein,Unknown,Unknown,slr6090
+sll1917,2,ssl2982,-1.01742820995683,0.001418701310262,"Cobalamin, heme, phycobilin and porphyrin","coproporphyrinogen III oxidase, anaerobic (oxygen-independent)","Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,sll1917
+slr0272,2,ssl2982,-1.0164409236919,0.012585216626686,NA,unknown protein,Unknown,Unknown,slr0272
+slr7100,2,ssl2982,-1.01568127949279,9.72788671025292e-6,NA,unknown protein,Unknown,Unknown,slr7100
+sll0793,2,ssl2982,-1.0128629469935,1.30690298524068e-5,NA,hypothetical protein,Hypothetical,Hypoth,sll0793
+sll0848,2,ssl2982,-1.01206404465373,1.81066783360169e-5,NA,chromosomal replication initiator protein DnaA,"DNA replication, restriction, modification, recombination, and repair",DNArep,dnaA sll0848
+slr0689,2,ssl2982,-1.00949774713508,4.43131216877578e-18,NA,hypothetical protein,Hypothetical,Hypoth,slr0689
+sll7085,2,ssl2982,-1.00176682127784,0.009250769221119,NA,unknown protein,Unknown,Unknown,sll7085
+sll1830,2,ssl2982,-0.937584717174871,4.3672686203615e-7,NA,unknown protein,Unknown,Unknown,sll1830
+slr0889,2,ssl2982,-0.928097215571031,0.062443797202643,NA,putative proteinkinase,Regulatory functions,Regul,slr0889
+sll5089,2,ssl2982,-0.913070593723439,3.1710128605495603e-05,NA,unknown protein,Unknown,Unknown,sll5089
+sll1308,2,ssl2982,-0.902227373872656,7.16721181097e-4,Other,probable oxidoreductase,Other categories,Other,sll1308
+slr6045,2,ssl2982,-0.895872999553971,0.003422981752496,NA,unknown protein,Unknown,Unknown,slr6045
+slr8022,2,ssl2982,-0.893940901981114,0.0634153198714,NA,hypothetical protein,Hypothetical,Hypoth,slr8022
+sll5006,2,ssl2982,-0.873037354854811,6.62739582699e-4,NA,unknown protein,Unknown,Unknown,sll5006
+sll0922,2,ssl2982,-0.847292632783516,0.069252387956396,NA,unknown protein,Unknown,Unknown,sll0922
+slr6063,2,ssl2982,-0.836051087116406,0.077603456719432,NA,unknown protein,Unknown,Unknown,slr6063
+ssl7045,2,ssl2982,-0.81364102072888,0.011986625905106,NA,unknown protein,Unknown,Unknown,ssl7045
+slr1262,2,ssl2982,-0.813586999812207,6.79792471672e-4,NA,hypothetical protein,Hypothetical,Hypoth,slr1262
+slr1152,2,ssl2982,-0.796229577286659,0.171826611818409,NA,hypothetical protein,Hypothetical,Hypoth,slr1152
+slr1957,2,ssl2982,-0.781958475280713,0.164594734045539,NA,hypothetical protein,Hypothetical,Hypoth,slr1957
+slr0286,2,ssl2982,-0.77785862414674,0.022244503726235,NA,protein involved in functional assembly of photosystem II,Unknown,Unknown,slr0286
+slr1536,2,ssl2982,-0.754120362305209,0.007393088928394,NA,ATP-dependent DNA helicase RecQ,"DNA replication, restriction, modification, recombination, and repair",DNArep,recQ slr1536
+ssr5019,2,ssl2982,-0.729991261725312,0.091422417980202,NA,hypothetical protein,Hypothetical,Hypoth,ssr5019
+slr2121,2,ssl2982,-0.729944938868887,0.002253096176788,Glycolate pathway,TSPO translocator protein,Energy metabolism,Energy,TSPO slr2121
+sll5090,2,ssl2982,-0.720018600914824,0.005816394338849,NA,unknown protein,Unknown,Unknown,sll5090
+sll1900,2,ssl2982,-0.694004748982865,4.23269639249e-4,Other,acetyltransferase,Other categories,Other,sll1900
+slr1074,2,ssl2982,-0.682257891904045,6.94368118949e-4,NA,polysaccharide transmembrane transporter Wzy,Transport and binding proteins,Transport,slr1074
+sll5057,2,ssl2982,-0.674511338047688,0.00280164237415,Other,probable glycosyltransferase,Other categories,Other,sll5057
+slr0888,2,ssl2982,-0.578791977621488,0.416960125235706,NA,hypothetical protein,Hypothetical,Hypoth,slr0888
+slr0749,2,ssl2982,-0.577681427716707,0.457240216941037,"Cobalamin, heme, phycobilin and porphyrin",light-independent protochlorophyllide reductase iron protein subunit ChlL,"Biosynthesis of cofactors, prosthetic groups, and carriers",Cofactors,chlL frxC slr0749
+slr1963,2,ssl2982,-0.563244893012978,0.056542362141427,Adaptations and atypical conditions,Orange carotenoid-binding protein,Other categories,Other,slr1963
+slr1535,2,ssl2982,-0.52879875340792,0.301168553282872,NA,hypothetical protein,Hypothetical,Hypoth,slr1535
+slr1261,2,ssl2982,-0.520246796146432,0.046421343982303,NA,hypothetical protein,Hypothetical,Hypoth,slr1261
+ssr6046,2,ssl2982,-0.505075144501234,0.127851833508391,NA,hypothetical protein,Hypothetical,Hypoth,ssr6046
+ssr5121,2,ssl2982,-0.504430686876224,0.178770327660233,NA,hypothetical protein,Hypothetical,Hypoth,ssr5121
+slr0554,2,ssl2982,-0.500734378437059,0.00125449156023,NA,hypothetical protein,Hypothetical,Hypoth,slr0554
+slr1077,2,ssl2982,-0.457664431056239,0.049453736120702,Other,probable glycosyltransferase,Other categories,Other,slr1077
+slr6107,2,ssl2982,-0.443721850165319,0.282262528536495,NA,hypothetical protein,Hypothetical,Hypoth,slr6107
+slr1260,2,ssl2982,-0.415698811878279,0.079989356256017,NA,hypothetical protein,Hypothetical,Hypoth,slr1260
+ssl3580,2,ssl2982,-0.412355704893015,0.006671169249222,Hydrogenase,putative hydrogenase expression/formation protein HypC,Other categories,Other,hypC ssl3580
+sll0572,2,ssl2982,-0.367696923477727,0.48717729734779,NA,hypothetical protein,Hypothetical,Hypoth,sll0572
+ssl5098,2,ssl2982,-0.338230915812281,0.245900774558487,NA,unknown protein,Unknown,Unknown,ssl5098
+slr1259,2,ssl2982,-0.297684328820105,0.154219649519879,NA,hypothetical protein,Hypothetical,Hypoth,slr1259
+slr1340,2,ssl2982,-0.195984701512657,0.378899200282503,NA,unknown protein,Unknown,Unknown,slr1340
+sll0543,2,ssl2982,-0.106893730992421,0.712441784831174,NA,hypothetical protein,Hypothetical,Hypoth,sll0543
+slr1916,2,ssl2982,0.019641846698762,0.920207565582239,Other,probable esterase,Other categories,Other,slr1916
+sll1969,2,ssl2982,0.072981039151445,0.754520161699084,NA,ppnK NAD+ kinase,"Fatty acid, phospholipid and sterol metabolism",FattyAcids,ppnK sll1969

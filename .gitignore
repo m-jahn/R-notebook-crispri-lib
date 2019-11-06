@@ -1,5 +1,13 @@
 .Rhistory
 .Rdata
-sgRNA_library/raw_data/*
-sgRNA_library/processed_data/*
+sgRNA_library/raw_data/gene_protein_table.txt
+sgRNA_library/raw_data/20181019_LunLib_all_CDS_RPKM_no_filter.corrected_labels.tab
+sgRNA_library/raw_data/190702_library_predepletion_deseq.tab
+sgRNA_library/raw_data/181025_countings_long_format_MERGED_HL.tab
+sgRNA_library/raw_data/181107_countings_long_format_MERGED_LL.tab
+sgRNA_library/processed_data/CRISPRi_library_DESeq_result_table.Rdata
+sgRNA_library/processed_data/CRISPRi_library_df_cluster.csv
+sgRNA_library/processed_data/CRISPRi_library_df_growthrates.csv
+sgRNA_library/processed_data/CRISPRi_library_df_annotated.Rdata
+sgRNA_library/processed_data/CRISPRi_library_df_cluster.Rdata
 sgRNA_library/pipeline/CRISPRi_library_pre_depletion.R
