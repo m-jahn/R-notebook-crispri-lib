@@ -7,9 +7,9 @@ This repository contains data processing pipelines or data curation projects
 that require a higher level of maintenance and documentation. 
 
 In contrast to some of my other github projects, 
-like [SysbioTreemaps](https:/github.com/m-jahn/SysbioTreemaps),
-[ShinyMC](https:/github.com/m-jahn/ShinyMC), [ShinyProt](https:/github.com/m-jahn/ShinyProt),
-or [ShinyLib](https:/github.com/m-jahn/ShinyLib),
+like [SysbioTreemaps](SysbioTreemaps),
+[ShinyMC](m-jahn/ShinyMC), [ShinyProt](/m-jahn/ShinyProt),
+or [ShinyLib](github.com/m-jahn/ShinyLib),
 the pipelines in this repository are not necessarily in the form of R packages or apps.
 This means the pipelines were created for a particular purpose or data analysis task,
 but are not further developed or maintained.
@@ -19,9 +19,29 @@ regarding stability or executability in future R versions. However, all care was
 guarantee scientific accuracy and adhere to good scientific practice in terms of statistics,
 reproducibility and code documentation. Please report any errors by filing a github issue.
 
-The documentation of the code is part of the actual pipeline. The pipelines themselves can
-be downloaded and executed from the `pipeline` sub-folders. To inspect the code chunks 
-and their corresponding results follow the links below (`*.html` reports).
+### How to run the pipelines
+
+The pipelines collected in this repository are self-contained and executable. 
+The code _and_ the documentation are part of one and the same R markdown document
+for each pipeline. The pipelines themselves can be downloaded and executed 
+from the `pipeline` sub-folders. To simply view the code chunks and their 
+corresponding output, follow the links to the rendered `*.html` reports under 
+[Contents](#Contents).
+
+To download the repository on your local drive use `git clone` in your terminal:
+
+``` bash
+cd /your-target-folder
+git clone https://github.com/m-jahn/R-notebooks.git
+```
+
+Open a pipeline with Rstudio and execute code (chunks) with the `Run` button.
+Alternatively, open an interactive R session and render the R markdown pipeline:
+
+``` bash
+rmarkdown::render("pipeline.Rmd")
+```
+
 
 ### Contents
 
