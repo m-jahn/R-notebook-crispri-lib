@@ -7,9 +7,9 @@ This repository contains data processing pipelines or data curation projects
 that require a higher level of maintenance and documentation. 
 
 In contrast to some of my other github projects, 
-like [SysbioTreemaps](SysbioTreemaps),
-[ShinyMC](m-jahn/ShinyMC), [ShinyProt](/m-jahn/ShinyProt),
-or [ShinyLib](github.com/m-jahn/ShinyLib),
+like [SysbioTreemaps](https://github.com/m-jahn/SysbioTreemaps),
+[ShinyMC](https://github.com/m-jahn/ShinyMC), [ShinyProt](https://github.com/m-jahn/ShinyProt),
+or [ShinyLib](https://github.com/m-jahn/ShinyLib),
 the pipelines in this repository are not necessarily in the form of R packages or apps.
 This means the pipelines were created for a particular purpose or data analysis task,
 but are not further developed or maintained.
