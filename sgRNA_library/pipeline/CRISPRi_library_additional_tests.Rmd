@@ -102,7 +102,7 @@ df_ms %>% group_by(condition, timepoint, induction, sgRNA_index) %>%
   summarise(sum(mean.mass.fraction.norm, na.rm = TRUE)) %>% head
 
 
-# # optionally reduce data to only the most 
+# # optionally reduce data to only the sgRNA with the smallest effect
 # df_ms <- df_ms %>% group_by(condition, induction, sgRNA_short) %>%
 # summarise(
 #   fitness_score = min(fitness_score),
@@ -115,7 +115,7 @@ df_ms %>% group_by(condition, timepoint, induction, sgRNA_index) %>%
 
 #### Correlation between change over light conditions and essentiality
 
-Different metrics could be used to determine a the extent of a protein changing 
+Different metrics could be used to determine the extent of a protein changing 
 abundance over light conditions. The MS dataset contains an ANOVA p-value that is 
 lower (more significant) the more a protein changes abudnance over light intensity/
 growth rate (5 light intensities were originally tested: L60, L100, L200, L300 

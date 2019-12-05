@@ -380,7 +380,7 @@ print(plot_heatmap)
 
 ```{r, results = 'hide', include = FALSE}
 # export both dendrogram and heatmap
-  png("../figures/main/CRISPRi_library_dendrogram.png", , width = 1800, height = 650, res = 165)
+png("../figures/main/CRISPRi_library_dendrogram.png", , width = 1800, height = 650, res = 165)
 plot(color_branches(cluster_reordered,
   groupLabels = as.numeric(levels(clusters)), lwd = 1,
   col = custom_palette[as.numeric(levels(clusters))],
@@ -642,8 +642,11 @@ First, global fitness score distribution was compared between L100 and L300 per 
 Then the strongest difference between the two conditions for specific sgRNAs was 
 investigated, and sgRNAs with the highest differential fitness score dF were selected. 
 Finally, the depletion/enrichment over time is shown for 20 selected genes where both
-sgRNAs are depleted.
+sgRNAs are depleted. 
 
+As a supplemental information, we tested also differential fitness
+between L100 and LD (25 genes with both sgRNAs present), and L300 and LD (4 genes with 
+both sgRNAs present). The overlap
 
 **Subfigure A: Difference in fitness score distribution between L100 and L300**
 
@@ -706,7 +709,7 @@ df_selected_fitness <- df %>% ungroup %>%
 
 plot_diff_fitness <- xyplot(diff_fitness_score ~ factor(Process.abbr) | factor(cluster), 
   df_selected_fitness, group = between(diff_fitness_score, -3, 3),
-  xlab = "", ylab = paste0("dF (",light_conditions[2], "-", light_conditions[1], ")"), #L300-L100
+  xlab = "", ylab = paste0("dF (",light_conditions[2], "-", light_conditions[1], ")"),
   par.settings = custom_lattice, type = "p", pch = 19, as.table = TRUE, 
   col = c("#D33F6A", "#00989D"),
   scales = list(alternating = FALSE, x = list(rot = 45, cex = 0.65)), 
@@ -728,11 +731,9 @@ plot_diff_fitness <- xyplot(diff_fitness_score ~ factor(Process.abbr) | factor(c
 
 ```{r}
 df_selected_genes <- filter(df_selected_fitness, 
-  !between(diff_fitness_score, -3, 3)#, 
-  #!grepl("^s[sl][lr][0-9]{4}", sgRNA_short)
-  ) %>% 
+  !between(diff_fitness_score, -3, 3)) %>% 
   pull(sgRNA_short)
-  
+    
 plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations | 
       paste0(cluster, "   ", sgRNA_short), 
     df %>% filter(sgRNA_short %in% df_selected_genes[1:18], 
