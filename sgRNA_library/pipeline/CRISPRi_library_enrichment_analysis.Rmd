@@ -963,32 +963,35 @@ sgRNA mutant library grown in presence of equimolar concentration of sodium chlo
 
 To find genes that are responsible for higher tolerance to lactate, sgRNAs with
 enrichment specifically for the lactate but not the sodium chloride condition were
-filtered. The volcano plot shows enrichment of 78 sgRNAs under lactate after 32 d,
-(threshold: log2 FC $\geq$ 2, -log10 p-value $\geq$ 20), while only 8 sgRNAs were enriched
-in the NaCl control. Of these 78 sgRNAs, several were targeting the same gene
+filtered. The volcano plot shows enrichment of 75 sgRNAs under lactate after 32 d,
+(induced condition, threshold: log2 FC $\geq$ 2, -log10 p-value $\geq$ 20), 
+while only 8 sgRNAs were enriched in the NaCl control. 
+Of these 75 sgRNAs, 16 were targeting the same gene
 giving those targets more confidence compared to single hit sgRNAs.
 
 
 ```{r,  fig.width = 6, fig.height = 2.5, warning = FALSE}
 # volcanoplot with potential boundaries for enriched sgRNAs
 plot_lactate_volcano <- df %>% filter(condition %in%  c("LAC", "NACL") & timepoint > 8) %>% 
-  filter(!is.na(log2FoldChange)) %>%
+  filter(!is.na(log2FoldChange), !is.na(padj)) %>%
   
   xyplot(-log10(padj) ~ log2FoldChange | 
       paste0(condition, "  ", timepoint, " d") %>% factor(., unique(.)[c(2,3,1,4)]), ., 
     as.table = TRUE, groups = induction, layout = c(4, 1),
-    # groups = read.fraction.mean < 1e-05,
     par.settings = custom.lattice, 
     xlab = bquote(log[2] ~ "FC"), ylab = bquote(-log[10] ~ "p-value"),
     col = c("#D33F6A", "#00989D"),
-    cex = 0.2, pch=19, between = list(x = 0.5, y = 0.5),
+    cex = 0.2, pch = 19, between = list(x = 0.5, y = 0.5),
     scales = list(alternating = FALSE),
     ylim = c(- 20, 200), xlim = c(-10, 10),
-    panel = function(x, y, ...) {
+    panel = function(x, y, groups, subscripts, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.xyplot(x, y, ...)
-      panel.quadrants(x, y, h = 20, v = 2, labels = "events")
-      panel.key(c("induced", "uninduced"), col = c("#D33F6A", "#00989D"), pch = 19, corner = c(0.9, 0.7))
+      panel.xyplot(x, y, groups = groups, subscripts = subscripts, ...)
+      # only quadrants for induced genes
+      panel.quadrants(x[groups[subscripts] == "i"], y[groups[subscripts] == "i"], 
+        h = 20, v = 2, labels = "events")
+      panel.key(c("induced", "uninduced"), col = c("#D33F6A", "#00989D"), 
+        pch = 19, corner = c(0.9, 0.7))
     }
   )
 
@@ -997,18 +1000,21 @@ print(plot_lactate_volcano)
 
 
 ```{r}
-# filter most enriched sgRNAs according to pvalue and log FC boundaries
-candidates <- filter(df, condition %in% "LAC", induction == "i",
+# filter most enriched sgRNAs according to pvalue and log FC boundaries 
+# (75 sgRNAs in 32d induced, 22 uninduced. The 24 sgRNAs in 16d sample are all
+# contained in 75 sgRNAs at 32d)
+candidates <- filter(df, condition %in% "LAC", 
+  induction == "i",
   log2FoldChange > 2, log10(padj) <= -20) %>%
   pull(sgRNA) %>% unique
 
 # check which ones fall into same criteria for NACL control ('false positives')
 falsepos <- filter(df, condition %in% "NACL", 
-  log2FoldChange > 2 & log10(padj) <= -20) %>% 
+  log2FoldChange > 2 & log10(padj) <= -20) %>%
   pull(sgRNA) %>% unique
 
 # no overlap between Lactate and NaCl enriched sgRNAs
-candidates %in% falsepos
+candidates %in% falsepos %>% any
 ```
 
 
