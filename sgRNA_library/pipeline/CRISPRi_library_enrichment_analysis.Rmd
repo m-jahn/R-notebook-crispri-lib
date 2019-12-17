@@ -69,6 +69,40 @@ df %>% group_by(condition, induction, sgRNA) %>%
   summarise(sum(NAs > 0))
 ```
 
+----------
+
+#### Sample coverage
+
+Out of the 39 possible conditions, not every sgRNA was quantified in all conditions.
+Here is a summary for quantification of 7119 ORF-targeting and 3379 ncRNA targeting 
+genes.
+
+```{r, fig.height = 3, fig.width = 6}
+bind_rows(.id = "sgRNA_target",
+    df %>% group_by(sgRNA) %>% summarize(quantified = sum(!is.na(FC))),
+    df_ncRNA %>% group_by(sgRNA) %>% summarize(quantified = sum(!is.na(FC)))
+  ) %>% 
+  
+  mutate(sgRNA_target = recode(sgRNA_target, `1` = "ORFs", `2` = "ncRNAs")) %>%
+  group_by(sgRNA_target) %>%
+  arrange(quantified) %>%
+  mutate(index = 1:length(quantified)) %>%
+  
+  xyplot(quantified ~ index | sgRNA_target, .,
+    as.table = TRUE, scales = list(alternating = FALSE),
+    xlab = "sgRNA", ylab = "quantified samples",
+    par.settings = custom.lattice, 
+    between = list(x = 0.5, y = 0.5),
+    type = "b", pch = 19, cex = 0.6, lwd = 2.5,
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+    }
+  )
+
+```
+
+
 -----------
 
 #### Read distribution
