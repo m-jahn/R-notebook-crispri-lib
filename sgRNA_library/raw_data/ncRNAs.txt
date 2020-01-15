@@ -1,0 +1,34 @@
+NAME
+psrR1
+nCr0700 dsiR1
+nsiR4
+CsiR1
+isAR1
+TU79 psiR2
+TU1565 nsiR5
+TU177 dsiR2
+TU36 isAR2
+TU1647 hliR1
+yfr2A
+TU818
+SyR53
+TU2529
+nCr0210
+SyR3
+TU1351 dsiR3
+SyR8
+SyR7
+SyR9
+SyR47
+SYR51
+SyR6
+SyR52
+SyR46
+SyR5
+SyR50
+Yfr1
+yfr2C
+yfr2b
+TU728 .nsiR6.
+nCl0710 .CoiR1.
+psiR1
