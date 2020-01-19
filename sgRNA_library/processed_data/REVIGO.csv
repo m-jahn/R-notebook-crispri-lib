@@ -1,230 +1,228 @@
 term_ID,description,frequency,plot_X,plot_Y,plot_size,uniqueness,dispensability,representative,eliminated
-GO:0002252,"immune effector process",0.185%, 0.961,-0.034,4.375,0.985,0.000,2252,0
-GO:0002376,"immune system process",0.600%, 0.935,-0.122,4.886,0.991,0.000,2376,0
-GO:0007155,"cell adhesion",0.544%, 0.799, 0.024,4.844,0.991,0.000,7155,0
-GO:0008152,"metabolic process",75.387%, 1.272,-0.339,6.986,0.998,0.000,8152,0
-GO:0009605,"response to external stimulus",1.370%, 2.594, 0.527,5.245,0.954,0.000,9605,0
-GO:0009987,"cellular process",63.780%, 0.984, 0.163,6.913,0.997,0.000,9987,0
-GO:0032259,"methylation",3.103%, 1.562,-0.132,5.600,0.969,0.000,32259,0
-GO:0042026,"protein refolding",0.069%, 1.459,-0.137,3.949,0.953,0.000,42026,0
-GO:0042274,"ribosomal small subunit biogenesis",0.255%, 1.722, 2.623,4.515,0.925,0.000,42274,0
-GO:0048511,"rhythmic process",0.077%, 1.486,-0.505,3.994,0.991,0.000,48511,0
-GO:0055080,"cation homeostasis",0.378%, 1.993, 1.375,4.685,0.954,0.000,55080,0
-GO:0090662,"ATP hydrolysis coupled transmembrane transport",1.001%, 4.250,-3.114,5.109,0.904,0.000,90662,0
-GO:0042157,"lipoprotein metabolic process",0.210%, 1.118, 1.694,4.431,0.922,0.014,42157,0
-GO:0043158,"heterocyst differentiation",0.002%,-0.374,-2.010,2.386,0.870,0.018,43158,0
-GO:0016999,"antibiotic metabolic process",0.055%, 0.560,-0.034,3.846,0.918,0.022,16999,0
-GO:0017000,"antibiotic biosynthetic process",0.028%,null,null,3.560,0.865,0.951,16999,1
-GO:0009058,"biosynthetic process",31.611%, 1.379,-0.059,6.608,0.963,0.030,9058,0
-GO:0007154,"cell communication",7.219%, 0.745,-0.024,5.967,0.932,0.033,7154,0
-GO:2001061,"D-glycero-D-manno-heptose 7-phosphate biosynthetic process",0.008%,-2.036,-0.084,3.007,0.798,0.035,2001061,0
-GO:0017144,"drug metabolic process",0.058%, 1.037, 0.046,3.868,0.926,0.040,17144,0
-GO:0015979,"photosynthesis",0.183%, 0.804,-0.178,4.370,0.919,0.043,15979,0
-GO:0015977,"carbon fixation",0.036%,-0.933,-1.971,3.664,0.867,0.043,15977,0
-GO:0019684,"photosynthesis, light reaction",0.069%, 0.660,-0.473,3.947,0.903,0.044,19684,0
-GO:0000103,"sulfate assimilation",0.084%,-0.068,-1.013,4.033,0.879,0.044,103,0
-GO:0010304,"PSII associated light-harvesting complex II catabolic process",0.001%, 0.123, 1.142,1.991,0.904,0.063,10304,0
-GO:0034471,"ncRNA 5'-end processing",0.048%,-1.177, 6.619,3.790,0.803,0.081,34471,0
-GO:0052889,"9,9'-di-cis-zeta-carotene desaturation to 7,9,7',9'-tetra-cis-lycopene",0.003%,-1.901,-3.957,2.566,0.807,0.088,52889,0
-GO:0046148,"pigment biosynthetic process",0.448%,-3.120,-3.090,4.760,0.839,0.118,46148,0
-GO:0051188,"cofactor biosynthetic process",2.763%,-3.715, 0.792,5.550,0.775,0.121,51188,0
-GO:0051301,"cell division",1.230%,-4.417,-4.155,5.198,0.801,0.126,51301,0
-GO:0052803,"imidazole-containing compound metabolic process",0.420%,-4.563, 4.747,4.732,0.782,0.131,52803,0
-GO:0019632,"shikimate metabolic process",0.023%,-5.776,-3.577,3.476,0.735,0.146,19632,0
-GO:0044550,"secondary metabolite biosynthetic process",0.101%,-5.289,-1.879,4.111,0.755,0.150,44550,0
-GO:0006474,"N-terminal protein amino acid acetylation",0.035%, 0.586, 4.084,3.651,0.882,0.169,6474,0
-GO:0090305,"nucleic acid phosphodiester bond hydrolysis",2.271%,-2.658, 6.133,5.464,0.786,0.212,90305,0
-GO:0055114,"oxidation-reduction process",15.060%,-5.019,-4.729,6.286,0.789,0.215,55114,0
-GO:0007049,"cell cycle",1.885%,-4.444,-3.812,5.384,0.793,0.223,7049,0
-GO:0090503,"RNA phosphodiester bond hydrolysis, exonucleolytic",0.146%,-1.324, 6.626,4.274,0.820,0.235,90503,0
-GO:0032784,"regulation of DNA-templated transcription, elongation",0.150%,-3.100, 5.841,4.284,0.748,0.237,32784,0
-GO:0046219,"indolalkylamine biosynthetic process",0.191%,-5.096, 3.457,4.389,0.739,0.241,46219,0
-GO:0000162,"tryptophan biosynthetic process",0.191%,null,null,4.389,0.583,0.995,46219,1
-GO:0042435,"indole-containing compound biosynthetic process",0.194%,null,null,4.397,0.739,0.935,46219,1
-GO:2000186,"negative regulation of phosphate transmembrane transport",0.000%, 4.443,-2.340,1.301,0.901,0.244,2000186,0
-GO:0006767,"water-soluble vitamin metabolic process",1.215%,-6.281,-3.694,5.193,0.724,0.251,6767,0
-GO:0042364,"water-soluble vitamin biosynthetic process",1.160%,null,null,5.173,0.614,0.980,6767,1
-GO:0006106,"fumarate metabolic process",0.049%,-5.999,-3.771,3.801,0.720,0.277,6106,0
-GO:0072527,"pyrimidine-containing compound metabolic process",1.037%,-4.429, 4.390,5.124,0.765,0.282,72527,0
-GO:0006814,"sodium ion transport",0.305%, 5.087,-3.269,4.592,0.877,0.289,6814,0
-GO:0018298,"protein-chromophore linkage",0.095%, 1.028, 4.859,4.084,0.874,0.317,18298,0
-GO:0072522,"purine-containing compound biosynthetic process",1.502%,-5.411, 3.632,5.285,0.687,0.322,72522,0
-GO:0044249,"cellular biosynthetic process",30.048%,-4.451, 1.763,6.586,0.765,0.329,44249,0
-GO:0043571,"maintenance of CRISPR repeat elements",0.052%,-0.354, 6.136,3.827,0.791,0.332,43571,0
-GO:0071214,"cellular response to abiotic stimulus",0.113%, 2.826, 0.511,4.162,0.919,0.333,71214,0
-GO:0006396,"RNA processing",3.210%,-2.849, 6.141,5.615,0.762,0.335,6396,0
-GO:0046185,"aldehyde catabolic process",0.048%,-3.102,-3.636,3.790,0.816,0.341,46185,0
-GO:0072350,"tricarboxylic acid metabolic process",0.497%,-6.522,-4.324,4.805,0.683,0.343,72350,0
-GO:0018065,"protein-cofactor linkage",0.126%, 0.638, 4.609,4.209,0.871,0.346,18065,0
-GO:0043953,"protein transport by the Tat complex",0.073%, 4.390,-3.108,3.974,0.900,0.373,43953,0
-GO:0072528,"pyrimidine-containing compound biosynthetic process",0.902%,-5.431, 3.573,5.063,0.685,0.378,72528,0
-GO:0002790,"peptide secretion",0.041%, 4.278,-3.148,3.720,0.845,0.380,2790,0
-GO:0006935,"chemotaxis",0.475%, 1.711, 0.733,4.785,0.947,0.383,6935,0
-GO:0071826,"ribonucleoprotein complex subunit organization",0.377%, 2.517, 2.928,4.685,0.891,0.389,71826,0
-GO:0045936,"negative regulation of phosphate metabolic process",0.182%,-0.731, 0.103,4.368,0.824,0.389,45936,0
-GO:0070681,"glutaminyl-tRNAGln biosynthesis via transamidation",0.011%,-6.278, 2.745,3.154,0.675,0.390,70681,0
-GO:0006952,"defense response",0.568%, 1.685, 0.772,4.863,0.952,0.390,6952,0
-GO:0072348,"sulfur compound transport",0.249%, 4.657,-3.251,4.504,0.840,0.391,72348,0
-GO:0090407,"organophosphate biosynthetic process",4.110%,-4.340, 0.616,5.722,0.703,0.414,90407,0
-GO:0009081,"branched-chain amino acid metabolic process",0.463%,-7.062,-1.745,4.774,0.639,0.414,9081,0
-GO:0045903,"positive regulation of translational fidelity",0.005%,-3.417, 3.878,2.842,0.765,0.424,45903,0
-GO:0043102,"amino acid salvage",0.073%,-7.124,-2.002,3.970,0.631,0.432,43102,0
-GO:0015074,"DNA integration",0.682%,-1.979, 6.790,4.942,0.789,0.434,15074,0
-GO:0018193,"peptidyl-amino acid modification",1.495%, 1.126, 6.157,5.283,0.843,0.434,18193,0
-GO:0000966,"RNA 5'-end processing",0.049%,-0.998, 6.714,3.798,0.815,0.436,966,0
-GO:0044283,"small molecule biosynthetic process",5.677%,-6.642,-1.993,5.862,0.613,0.440,44283,0
-GO:0015970,"guanosine tetraphosphate biosynthetic process",0.001%,-6.089,-0.320,2.104,0.695,0.448,15970,0
-GO:0006810,"transport",17.616%, 5.008,-3.320,6.354,0.892,0.448,6810,0
-GO:0044255,"cellular lipid metabolic process",2.704%,-5.222,-4.859,5.540,0.710,0.459,44255,0
-GO:0071555,"cell wall organization",0.709%, 1.684, 2.548,4.959,0.888,0.463,71555,0
-GO:0009252,"peptidoglycan biosynthetic process",0.533%,null,null,4.835,0.651,0.906,71555,1
-GO:0008616,"queuosine biosynthetic process",0.146%,-6.516, 0.994,4.271,0.617,0.464,8616,0
-GO:0042372,"phylloquinone biosynthetic process",0.006%,-5.954,-2.715,2.915,0.717,0.467,42372,0
-GO:0006527,"arginine catabolic process",0.051%,-6.524,-2.498,3.817,0.667,0.472,6527,0
-GO:1901566,"organonitrogen compound biosynthetic process",14.064%,-5.873, 3.384,6.256,0.692,0.498,1901566,0
-GO:0046903,"secretion",0.810%, 4.407,-3.524,5.017,0.824,0.499,46903,0
-GO:0006950,"response to stress",4.575%, 1.746, 0.764,5.769,0.950,0.501,6950,0
-GO:0009451,"RNA modification",1.778%,-2.310, 6.216,5.358,0.766,0.509,9451,0
-GO:0006304,"DNA modification",0.339%,-1.341, 7.082,4.639,0.788,0.510,6304,0
-GO:0006313,"transposition, DNA-mediated",0.413%,-4.575, 3.667,4.724,0.737,0.519,6313,0
-GO:0006431,"methionyl-tRNA aminoacylation",0.055%,-5.676, 2.661,3.845,0.621,0.534,6431,0
-GO:0009066,"aspartate family amino acid metabolic process",0.828%,-7.126,-1.527,5.026,0.609,0.536,9066,0
-GO:0006261,"DNA-dependent DNA replication",0.576%,-3.235, 6.025,4.869,0.762,0.536,6261,0
-GO:0006355,"regulation of transcription, DNA-templated",9.917%,-4.173, 4.872,6.105,0.632,0.537,6355,0
-GO:0009208,"pyrimidine ribonucleoside triphosphate metabolic process",0.145%,-6.006, 0.361,4.268,0.631,0.538,9208,0
-GO:0009148,"pyrimidine nucleoside triphosphate biosynthetic process",0.215%,null,null,4.441,0.575,0.944,9208,1
-GO:0070925,"organelle assembly",0.571%, 1.687, 2.595,4.865,0.883,0.538,70925,0
-GO:0006884,"cell volume homeostasis",0.009%,-0.790, 0.569,3.039,0.810,0.539,6884,0
-GO:0070814,"hydrogen sulfide biosynthetic process",0.058%,-2.042, 0.289,3.875,0.817,0.541,70814,0
-GO:0070813,"hydrogen sulfide metabolic process",0.059%, 0.092,-1.222,3.877,0.874,0.542,70813,0
-GO:0006090,"pyruvate metabolic process",0.817%,-6.176,-3.873,5.021,0.657,0.547,6090,0
-GO:0000160,"phosphorelay signal transduction system",2.570%, 1.383, 1.017,5.518,0.823,0.547,160,0
-GO:0043570,"maintenance of DNA repeat elements",0.064%,-0.431, 6.156,3.914,0.788,0.557,43570,0
-GO:0009088,"threonine biosynthetic process",0.126%,-7.193,-1.857,4.208,0.607,0.557,9088,0
-GO:0009082,"branched-chain amino acid biosynthetic process",0.402%,-7.156,-1.407,4.713,0.588,0.562,9082,0
-GO:2001295,"malonyl-CoA biosynthetic process",0.037%,-3.318,-0.297,3.680,0.760,0.566,2001295,0
-GO:0006820,"anion transport",1.956%, 5.127,-3.348,5.400,0.873,0.570,6820,0
-GO:0006227,"dUDP biosynthetic process",0.001%,-6.142,-0.135,2.279,0.679,0.571,6227,0
-GO:0016116,"carotenoid metabolic process",0.031%,-3.335,-4.589,3.597,0.772,0.577,16116,0
-GO:0016109,"tetraterpenoid biosynthetic process",0.030%,null,null,3.583,0.702,0.998,16116,1
-GO:0016117,"carotenoid biosynthetic process",0.030%,null,null,3.583,0.693,0.998,16116,1
-GO:0034470,"ncRNA processing",2.222%,-2.673, 6.536,5.455,0.737,0.582,34470,0
-GO:0006412,"translation",5.686%,-4.977, 4.152,5.863,0.639,0.585,6412,0
-GO:0009107,"lipoate biosynthetic process",0.066%,-6.606,-1.055,3.926,0.573,0.594,9107,0
-GO:0006430,"lysyl-tRNA aminoacylation",0.057%,-5.681, 2.649,3.867,0.620,0.596,6430,0
-GO:0006310,"DNA recombination",1.641%,-2.432, 6.774,5.323,0.772,0.598,6310,0
-GO:0019752,"carboxylic acid metabolic process",8.831%,-6.401,-4.020,6.054,0.588,0.607,19752,0
+GO:0002252,"immune effector process",0.185%, 0.751,-0.132,4.375,0.984,0.000,2252,0
+GO:0002376,"immune system process",0.600%, 0.871, 0.182,4.886,0.991,0.000,2376,0
+GO:0007155,"cell adhesion",0.544%, 0.735, 0.058,4.844,0.991,0.000,7155,0
+GO:0009605,"response to external stimulus",1.370%, 2.348,-2.016,5.245,0.954,0.000,9605,0
+GO:0009987,"cellular process",63.780%, 0.925,-0.032,6.913,0.997,0.000,9987,0
+GO:0032259,"methylation",3.103%, 1.832, 0.186,5.600,0.971,0.000,32259,0
+GO:0043953,"protein transport by the Tat complex",0.073%, 4.414, 3.816,3.974,0.898,0.000,43953,0
+GO:0048511,"rhythmic process",0.077%, 1.784, 0.156,3.994,0.991,0.000,48511,0
+GO:0055062,"phosphate ion homeostasis",0.035%, 3.994,-1.417,3.653,0.908,0.000,55062,0
+GO:0030320,"cellular monovalent inorganic anion homeostasis",0.036%,null,null,3.668,0.780,0.991,55062,1
+GO:0030002,"cellular anion homeostasis",0.036%,null,null,3.668,0.780,0.971,55062,1
+GO:0030643,"cellular phosphate ion homeostasis",0.033%,null,null,3.632,0.781,0.997,55062,1
+GO:0017144,"drug metabolic process",0.058%, 0.998, 0.261,3.868,0.929,0.013,17144,0
+GO:0042157,"lipoprotein metabolic process",0.210%, 0.805,-1.236,4.431,0.931,0.014,42157,0
+GO:0071555,"cell wall organization",0.709%, 1.075,-3.083,4.959,0.888,0.026,71555,0
+GO:0009252,"peptidoglycan biosynthetic process",0.533%,null,null,4.835,0.659,0.906,71555,1
+GO:0009058,"biosynthetic process",31.611%, 1.629, 0.332,6.608,0.965,0.030,9058,0
+GO:0015977,"carbon fixation",0.036%,-0.853, 2.015,3.664,0.866,0.032,15977,0
+GO:0017000,"antibiotic biosynthetic process",0.028%,-1.238,-1.301,3.560,0.876,0.038,17000,0
+GO:0007154,"cell communication",7.219%, 0.686, 0.105,5.967,0.935,0.043,7154,0
+GO:0015979,"photosynthesis",0.183%, 0.817, 0.178,4.370,0.923,0.043,15979,0
+GO:0043158,"heterocyst differentiation",0.002%,-0.158, 1.923,2.386,0.864,0.043,43158,0
+GO:0019684,"photosynthesis, light reaction",0.069%, 0.647,-0.204,3.947,0.905,0.044,19684,0
+GO:0000103,"sulfate assimilation",0.084%,-0.072, 0.305,4.033,0.903,0.044,103,0
+GO:0052803,"imidazole-containing compound metabolic process",0.420%,-4.698,-4.354,4.732,0.794,0.051,52803,0
+GO:0010304,"PSII associated light-harvesting complex II catabolic process",0.001%,-0.184,-1.994,1.991,0.912,0.063,10304,0
+GO:0052889,"9,9'-di-cis-zeta-carotene desaturation to 7,9,7',9'-tetra-cis-lycopene",0.003%,-1.443, 3.633,2.566,0.815,0.088,52889,0
+GO:0046148,"pigment biosynthetic process",0.448%,-2.822, 3.396,4.760,0.822,0.118,46148,0
+GO:0051301,"cell division",1.230%,-3.732, 4.710,5.198,0.793,0.126,51301,0
+GO:0006662,"glycerol ether metabolic process",0.122%,-5.574, 4.731,4.193,0.766,0.130,6662,0
+GO:0051188,"cofactor biosynthetic process",2.763%,-3.846,-1.595,5.550,0.772,0.143,51188,0
+GO:0032465,"regulation of cytokinesis",0.064%,-0.703, 2.718,3.917,0.777,0.165,32465,0
+GO:0032955,"regulation of barrier septum assembly",0.025%,null,null,3.507,0.746,0.907,32465,1
+GO:0032954,"regulation of cytokinetic process",0.043%,null,null,3.739,0.783,0.939,32465,1
+GO:0006474,"N-terminal protein amino acid acetylation",0.035%, 0.006,-4.396,3.651,0.893,0.169,6474,0
+GO:0019632,"shikimate metabolic process",0.023%,-5.315, 4.667,3.476,0.737,0.213,19632,0
+GO:0055114,"oxidation-reduction process",15.060%,-4.530, 5.502,6.286,0.784,0.215,55114,0
+GO:0051174,"regulation of phosphorus metabolic process",0.580%, 0.531,-0.933,4.872,0.773,0.217,51174,0
+GO:0006814,"sodium ion transport",0.305%, 5.155, 4.058,4.592,0.875,0.220,6814,0
+GO:0007049,"cell cycle",1.885%,-3.825, 4.364,5.384,0.785,0.223,7049,0
+GO:1901137,"carbohydrate derivative biosynthetic process",3.651%,-4.246,-1.981,5.671,0.763,0.228,1901137,0
+GO:0018904,"ether metabolic process",0.124%,-5.478, 4.562,4.201,0.766,0.239,18904,0
+GO:0070681,"glutaminyl-tRNAGln biosynthesis via transamidation",0.011%,-6.465, 0.161,3.154,0.704,0.253,70681,0
+GO:0006106,"fumarate metabolic process",0.049%,-5.470, 4.856,3.801,0.722,0.277,6106,0
+GO:0072527,"pyrimidine-containing compound metabolic process",1.037%,-4.453,-3.775,5.124,0.778,0.282,72527,0
+GO:0006767,"water-soluble vitamin metabolic process",1.215%,-5.912, 4.693,5.193,0.711,0.289,6767,0
+GO:0042364,"water-soluble vitamin biosynthetic process",1.160%,null,null,5.173,0.608,0.980,6767,1
+GO:0072528,"pyrimidine-containing compound biosynthetic process",0.902%,-5.462,-3.245,5.063,0.696,0.305,72528,0
+GO:0018298,"protein-chromophore linkage",0.095%, 0.310,-5.184,4.084,0.885,0.317,18298,0
+GO:0032784,"regulation of DNA-templated transcription, elongation",0.150%,-2.180,-5.083,4.284,0.731,0.326,32784,0
+GO:0010966,"regulation of phosphate transport",0.002%, 4.887, 2.474,2.320,0.858,0.330,10966,0
+GO:0045936,"negative regulation of phosphate metabolic process",0.182%, 1.955,-0.891,4.368,0.770,0.331,45936,0
+GO:0006304,"DNA modification",0.339%,-2.121,-6.477,4.639,0.808,0.332,6304,0
+GO:0071214,"cellular response to abiotic stimulus",0.113%, 2.586,-2.069,4.162,0.920,0.333,71214,0
+GO:0006527,"arginine catabolic process",0.051%,-6.001, 3.202,3.817,0.685,0.342,6527,0
+GO:0072350,"tricarboxylic acid metabolic process",0.497%,-5.846, 5.332,4.805,0.683,0.343,72350,0
+GO:0018065,"protein-cofactor linkage",0.126%,-0.001,-4.816,4.209,0.883,0.346,18065,0
+GO:0015970,"guanosine tetraphosphate biosynthetic process",0.001%,-5.713, 0.271,2.104,0.681,0.349,15970,0
+GO:0044249,"cellular biosynthetic process",30.048%,-4.347,-2.452,6.586,0.771,0.349,44249,0
+GO:0045903,"positive regulation of translational fidelity",0.005%,-2.039,-3.955,2.842,0.748,0.368,45903,0
+GO:0006810,"transport",17.616%, 5.105, 4.153,6.354,0.886,0.378,6810,0
+GO:0002790,"peptide secretion",0.041%, 4.276, 3.876,3.720,0.839,0.380,2790,0
+GO:0006935,"chemotaxis",0.475%, 1.733,-1.875,4.785,0.947,0.383,6935,0
+GO:0006952,"defense response",0.568%, 1.704,-1.893,4.863,0.951,0.390,6952,0
+GO:0072348,"sulfur compound transport",0.249%, 4.663, 4.036,4.504,0.835,0.391,72348,0
+GO:2001061,"D-glycero-D-manno-heptose 7-phosphate biosynthetic process",0.008%,-2.196,-0.805,3.007,0.779,0.406,2001061,0
+GO:0043571,"maintenance of CRISPR repeat elements",0.052%,-1.080,-5.645,3.827,0.802,0.411,43571,0
+GO:0090407,"organophosphate biosynthetic process",4.110%,-4.278,-1.747,5.722,0.683,0.415,90407,0
+GO:0018193,"peptidyl-amino acid modification",1.495%, 0.398,-6.387,5.283,0.857,0.434,18193,0
+GO:0044255,"cellular lipid metabolic process",2.704%,-4.471, 5.489,5.540,0.720,0.459,44255,0
+GO:0001510,"RNA methylation",0.739%,-2.618,-5.927,4.977,0.801,0.460,1510,0
+GO:0006884,"cell volume homeostasis",0.009%, 0.577,-1.030,3.039,0.780,0.465,6884,0
+GO:0042372,"phylloquinone biosynthetic process",0.006%,-5.701, 3.066,2.915,0.709,0.467,42372,0
+GO:0009196,"pyrimidine deoxyribonucleoside diphosphate metabolic process",0.043%,-5.497, 1.583,3.741,0.639,0.478,9196,0
+GO:0009139,"pyrimidine nucleoside diphosphate biosynthetic process",0.043%,null,null,3.742,0.601,0.996,9196,1
+GO:0006233,"dTDP biosynthetic process",0.043%,null,null,3.737,0.575,0.997,9196,1
+GO:0009189,"deoxyribonucleoside diphosphate biosynthetic process",0.043%,null,null,3.741,0.601,0.998,9196,1
+GO:0009197,"pyrimidine deoxyribonucleoside diphosphate biosynthetic process",0.043%,null,null,3.741,0.601,0.999,9196,1
+GO:0046072,"dTDP metabolic process",0.043%,null,null,3.737,0.610,0.998,9196,1
+GO:0032787,"monocarboxylic acid metabolic process",2.485%,-5.926, 5.263,5.504,0.636,0.492,32787,0
+GO:1901566,"organonitrogen compound biosynthetic process",14.064%,-5.793,-3.231,6.256,0.709,0.498,1901566,0
+GO:0046903,"secretion",0.810%, 4.476, 4.181,5.017,0.818,0.499,46903,0
+GO:0006950,"response to stress",4.575%, 1.765,-1.921,5.769,0.949,0.501,6950,0
+GO:0008360,"regulation of cell shape",0.640%,-1.361, 1.277,4.914,0.699,0.503,8360,0
+GO:0006355,"regulation of transcription, DNA-templated",9.917%,-3.137,-4.119,6.105,0.611,0.509,6355,0
+GO:0015074,"DNA integration",0.682%,-2.730,-6.044,4.942,0.807,0.510,15074,0
+GO:0006313,"transposition, DNA-mediated",0.413%,-4.814,-0.923,4.724,0.753,0.519,6313,0
+GO:0009066,"aspartate family amino acid metabolic process",0.828%,-6.598, 2.860,5.026,0.623,0.521,9066,0
+GO:0008616,"queuosine biosynthetic process",0.146%,-6.346, 0.291,4.271,0.608,0.526,8616,0
+GO:0006431,"methionyl-tRNA aminoacylation",0.055%,-5.881,-0.887,3.845,0.652,0.534,6431,0
+GO:0009208,"pyrimidine ribonucleoside triphosphate metabolic process",0.145%,-5.588, 1.416,4.268,0.627,0.538,9208,0
+GO:0009148,"pyrimidine nucleoside triphosphate biosynthetic process",0.215%,null,null,4.441,0.570,0.944,9208,1
+GO:0070814,"hydrogen sulfide biosynthetic process",0.058%,-2.112,-1.223,3.875,0.840,0.541,70814,0
+GO:0006090,"pyruvate metabolic process",0.817%,-5.556, 4.861,5.021,0.661,0.547,6090,0
+GO:0000160,"phosphorelay signal transduction system",2.570%, 3.219,-1.735,5.518,0.788,0.547,160,0
+GO:0043570,"maintenance of DNA repeat elements",0.064%,-1.160,-5.662,3.914,0.799,0.557,43570,0
+GO:0009088,"threonine biosynthetic process",0.126%,-6.753, 2.477,4.208,0.624,0.557,9088,0
+GO:0022607,"cellular component assembly",2.484%, 1.556,-3.476,5.503,0.873,0.563,22607,0
+GO:0006820,"anion transport",1.956%, 5.224, 4.162,5.400,0.867,0.570,6820,0
+GO:0016116,"carotenoid metabolic process",0.031%,-2.722, 4.768,3.597,0.781,0.577,16116,0
+GO:0016109,"tetraterpenoid biosynthetic process",0.030%,null,null,3.583,0.708,0.998,16116,1
+GO:0016117,"carotenoid biosynthetic process",0.030%,null,null,3.583,0.691,0.998,16116,1
+GO:0051051,"negative regulation of transport",0.089%, 4.850, 2.022,4.059,0.844,0.578,51051,0
+GO:0006412,"translation",5.686%,-5.063,-3.774,5.863,0.661,0.585,6412,0
+GO:0046654,"tetrahydrofolate biosynthetic process",0.101%,-6.314, 0.945,4.113,0.615,0.590,46654,0
+GO:0009107,"lipoate biosynthetic process",0.066%,-6.481, 2.095,3.926,0.597,0.594,9107,0
+GO:0006430,"lysyl-tRNA aminoacylation",0.057%,-5.886,-0.881,3.867,0.651,0.596,6430,0
+GO:0006310,"DNA recombination",1.641%,-3.164,-6.023,5.323,0.792,0.598,6310,0
+GO:0046501,"protoporphyrinogen IX metabolic process",0.116%,-4.724,-3.072,4.174,0.760,0.598,46501,0
+GO:0051302,"regulation of cell division",0.083%,-0.686, 2.872,4.026,0.788,0.601,51302,0
+GO:0046040,"IMP metabolic process",0.418%,-5.936, 0.466,4.730,0.583,0.604,46040,0
+GO:0006605,"protein targeting",0.694%, 4.468, 3.904,4.949,0.889,0.609,6605,0
+GO:0006811,"ion transport",5.344%, 5.029, 4.080,5.836,0.898,0.609,6811,0
+GO:0006432,"phenylalanyl-tRNA aminoacylation",0.094%,-5.923,-0.850,4.082,0.639,0.618,6432,0
+GO:0006108,"malate metabolic process",0.088%,-5.510, 4.888,4.051,0.711,0.620,6108,0
+GO:0009138,"pyrimidine nucleoside diphosphate metabolic process",0.044%,-5.576, 1.614,3.752,0.655,0.637,9138,0
+GO:0009106,"lipoate metabolic process",0.066%,-6.092, 3.033,3.927,0.638,0.641,9106,0
+GO:0034036,"purine ribonucleoside bisphosphate biosynthetic process",0.001%,-5.830, 0.350,2.223,0.684,0.642,34036,0
+GO:0046394,"carboxylic acid biosynthetic process",4.159%,-6.399, 3.203,5.727,0.546,0.644,46394,0
+GO:0008652,"cellular amino acid biosynthetic process",2.932%,null,null,5.575,0.532,0.908,46394,1
+GO:0022618,"ribonucleoprotein complex assembly",0.364%, 1.685,-3.623,4.669,0.878,0.644,22618,0
+GO:0042255,"ribosome assembly",0.164%,null,null,4.322,0.883,0.924,22618,1
+GO:0015991,"ATP hydrolysis coupled proton transport",0.163%, 5.254, 4.227,4.321,0.801,0.644,15991,0
+GO:0009133,"nucleoside diphosphate biosynthetic process",0.052%,-6.025, 0.681,3.822,0.613,0.645,9133,0
+GO:0034766,"negative regulation of ion transmembrane transport",0.012%, 4.950, 2.333,3.171,0.833,0.648,34766,0
+GO:0071826,"ribonucleoprotein complex subunit organization",0.377%, 1.792,-3.718,4.685,0.889,0.653,71826,0
+GO:0044283,"small molecule biosynthetic process",5.677%,-6.304, 2.410,5.862,0.611,0.654,44283,0
+GO:0010205,"photoinhibition",0.001%, 3.350,-1.554,1.978,0.784,0.659,10205,0
+GO:0015711,"organic anion transport",1.192%, 4.506, 3.923,5.184,0.851,0.663,15711,0
+GO:0031564,"transcription antitermination",0.076%,-2.484,-2.920,3.987,0.674,0.666,31564,0
+GO:0070925,"organelle assembly",0.571%, 1.083,-3.113,4.865,0.883,0.677,70925,0
+GO:0006541,"glutamine metabolic process",0.472%,-6.264, 2.902,4.782,0.636,0.682,6541,0
+GO:0009423,"chorismate biosynthetic process",0.191%,-6.011, 3.325,4.389,0.640,0.683,9423,0
+GO:0044272,"sulfur compound biosynthetic process",1.235%,-3.454,-1.802,5.200,0.798,0.685,44272,0
+GO:0006281,"DNA repair",2.234%,-2.102,-6.046,5.457,0.745,0.688,6281,0
+GO:0030001,"metal ion transport",1.677%, 4.519, 3.869,5.333,0.863,0.691,30001,0
+GO:0000105,"histidine biosynthetic process",0.360%,-6.356, 1.040,4.664,0.595,0.691,105,0
+GO:0006547,"histidine metabolic process",0.420%,null,null,4.731,0.636,0.982,105,1
+GO:0046488,"phosphatidylinositol metabolic process",0.339%,-4.119, 4.164,4.638,0.670,0.694,46488,0
+GO:0019464,"glycine decarboxylation via glycine cleavage system",0.080%,-5.968, 3.162,4.010,0.678,0.699,19464,0
+GO:0070838,"divalent metal ion transport",0.358%, 4.850, 3.970,4.662,0.872,0.704,70838,0
+GO:0006816,"calcium ion transport",0.197%,null,null,4.404,0.878,0.930,70838,1
+GO:0010206,"photosystem II repair",0.002%, 0.756,-3.547,2.502,0.893,0.704,10206,0
+GO:0008272,"sulfate transport",0.150%, 4.651, 3.991,4.284,0.810,0.706,8272,0
+GO:0009234,"menaquinone biosynthetic process",0.107%,-6.218, 3.096,4.136,0.653,0.724,9234,0
+GO:0009073,"aromatic amino acid family biosynthetic process",0.540%,-6.842, 0.918,4.841,0.583,0.725,9073,0
+GO:0046390,"ribose phosphate biosynthetic process",1.778%,-4.357,-1.924,5.358,0.669,0.725,46390,0
+GO:0071806,"protein transmembrane transport",0.525%, 4.945, 4.059,4.829,0.884,0.726,71806,0
+GO:0006084,"acetyl-CoA metabolic process",0.172%,-2.325, 0.006,4.343,0.769,0.731,6084,0
+GO:0019253,"reductive pentose-phosphate cycle",0.005%,-3.637, 0.988,2.820,0.772,0.734,19253,0
+GO:0016108,"tetraterpenoid metabolic process",0.031%,-2.703, 4.843,3.597,0.785,0.734,16108,0
+GO:0009065,"glutamine family amino acid catabolic process",0.117%,-6.415, 3.360,4.177,0.667,0.741,9065,0
+GO:0046129,"purine ribonucleoside biosynthetic process",0.923%,-6.234, 0.318,5.073,0.540,0.748,46129,0
+GO:0006164,"purine nucleotide biosynthetic process",1.409%,null,null,5.257,0.505,0.964,46129,1
+GO:0009145,"purine nucleoside triphosphate biosynthetic process",0.485%,null,null,4.794,0.549,0.929,46129,1
+GO:0009152,"purine ribonucleotide biosynthetic process",1.337%,null,null,5.234,0.500,0.919,46129,1
+GO:0006754,"ATP biosynthetic process",0.432%,null,null,4.743,0.525,0.916,46129,1
+GO:0015986,"ATP synthesis coupled proton transport",0.411%,null,null,4.722,0.439,0.970,46129,1
+GO:0009206,"purine ribonucleoside triphosphate biosynthetic process",0.485%,null,null,4.794,0.548,0.984,46129,1
+GO:0009260,"ribonucleotide biosynthetic process",1.734%,null,null,5.347,0.501,0.946,46129,1
+GO:0006561,"proline biosynthetic process",0.163%,-6.438, 1.162,4.321,0.612,0.749,6561,0
+GO:0032940,"secretion by cell",0.763%, 0.257, 6.153,4.991,0.718,0.754,32940,0
+GO:0009306,"protein secretion",0.529%,null,null,4.832,0.710,0.944,32940,1
+GO:0009124,"nucleoside monophosphate biosynthetic process",1.486%,-6.058, 0.329,5.280,0.518,0.755,9124,0
+GO:0009165,"nucleotide biosynthetic process",2.562%,null,null,5.517,0.497,0.903,9124,1
+GO:0006614,"SRP-dependent cotranslational protein targeting to membrane",0.138%, 1.388, 4.540,4.249,0.704,0.756,6614,0
+GO:0034220,"ion transmembrane transport",3.528%, 4.548, 3.895,5.656,0.854,0.762,34220,0
+GO:0051607,"defense response to virus",0.098%, 1.886,-1.922,4.098,0.938,0.769,51607,0
+GO:0006418,"tRNA aminoacylation for protein translation",1.099%,-5.908,-0.708,5.149,0.565,0.773,6418,0
+GO:0072330,"monocarboxylic acid biosynthetic process",0.940%,-6.687, 3.543,5.081,0.595,0.776,72330,0
+GO:0007346,"regulation of mitotic cell cycle",0.269%,-1.117, 3.402,4.537,0.762,0.781,7346,0
+GO:0019752,"carboxylic acid metabolic process",8.831%,-5.742, 4.807,6.054,0.588,0.781,19752,0
 GO:0043436,"oxoacid metabolic process",9.006%,null,null,6.063,0.588,0.902,19752,1
-GO:0006605,"protein targeting",0.694%, 4.390,-3.143,4.949,0.894,0.609,6605,0
-GO:0006811,"ion transport",5.344%, 4.929,-3.244,5.836,0.904,0.609,6811,0
-GO:0006099,"tricarboxylic acid cycle",0.469%,-5.877,-3.849,4.780,0.671,0.612,6099,0
-GO:0006101,"citrate metabolic process",0.472%,null,null,4.782,0.680,0.985,6099,1
-GO:0008360,"regulation of cell shape",0.640%,-2.900,-1.171,4.914,0.739,0.615,8360,0
-GO:0000105,"histidine biosynthetic process",0.360%,-6.596, 0.302,4.664,0.577,0.615,105,0
-GO:0006547,"histidine metabolic process",0.420%,null,null,4.731,0.618,0.982,105,1
-GO:0002098,"tRNA wobble uridine modification",0.093%,-1.220, 6.527,4.078,0.780,0.617,2098,0
-GO:0006432,"phenylalanyl-tRNA aminoacylation",0.094%,-5.725, 2.586,4.082,0.607,0.618,6432,0
-GO:0006108,"malate metabolic process",0.088%,-6.060,-3.815,4.051,0.709,0.620,6108,0
-GO:0006561,"proline biosynthetic process",0.163%,-6.729, 0.118,4.321,0.590,0.630,6561,0
-GO:0055129,"L-proline biosynthetic process",0.085%,null,null,4.039,0.608,0.930,6561,1
-GO:0009073,"aromatic amino acid family biosynthetic process",0.540%,-7.009, 0.508,4.841,0.566,0.638,9073,0
-GO:0009106,"lipoate metabolic process",0.066%,-6.342,-1.576,3.927,0.615,0.641,9106,0
-GO:0099131,"ATP hydrolysis coupled ion transmembrane transport",0.996%, 4.652,-3.277,5.106,0.865,0.649,99131,0
-GO:0099132,"ATP hydrolysis coupled cation transmembrane transport",0.729%,null,null,4.971,0.863,0.956,99131,1
-GO:0030490,"maturation of SSU-rRNA",0.104%,-0.854, 6.309,4.124,0.751,0.653,30490,0
-GO:0006260,"DNA replication",1.577%,-3.623, 5.618,5.306,0.740,0.659,6260,0
-GO:0010205,"photoinhibition",0.001%, 1.877,-0.534,1.978,0.816,0.659,10205,0
-GO:0015711,"organic anion transport",1.192%, 4.386,-3.225,5.184,0.859,0.663,15711,0
-GO:0006082,"organic acid metabolic process",9.086%,-5.992,-3.778,6.067,0.636,0.664,6082,0
-GO:0001510,"RNA methylation",0.739%,-1.833, 6.742,4.977,0.778,0.666,1510,0
-GO:0031564,"transcription antitermination",0.076%,-3.298, 3.910,3.987,0.692,0.666,31564,0
-GO:0015988,"energy coupled proton transmembrane transport, against electrochemical gradient",0.170%, 4.666,-3.321,4.339,0.804,0.670,15988,0
-GO:0042777,"plasma membrane ATP synthesis coupled proton transport",0.083%,-3.049,-1.747,4.027,0.510,0.675,42777,0
-GO:0017038,"protein import",0.257%, 4.429,-3.257,4.518,0.825,0.678,17038,0
-GO:0009423,"chorismate biosynthetic process",0.191%,-6.567,-2.562,4.389,0.633,0.683,9423,0
-GO:0009263,"deoxyribonucleotide biosynthetic process",0.150%,-6.275, 0.605,4.283,0.598,0.684,9263,0
-GO:0044272,"sulfur compound biosynthetic process",1.235%,-3.330, 0.670,5.200,0.772,0.685,44272,0
-GO:0006281,"DNA repair",2.234%,-1.609, 6.323,5.457,0.725,0.688,6281,0
-GO:0009064,"glutamine family amino acid metabolic process",1.157%,-7.097,-1.365,5.172,0.598,0.691,9064,0
-GO:0030001,"metal ion transport",1.677%, 4.411,-3.201,5.333,0.866,0.691,30001,0
-GO:0006560,"proline metabolic process",0.187%,-6.545, 0.177,4.380,0.635,0.694,6560,0
-GO:0046488,"phosphatidylinositol metabolic process",0.339%,-4.780,-4.269,4.638,0.679,0.694,46488,0
-GO:0019464,"glycine decarboxylation via glycine cleavage system",0.080%,-6.497,-2.377,4.010,0.664,0.699,19464,0
-GO:0022618,"ribonucleoprotein complex assembly",0.364%, 2.430, 2.930,4.669,0.875,0.701,22618,0
-GO:0042255,"ribosome assembly",0.164%,null,null,4.322,0.880,0.924,22618,1
-GO:0070838,"divalent metal ion transport",0.358%, 4.808,-3.230,4.662,0.876,0.704,70838,0
-GO:0006816,"calcium ion transport",0.197%,null,null,4.404,0.881,0.930,70838,1
-GO:0010206,"photosystem II repair",0.002%, 1.153, 2.112,2.502,0.889,0.704,10206,0
-GO:0008272,"sulfate transport",0.150%, 4.593,-3.284,4.284,0.821,0.706,8272,0
-GO:0046390,"ribose phosphate biosynthetic process",1.778%,-4.272, 0.717,5.358,0.695,0.725,46390,0
-GO:0046655,"folic acid metabolic process",0.054%,-6.282,-0.199,3.844,0.651,0.729,46655,0
-GO:0019253,"reductive pentose-phosphate cycle",0.005%,-3.917,-1.801,2.820,0.777,0.734,19253,0
-GO:0016108,"tetraterpenoid metabolic process",0.031%,-3.321,-4.631,3.597,0.776,0.734,16108,0
-GO:0009065,"glutamine family amino acid catabolic process",0.117%,-6.954,-2.447,4.177,0.648,0.741,9065,0
-GO:0009124,"nucleoside monophosphate biosynthetic process",1.486%,-6.384, 0.915,5.280,0.531,0.743,9124,0
-GO:0009165,"nucleotide biosynthetic process",2.562%,null,null,5.517,0.509,0.903,9124,1
-GO:0032940,"secretion by cell",0.763%,-0.284,-5.496,4.991,0.726,0.754,32940,0
-GO:0009306,"protein secretion",0.529%,null,null,4.832,0.720,0.944,32940,1
-GO:0046656,"folic acid biosynthetic process",0.053%,-6.518,-0.213,3.837,0.606,0.756,46656,0
-GO:2001293,"malonyl-CoA metabolic process",0.038%,-2.093,-1.321,3.683,0.794,0.756,2001293,0
-GO:0006633,"fatty acid biosynthetic process",0.617%,-6.554,-2.804,4.899,0.569,0.756,6633,0
-GO:0006614,"SRP-dependent cotranslational protein targeting to membrane",0.138%, 1.064,-3.913,4.249,0.713,0.756,6614,0
-GO:0006541,"glutamine metabolic process",0.472%,-6.843,-1.664,4.782,0.618,0.757,6541,0
-GO:0072330,"monocarboxylic acid biosynthetic process",0.940%,-7.155,-2.804,5.081,0.587,0.761,72330,0
-GO:0034220,"ion transmembrane transport",3.528%, 4.379,-3.217,5.656,0.862,0.762,34220,0
-GO:0015985,"energy coupled proton transport, down electrochemical gradient",0.411%, 4.641,-3.406,4.722,0.790,0.766,15985,0
-GO:0051607,"defense response to virus",0.098%, 1.981, 0.660,4.098,0.939,0.769,51607,0
-GO:0006631,"fatty acid metabolic process",0.878%,-6.134,-4.080,5.052,0.616,0.774,6631,0
-GO:0006555,"methionine metabolic process",0.358%,-6.421,-1.796,4.662,0.590,0.784,6555,0
-GO:0006418,"tRNA aminoacylation for protein translation",1.099%,-5.753, 2.297,5.149,0.528,0.785,6418,0
-GO:1901607,"alpha-amino acid biosynthetic process",2.557%,-6.939,-0.697,5.516,0.514,0.787,1901607,0
-GO:0007165,"signal transduction",6.621%, 1.453, 0.272,5.929,0.806,0.788,7165,0
-GO:0046654,"tetrahydrofolate biosynthetic process",0.101%,-6.494, 0.027,4.113,0.603,0.797,46654,0
-GO:0030643,"cellular phosphate ion homeostasis",0.033%,-2.231,-1.893,3.632,0.826,0.798,30643,0
-GO:0019509,"L-methionine biosynthetic process from methylthioadenosine",0.067%,-6.625,-1.964,3.934,0.590,0.803,19509,0
-GO:0071267,"L-methionine salvage",0.073%,null,null,3.970,0.588,0.994,19509,1
-GO:0065002,"intracellular protein transmembrane transport",0.276%, 4.496,-3.159,4.549,0.889,0.805,65002,0
-GO:0006829,"zinc II ion transport",0.032%, 4.756,-3.019,3.608,0.895,0.806,6829,0
-GO:0000096,"sulfur amino acid metabolic process",0.539%,-6.317,-1.630,4.840,0.603,0.818,96,0
-GO:0008033,"tRNA processing",1.345%,-2.436, 6.910,5.237,0.743,0.820,8033,0
-GO:0009108,"coenzyme biosynthetic process",1.983%,-3.834, 0.933,5.406,0.777,0.824,9108,0
-GO:0006505,"GPI anchor metabolic process",0.102%,-4.304,-3.690,4.115,0.701,0.825,6505,0
-GO:0006520,"cellular amino acid metabolic process",5.591%,-6.629,-0.566,5.856,0.572,0.825,6520,0
-GO:0015991,"ATP hydrolysis coupled proton transport",0.163%, 5.156,-3.404,4.321,0.802,0.827,15991,0
-GO:0006400,"tRNA modification",0.914%,-2.118, 6.474,5.069,0.737,0.827,6400,0
-GO:0009089,"lysine biosynthetic process via diaminopimelate",0.288%,-7.158,-1.575,4.567,0.572,0.828,9089,0
-GO:0009085,"lysine biosynthetic process",0.309%,null,null,4.599,0.580,0.974,9089,1
-GO:0006364,"rRNA processing",0.952%,-1.614, 6.625,5.087,0.706,0.831,6364,0
-GO:0009168,"purine ribonucleoside monophosphate biosynthetic process",1.043%,-6.321, 0.861,5.127,0.539,0.833,9168,0
-GO:0009127,"purine nucleoside monophosphate biosynthetic process",1.044%,null,null,5.127,0.540,0.909,9168,1
-GO:0009156,"ribonucleoside monophosphate biosynthetic process",1.394%,null,null,5.253,0.529,0.939,9168,1
-GO:0009152,"purine ribonucleotide biosynthetic process",1.337%,-6.324, 1.031,5.234,0.516,0.834,9152,0
-GO:0006164,"purine nucleotide biosynthetic process",1.409%,null,null,5.257,0.520,0.964,9152,1
-GO:0009260,"ribonucleotide biosynthetic process",1.734%,null,null,5.347,0.516,0.946,9152,1
-GO:0006865,"amino acid transport",0.813%, 4.833,-3.562,5.018,0.788,0.835,6865,0
-GO:0044205,"'de novo' UMP biosynthetic process",0.221%,-6.637, 0.981,4.452,0.562,0.835,44205,0
-GO:0006084,"acetyl-CoA metabolic process",0.172%,-2.163,-1.237,4.343,0.772,0.837,6084,0
-GO:0008654,"phospholipid biosynthetic process",0.889%,-6.176,-2.763,5.057,0.586,0.838,8654,0
-GO:0000462,"maturation of SSU-rRNA from tricistronic rRNA transcript (SSU-rRNA, 5.8S rRNA, LSU-rRNA)",0.066%,-0.708, 6.369,3.928,0.759,0.839,462,0
-GO:0016114,"terpenoid biosynthetic process",0.245%,-6.019,-3.083,4.498,0.660,0.842,16114,0
-GO:0019856,"pyrimidine nucleobase biosynthetic process",0.241%,-6.544, 1.123,4.491,0.608,0.842,19856,0
-GO:0009084,"glutamine family amino acid biosynthetic process",0.608%,-7.135,-1.276,4.892,0.560,0.843,9084,0
-GO:0006233,"dTDP biosynthetic process",0.043%,-6.460, 0.671,3.737,0.611,0.846,6233,0
-GO:0009615,"response to virus",0.117%, 2.567, 0.485,4.175,0.948,0.847,9615,0
+GO:0034763,"negative regulation of transmembrane transport",0.014%, 4.866, 2.086,3.251,0.850,0.782,34763,0
+GO:0006555,"methionine metabolic process",0.358%,-6.071, 2.679,4.662,0.619,0.784,6555,0
+GO:0007165,"signal transduction",6.621%, 3.187,-1.270,5.929,0.767,0.788,7165,0
+GO:0042777,"plasma membrane ATP synthesis coupled proton transport",0.083%,-2.308, 2.985,4.027,0.496,0.788,42777,0
+GO:0034762,"regulation of transmembrane transport",0.202%, 4.935, 2.240,4.414,0.836,0.788,34762,0
+GO:0006364,"rRNA processing",0.952%,-2.334,-5.981,5.087,0.741,0.791,6364,0
+GO:0044070,"regulation of anion transport",0.095%, 5.143, 2.397,4.085,0.821,0.792,44070,0
+GO:0034765,"regulation of ion transmembrane transport",0.197%,null,null,4.404,0.810,0.910,44070,1
+GO:0046656,"folic acid biosynthetic process",0.053%,-6.348, 1.135,3.837,0.613,0.797,46656,0
+GO:0055080,"cation homeostasis",0.378%, 4.221,-1.491,4.685,0.903,0.800,55080,0
+GO:0065002,"intracellular protein transmembrane transport",0.276%, 4.541, 3.904,4.549,0.886,0.805,65002,0
+GO:0006829,"zinc II ion transport",0.032%, 4.921, 3.826,3.608,0.892,0.806,6829,0
+GO:0009767,"photosynthetic electron transport chain",0.025%,-1.979, 2.951,3.501,0.812,0.808,9767,0
+GO:0043271,"negative regulation of ion transport",0.022%, 4.773, 2.256,3.445,0.831,0.810,43271,0
+GO:0010563,"negative regulation of phosphorus metabolic process",0.182%, 1.571,-0.832,4.368,0.771,0.811,10563,0
+GO:0000096,"sulfur amino acid metabolic process",0.539%,-5.967, 2.554,4.840,0.626,0.818,96,0
+GO:0006227,"dUDP biosynthetic process",0.001%,-5.777, 0.203,2.279,0.648,0.820,6227,0
+GO:0046077,"dUDP metabolic process",0.001%,-5.317, 0.610,2.279,0.677,0.820,46077,0
+GO:0006400,"tRNA modification",0.914%,-2.829,-5.629,5.069,0.776,0.824,6400,0
+GO:0006505,"GPI anchor metabolic process",0.102%,-3.813, 3.374,4.115,0.687,0.825,6505,0
+GO:0006207,"'de novo' pyrimidine nucleobase biosynthetic process",0.192%,-6.345, 0.403,4.392,0.606,0.825,6207,0
+GO:0019856,"pyrimidine nucleobase biosynthetic process",0.241%,null,null,4.491,0.600,0.959,6207,1
+GO:0009089,"lysine biosynthetic process via diaminopimelate",0.288%,-6.741, 2.293,4.567,0.593,0.828,9089,0
+GO:0009168,"purine ribonucleoside monophosphate biosynthetic process",1.043%,-5.965, 0.367,5.127,0.524,0.833,9168,0
+GO:0009127,"purine nucleoside monophosphate biosynthetic process",1.044%,null,null,5.127,0.526,0.909,9168,1
+GO:0009156,"ribonucleoside monophosphate biosynthetic process",1.394%,null,null,5.253,0.515,0.939,9168,1
+GO:0006865,"amino acid transport",0.813%, 4.905, 4.272,5.018,0.774,0.835,6865,0
+GO:0044205,"'de novo' UMP biosynthetic process",0.221%,-6.411,-0.042,4.452,0.545,0.835,44205,0
+GO:0006415,"translational termination",0.201%,-4.476,-2.672,4.411,0.666,0.841,6415,0
+GO:0016114,"terpenoid biosynthetic process",0.245%,-5.367, 3.228,4.498,0.667,0.842,16114,0
+GO:0009615,"response to virus",0.117%, 2.306,-1.952,4.175,0.947,0.847,9615,0
 GO:0098542,"defense response to other organism",0.220%,null,null,4.450,0.942,0.900,9615,1
-GO:0046051,"UTP metabolic process",0.052%,-6.211, 0.764,3.827,0.629,0.849,46051,0
-GO:0044210,"'de novo' CTP biosynthetic process",0.071%,null,null,3.959,0.583,0.947,46051,1
-GO:0006241,"CTP biosynthetic process",0.144%,null,null,4.267,0.563,0.926,46051,1
-GO:0046036,"CTP metabolic process",0.144%,null,null,4.267,0.603,0.998,46051,1
-GO:0009209,"pyrimidine ribonucleoside triphosphate biosynthetic process",0.144%,null,null,4.267,0.585,0.998,46051,1
-GO:0006449,"regulation of translational termination",0.036%,-3.678, 3.132,3.667,0.683,0.851,6449,0
-GO:0019288,"isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway",0.148%,-6.674,-3.173,4.279,0.570,0.862,19288,0
-GO:0009240,"isopentenyl diphosphate biosynthetic process",0.163%,null,null,4.320,0.624,0.991,19288,1
-GO:0008610,"lipid biosynthetic process",2.123%,-6.338,-2.228,5.435,0.639,0.865,8610,0
-GO:0006782,"protoporphyrinogen IX biosynthetic process",0.116%,-6.580, 0.893,4.172,0.656,0.872,6782,0
-GO:0006351,"transcription, DNA-templated",10.659%,-4.653, 5.071,6.136,0.650,0.876,6351,0
-GO:0009403,"toxin biosynthetic process",0.032%,-5.084,-2.245,3.608,0.749,0.879,9403,0
-GO:0006235,"dTTP biosynthetic process",0.052%,-6.450, 0.699,3.824,0.592,0.885,6235,0
-GO:0006189,"'de novo' IMP biosynthetic process",0.398%,-6.487, 0.967,4.708,0.556,0.895,6189,0
-GO:0015986,"ATP synthesis coupled proton transport",0.411%,-3.250,-1.599,4.722,0.454,0.898,15986,0
-GO:0009067,"aspartate family amino acid biosynthetic process",0.715%,-7.144,-1.227,4.963,0.553,0.899,9067,0
+GO:0006235,"dTTP biosynthetic process",0.052%,-6.087, 0.064,3.824,0.578,0.849,6235,0
+GO:0046075,"dTTP metabolic process",0.052%,null,null,3.826,0.617,0.908,6235,1
+GO:0006449,"regulation of translational termination",0.036%,-2.573,-2.906,3.667,0.669,0.851,6449,0
+GO:0016053,"organic acid biosynthetic process",4.171%,-6.406, 3.222,5.728,0.554,0.851,16053,0
+GO:0000162,"tryptophan biosynthetic process",0.191%,-6.309, 1.111,4.389,0.610,0.853,162,0
+GO:0043269,"regulation of ion transport",0.244%, 4.787, 2.358,4.496,0.817,0.853,43269,0
+GO:0009236,"cobalamin biosynthetic process",0.332%,-6.339, 0.763,4.630,0.603,0.859,9236,0
+GO:0009235,"cobalamin metabolic process",0.336%,-6.040, 1.429,4.634,0.661,0.860,9235,0
+GO:0019288,"isopentenyl diphosphate biosynthetic process, methylerythritol 4-phosphate pathway",0.148%,-6.123, 3.509,4.279,0.571,0.862,19288,0
+GO:0008610,"lipid biosynthetic process",2.123%,-5.886, 2.212,5.435,0.648,0.865,8610,0
+GO:0009233,"menaquinone metabolic process",0.107%,-5.556, 4.334,4.136,0.709,0.872,9233,0
+GO:0006782,"protoporphyrinogen IX biosynthetic process",0.116%,-6.552,-0.364,4.172,0.641,0.872,6782,0
+GO:0006351,"transcription, DNA-templated",10.659%,-5.079,-4.358,6.136,0.669,0.876,6351,0
+GO:0006779,"porphyrin-containing compound biosynthetic process",0.424%,-6.061,-3.331,4.736,0.690,0.878,6779,0
+GO:0006783,"heme biosynthetic process",0.244%,null,null,4.496,0.622,0.935,6779,1
+GO:0042168,"heme metabolic process",0.267%,null,null,4.535,0.685,0.942,6779,1
+GO:0010564,"regulation of cell cycle process",0.312%,-1.296, 3.247,4.603,0.759,0.886,10564,0
+GO:1901607,"alpha-amino acid biosynthetic process",2.557%,-6.566, 1.640,5.516,0.530,0.889,1901607,0
+GO:0019220,"regulation of phosphate metabolic process",0.579%, 1.566,-1.109,4.871,0.763,0.893,19220,0
+GO:0006189,"'de novo' IMP biosynthetic process",0.398%,-6.185, 0.051,4.708,0.539,0.895,6189,0
+GO:0006188,"IMP biosynthetic process",0.417%,null,null,4.728,0.538,0.991,6189,1
+GO:0009067,"aspartate family amino acid biosynthetic process",0.715%,-6.724, 2.010,4.963,0.573,0.899,9067,0

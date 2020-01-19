@@ -11,12 +11,6 @@ sll0535,clpX_3,clpX,LD,Translation,"Degradation of proteins, peptides, and glyco
 sll0535,clpX_46,clpX,L100,Translation,"Degradation of proteins, peptides, and glycopeptides",-0.7817400377485655,3
 sll0535,clpX_46,clpX,L300,Translation,"Degradation of proteins, peptides, and glycopeptides",-2.676542905328955,3
 sll0535,clpX_46,clpX,LD,Translation,"Degradation of proteins, peptides, and glycopeptides",-2.731450869570254,3
-sll1612,folC_24,folC,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,-1.9098151824884384,3
-sll1612,folC_24,folC,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,-4.9815853800483225,3
-sll1612,folC_24,folC,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,-3.152453089410233,3
-sll1612,folC_37,folC,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,-0.031028010333136596,3
-sll1612,folC_37,folC,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,-3.784904148230122,3
-sll1612,folC_37,folC,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers",Folic acid,0.07103056496751725,3
 ssr0330,ftrV_28,ftrV,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers","Thioredoxin, glutaredoxin, and glutathione",-1.5294734690452378,3
 ssr0330,ftrV_28,ftrV,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers","Thioredoxin, glutaredoxin, and glutathione",-5.045897097405619,3
 ssr0330,ftrV_28,ftrV,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers","Thioredoxin, glutaredoxin, and glutathione",NA,3
@@ -29,12 +23,12 @@ slr1463,fus4_178,fus4,LD,Translation,Protein modification and translation factor
 slr1463,fus4_94,fus4,L100,Translation,Protein modification and translation factors,-1.6973856883110114,3
 slr1463,fus4_94,fus4,L300,Translation,Protein modification and translation factors,-4.65440197611075,3
 slr1463,fus4_94,fus4,LD,Translation,Protein modification and translation factors,-4.915138307793326,3
-slr2072,ilvA_35,ilvA,L100,Amino acid biosynthesis,Branched chain family,-0.18399572354367516,3
-slr2072,ilvA_35,ilvA,L300,Amino acid biosynthesis,Branched chain family,-3.145542362737563,3
-slr2072,ilvA_35,ilvA,LD,Amino acid biosynthesis,Branched chain family,-2.670400390498026,3
-slr2072,ilvA_4,ilvA,L100,Amino acid biosynthesis,Branched chain family,-0.7793949101987315,3
-slr2072,ilvA_4,ilvA,L300,Amino acid biosynthesis,Branched chain family,-4.315812563451285,3
-slr2072,ilvA_4,ilvA,LD,Amino acid biosynthesis,Branched chain family,-3.7262873897278266,3
+sll2001,lap_24,lap,L100,Translation,Protein modification and translation factors,0.13651613783035316,4
+sll2001,lap_24,lap,L300,Translation,Protein modification and translation factors,-3.316742106432342,4
+sll2001,lap_24,lap,LD,Translation,Protein modification and translation factors,-1.0980438130867975,4
+sll2001,lap_56,lap,L100,Translation,Protein modification and translation factors,-0.16183055512236838,4
+sll2001,lap_56,lap,L300,Translation,Protein modification and translation factors,-3.3498040071341566,4
+sll2001,lap_56,lap,LD,Translation,Protein modification and translation factors,-1.8282948183519638,4
 slr1518,menA_34,menA,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers",Menaquinone and ubiquinone,-0.3200076713837207,3
 slr1518,menA_34,menA,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers",Menaquinone and ubiquinone,-4.336175686097301,3
 slr1518,menA_34,menA,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers",Menaquinone and ubiquinone,-4.629013030254219,3
@@ -59,18 +53,12 @@ sll0223,ndhB_51,ndhB,LD,Photosynthesis and respiration,NADH dehydrogenase,-4.038
 sll0223,ndhB_77,ndhB,L100,Photosynthesis and respiration,NADH dehydrogenase,-0.4862241214489555,3
 sll0223,ndhB_77,ndhB,L300,Photosynthesis and respiration,NADH dehydrogenase,-2.7460267135376784,3
 sll0223,ndhB_77,ndhB,LD,Photosynthesis and respiration,NADH dehydrogenase,-2.635248622584309,3
-sll1733,ndhD3_20,ndhD3,L100,Photosynthesis and respiration,NADH dehydrogenase,-0.1286638553842993,3
-sll1733,ndhD3_20,ndhD3,L300,Photosynthesis and respiration,NADH dehydrogenase,-4.140175549579122,3
-sll1733,ndhD3_20,ndhD3,LD,Photosynthesis and respiration,NADH dehydrogenase,-0.14623595028350214,3
-sll1733,ndhD3_8,ndhD3,L100,Photosynthesis and respiration,NADH dehydrogenase,-0.09957763218898273,3
-sll1733,ndhD3_8,ndhD3,L300,Photosynthesis and respiration,NADH dehydrogenase,-5.367051008181855,3
-sll1733,ndhD3_8,ndhD3,LD,Photosynthesis and respiration,NADH dehydrogenase,0.12533465403196167,3
-slr0261,ndhH_16,ndhH,L100,Photosynthesis and respiration,NADH dehydrogenase,-1.8854273393419267,3
-slr0261,ndhH_16,ndhH,L300,Photosynthesis and respiration,NADH dehydrogenase,-4.665685564290002,3
-slr0261,ndhH_16,ndhH,LD,Photosynthesis and respiration,NADH dehydrogenase,-4.823598435460585,3
-slr0261,ndhH_4,ndhH,L100,Photosynthesis and respiration,NADH dehydrogenase,-1.5316155721842757,3
-slr0261,ndhH_4,ndhH,L300,Photosynthesis and respiration,NADH dehydrogenase,-5.2030208499465775,3
-slr0261,ndhH_4,ndhH,LD,Photosynthesis and respiration,NADH dehydrogenase,-5.479860003253777,3
+sll1733,ndhD3_20,ndhD3,L100,Photosynthesis and respiration,NADH dehydrogenase,-0.1286638553842993,4
+sll1733,ndhD3_20,ndhD3,L300,Photosynthesis and respiration,NADH dehydrogenase,-4.140175549579122,4
+sll1733,ndhD3_20,ndhD3,LD,Photosynthesis and respiration,NADH dehydrogenase,-0.14623595028350214,4
+sll1733,ndhD3_8,ndhD3,L100,Photosynthesis and respiration,NADH dehydrogenase,-0.09957763218898273,4
+sll1733,ndhD3_8,ndhD3,L300,Photosynthesis and respiration,NADH dehydrogenase,-5.367051008181855,4
+sll1733,ndhD3_8,ndhD3,LD,Photosynthesis and respiration,NADH dehydrogenase,0.12533465403196167,4
 ssr1386,ndhL_34,ndhL,L100,Photosynthesis and respiration,NADH dehydrogenase,-2.218934736459295,3
 ssr1386,ndhL_34,ndhL,L300,Photosynthesis and respiration,NADH dehydrogenase,-5.828571148067298,3
 ssr1386,ndhL_34,ndhL,LD,Photosynthesis and respiration,NADH dehydrogenase,NA,3
@@ -101,12 +89,6 @@ slr0520,purL2_26,purL2,LD,"Purines, pyrimidines, nucleosides, and nucleotides",P
 slr0520,purL2_64,purL2,L100,"Purines, pyrimidines, nucleosides, and nucleotides",Purine ribonucleotide biosynthesis,-0.3656392658427126,3
 slr0520,purL2_64,purL2,L300,"Purines, pyrimidines, nucleosides, and nucleotides",Purine ribonucleotide biosynthesis,-3.4788192336650665,3
 slr0520,purL2_64,purL2,LD,"Purines, pyrimidines, nucleosides, and nucleotides",Purine ribonucleotide biosynthesis,-2.930416833905756,3
-sll0569,recA_23,recA,L100,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",-1.8586726778410152,3
-sll0569,recA_23,recA,L300,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",-5.966223903438883,3
-sll0569,recA_23,recA,LD,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",NA,3
-sll0569,recA_4,recA,L100,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",-2.1754722016034638,3
-sll0569,recA_4,recA,L300,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",-4.094579102027541,3
-sll0569,recA_4,recA,LD,"DNA replication, restriction, modification, recombination, and repair","DNA replication, restriction, modification, recombination, and repair",-4.482935828004343,3
 slr0774,secD_52,secD,L100,Cellular processes,Protein and peptide secretion,-3.1443119230902203,3
 slr0774,secD_52,secD,L300,Cellular processes,Protein and peptide secretion,-5.17203690283655,3
 slr0774,secD_52,secD,LD,Cellular processes,Protein and peptide secretion,NA,3
@@ -119,72 +101,66 @@ sll0085,sll0085_11,sll0085,LD,Unknown,Unknown,-5.413914367565113,3
 sll0085,sll0085_27,sll0085,L100,Unknown,Unknown,-0.7281932711202121,3
 sll0085,sll0085_27,sll0085,L300,Unknown,Unknown,-4.371176997836438,3
 sll0085,sll0085_27,sll0085,LD,Unknown,Unknown,-3.674699822478687,3
-sll0602,sll0602_19,sll0602,L100,Hypothetical,Hypothetical,-0.24451188812757765,3
-sll0602,sll0602_19,sll0602,L300,Hypothetical,Hypothetical,-3.598503126774214,3
-sll0602,sll0602_19,sll0602,LD,Hypothetical,Hypothetical,-3.0680873434508156,3
-sll0602,sll0602_3,sll0602,L100,Hypothetical,Hypothetical,-0.26838869237333035,3
-sll0602,sll0602_3,sll0602,L300,Hypothetical,Hypothetical,-3.4549617542574267,3
-sll0602,sll0602_3,sll0602,LD,Hypothetical,Hypothetical,-3.695573128581116,3
-sll0871,sll0871_19,sll0871,L100,Hypothetical,Hypothetical,-0.21890600069698557,3
-sll0871,sll0871_19,sll0871,L300,Hypothetical,Hypothetical,-5.130457291571379,3
-sll0871,sll0871_19,sll0871,LD,Hypothetical,Hypothetical,-1.8774361418583347,3
-sll0871,sll0871_47,sll0871,L100,Hypothetical,Hypothetical,0.005022291899547395,3
-sll0871,sll0871_47,sll0871,L300,Hypothetical,Hypothetical,-4.684808209426726,3
-sll0871,sll0871_47,sll0871,LD,Hypothetical,Hypothetical,-1.5258660202615906,3
+sll0871,sll0871_19,sll0871,L100,Hypothetical,Hypothetical,-0.21890600069698557,4
+sll0871,sll0871_19,sll0871,L300,Hypothetical,Hypothetical,-5.130457291571379,4
+sll0871,sll0871_19,sll0871,LD,Hypothetical,Hypothetical,-1.8774361418583347,4
+sll0871,sll0871_47,sll0871,L100,Hypothetical,Hypothetical,0.005022291899547395,4
+sll0871,sll0871_47,sll0871,L300,Hypothetical,Hypothetical,-4.684808209426726,4
+sll0871,sll0871_47,sll0871,LD,Hypothetical,Hypothetical,-1.5258660202615906,4
 sll0936,sll0936_26,sll0936,L100,Other categories,Other,-0.6253686126824051,3
 sll0936,sll0936_26,sll0936,L300,Other categories,Other,-5.499352667703888,3
 sll0936,sll0936_26,sll0936,LD,Other categories,Other,-3.9153123689075127,3
 sll0936,sll0936_4,sll0936,L100,Other categories,Other,-0.8378240708224874,3
 sll0936,sll0936_4,sll0936,L300,Other categories,Other,-6.358541670806915,3
 sll0936,sll0936_4,sll0936,LD,Other categories,Other,-5.764085070476027,3
-sll1461,sll1461_32,sll1461,L100,Hypothetical,Hypothetical,-4.865376478141863,4
-sll1461,sll1461_32,sll1461,L300,Hypothetical,Hypothetical,-0.8798828011839014,4
-sll1461,sll1461_32,sll1461,LD,Hypothetical,Hypothetical,-1.4513439787299909,4
-sll1461,sll1461_51,sll1461,L100,Hypothetical,Hypothetical,-2.9853733029386142,4
-sll1461,sll1461_51,sll1461,L300,Hypothetical,Hypothetical,-0.06804372257961705,4
-sll1461,sll1461_51,sll1461,LD,Hypothetical,Hypothetical,-0.01658825911384686,4
-sll1654,sll1654_24,sll1654,L100,Regulatory functions,Regulatory functions,-0.5445459473483854,3
-sll1654,sll1654_24,sll1654,L300,Regulatory functions,Regulatory functions,-3.660391740340872,3
-sll1654,sll1654_24,sll1654,LD,Regulatory functions,Regulatory functions,-3.021826517090914,3
-sll1654,sll1654_98,sll1654,L100,Regulatory functions,Regulatory functions,-0.0841680989920538,3
-sll1654,sll1654_98,sll1654,L300,Regulatory functions,Regulatory functions,-3.2755252345859227,3
-sll1654,sll1654_98,sll1654,LD,Regulatory functions,Regulatory functions,-2.7338023959663382,3
+sll1461,sll1461_32,sll1461,L100,Hypothetical,Hypothetical,-4.865376478141863,3
+sll1461,sll1461_32,sll1461,L300,Hypothetical,Hypothetical,-0.8798828011839014,3
+sll1461,sll1461_32,sll1461,LD,Hypothetical,Hypothetical,-1.4513439787299909,3
+sll1461,sll1461_51,sll1461,L100,Hypothetical,Hypothetical,-2.9853733029386142,3
+sll1461,sll1461_51,sll1461,L300,Hypothetical,Hypothetical,-0.06804372257961705,3
+sll1461,sll1461_51,sll1461,LD,Hypothetical,Hypothetical,-0.01658825911384686,3
+sll1647,sll1647_14,sll1647,L100,Other categories,Other,-0.07443092632779058,4
+sll1647,sll1647_14,sll1647,L300,Other categories,Other,-3.2736420033596074,4
+sll1647,sll1647_14,sll1647,LD,Other categories,Other,-2.150951915414488,4
+sll1647,sll1647_31,sll1647,L100,Other categories,Other,-0.40450935421915446,4
+sll1647,sll1647_31,sll1647,L300,Other categories,Other,-3.830626269853144,4
+sll1647,sll1647_31,sll1647,LD,Other categories,Other,-2.6481288597437813,4
+sll1654,sll1654_24,sll1654,L100,Regulatory functions,Regulatory functions,-0.5445459473483854,4
+sll1654,sll1654_24,sll1654,L300,Regulatory functions,Regulatory functions,-3.660391740340872,4
+sll1654,sll1654_24,sll1654,LD,Regulatory functions,Regulatory functions,-3.021826517090914,4
+sll1654,sll1654_98,sll1654,L100,Regulatory functions,Regulatory functions,-0.0841680989920538,4
+sll1654,sll1654_98,sll1654,L300,Regulatory functions,Regulatory functions,-3.2755252345859227,4
+sll1654,sll1654_98,sll1654,LD,Regulatory functions,Regulatory functions,-2.7338023959663382,4
 sll1848,sll1848_39,sll1848,L100,Other categories,Other,-0.6490192193792921,3
 sll1848,sll1848_39,sll1848,L300,Other categories,Other,-3.485495389412717,3
 sll1848,sll1848_39,sll1848,LD,Other categories,Other,-4.528628848295612,3
 sll1848,sll1848_7,sll1848,L100,Other categories,Other,-0.7210901927000228,3
 sll1848,sll1848_7,sll1848,L300,Other categories,Other,-4.143922344554563,3
 sll1848,sll1848_7,sll1848,LD,Other categories,Other,-4.365578819371546,3
-slr0058,slr0058_47,slr0058,L100,Central intermediary metabolism,Phosphorus compounds,-0.7080364832508063,3
-slr0058,slr0058_47,slr0058,L300,Central intermediary metabolism,Phosphorus compounds,-4.261565372209915,3
-slr0058,slr0058_47,slr0058,LD,Central intermediary metabolism,Phosphorus compounds,-1.4958928727594383,3
-slr0058,slr0058_99,slr0058,L100,Central intermediary metabolism,Phosphorus compounds,-1.4848965484316001,3
-slr0058,slr0058_99,slr0058,L300,Central intermediary metabolism,Phosphorus compounds,-4.819480877521996,3
-slr0058,slr0058_99,slr0058,LD,Central intermediary metabolism,Phosphorus compounds,-2.269260626697436,3
+slr0195,slr0195_13,slr0195,L100,Hypothetical,Hypothetical,-0.015771517294821465,4
+slr0195,slr0195_13,slr0195,L300,Hypothetical,Hypothetical,-4.418075047136269,4
+slr0195,slr0195_13,slr0195,LD,Hypothetical,Hypothetical,0.07350330270159303,4
+slr0195,slr0195_26,slr0195,L100,Hypothetical,Hypothetical,0.010740283907782696,4
+slr0195,slr0195_26,slr0195,L300,Hypothetical,Hypothetical,-2.816438305180512,4
+slr0195,slr0195_26,slr0195,LD,Hypothetical,Hypothetical,0.18228384046071225,4
 slr0362,slr0362_34,slr0362,L100,Hypothetical,Hypothetical,-0.03569381075774759,3
 slr0362,slr0362_34,slr0362,L300,Hypothetical,Hypothetical,-4.166037228669074,3
 slr0362,slr0362_34,slr0362,LD,Hypothetical,Hypothetical,-3.174136338812368,3
 slr0362,slr0362_76,slr0362,L100,Hypothetical,Hypothetical,-0.14378847855549312,3
 slr0362,slr0362_76,slr0362,L300,Hypothetical,Hypothetical,-4.775975662035448,3
 slr0362,slr0362_76,slr0362,LD,Hypothetical,Hypothetical,-3.6751501157996964,3
-slr0379,slr0379_10,slr0379,L100,Other categories,Other,0.14322399121090246,4
-slr0379,slr0379_10,slr0379,L300,Other categories,Other,-3.9976962829389553,4
-slr0379,slr0379_10,slr0379,LD,Other categories,Other,-0.6703049743683472,4
-slr0379,slr0379_26,slr0379,L100,Other categories,Other,-1.1122200445252468,4
-slr0379,slr0379_26,slr0379,L300,Other categories,Other,-2.881677669755733,4
-slr0379,slr0379_26,slr0379,LD,Other categories,Other,0.21031867438904184,4
 slr0521,slr0521_32,slr0521,L100,Unknown,Unknown,-0.5710545855196213,3
 slr0521,slr0521_32,slr0521,L300,Unknown,Unknown,-3.3042332507209156,3
 slr0521,slr0521_32,slr0521,LD,Unknown,Unknown,-3.4058846673173817,3
 slr0521,slr0521_4,slr0521,L100,Unknown,Unknown,-0.413178892080889,3
 slr0521,slr0521_4,slr0521,L300,Unknown,Unknown,-4.1569880907278245,3
 slr0521,slr0521_4,slr0521,LD,Unknown,Unknown,-3.761533239785659,3
-slr1302,slr1302_17,slr1302,L100,Other categories,Other,-2.0157097939965576,4
-slr1302,slr1302_17,slr1302,L300,Other categories,Other,-0.04575250426670685,4
-slr1302,slr1302_17,slr1302,LD,Other categories,Other,-3.1288069999055215,4
-slr1302,slr1302_3,slr1302,L100,Other categories,Other,-1.953341998351974,4
-slr1302,slr1302_3,slr1302,L300,Other categories,Other,-0.16061194199386913,4
-slr1302,slr1302_3,slr1302,LD,Other categories,Other,-3.213883494970926,4
+slr0523,slr0523_13,slr0523,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-0.09422885518285844,4
+slr0523,slr0523_13,slr0523,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-4.351483377965379,4
+slr0523,slr0523_13,slr0523,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-1.9380626935224536,4
+slr0523,slr0523_26,slr0523,L100,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-0.3825404962011168,4
+slr0523,slr0523_26,slr0523,L300,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-5.0283127968932435,4
+slr0523,slr0523_26,slr0523,LD,"Biosynthesis of cofactors, prosthetic groups, and carriers",Biotin,-1.4567338164870076,4
 slr1334,slr1334_106,slr1334,L100,Central intermediary metabolism,Polysaccharides and glycoproteins,-2.152994915505465,3
 slr1334,slr1334_106,slr1334,L300,Central intermediary metabolism,Polysaccharides and glycoproteins,-4.787601117252459,3
 slr1334,slr1334_106,slr1334,LD,Central intermediary metabolism,Polysaccharides and glycoproteins,-5.021908569183313,3
@@ -197,24 +173,12 @@ slr1342,slr1342_10,slr1342,LD,Hypothetical,Hypothetical,-3.6605477843300034,3
 slr1342,slr1342_38,slr1342,L100,Hypothetical,Hypothetical,0.11776856580750178,3
 slr1342,slr1342_38,slr1342,L300,Hypothetical,Hypothetical,-3.7664441461659335,3
 slr1342,slr1342_38,slr1342,LD,Hypothetical,Hypothetical,-2.86102283904956,3
-slr1537,slr1537_12,slr1537,L100,Unknown,Unknown,-0.0448069774285628,3
-slr1537,slr1537_12,slr1537,L300,Unknown,Unknown,-4.400947140719988,3
-slr1537,slr1537_12,slr1537,LD,Unknown,Unknown,-1.7739533088650108,3
-slr1537,slr1537_32,slr1537,L100,Unknown,Unknown,-0.02668938184319043,3
-slr1537,slr1537_32,slr1537,L300,Unknown,Unknown,-4.781185647996054,3
-slr1537,slr1537_32,slr1537,LD,Unknown,Unknown,-2.769173100263643,3
-slr1541,slr1541_29,slr1541,L100,Hypothetical,Hypothetical,-1.4435554441051528,3
-slr1541,slr1541_29,slr1541,L300,Hypothetical,Hypothetical,-4.692295278920624,3
-slr1541,slr1541_29,slr1541,LD,Hypothetical,Hypothetical,-2.647643634431853,3
-slr1541,slr1541_4,slr1541,L100,Hypothetical,Hypothetical,0.10912707919987816,3
-slr1541,slr1541_4,slr1541,L300,Hypothetical,Hypothetical,-3.4760275501181788,3
-slr1541,slr1541_4,slr1541,LD,Hypothetical,Hypothetical,-1.7233014263311388,3
-slr1638,slr1638_112,slr1638,L100,Hypothetical,Hypothetical,-0.2541518322121099,3
-slr1638,slr1638_112,slr1638,L300,Hypothetical,Hypothetical,-3.9435426151276665,3
-slr1638,slr1638_112,slr1638,LD,Hypothetical,Hypothetical,-1.4776650582360367,3
-slr1638,slr1638_84,slr1638,L100,Hypothetical,Hypothetical,-0.1334854197450824,3
-slr1638,slr1638_84,slr1638,L300,Hypothetical,Hypothetical,-3.695425804425357,3
-slr1638,slr1638_84,slr1638,LD,Hypothetical,Hypothetical,-1.4863877799433463,3
+slr1638,slr1638_112,slr1638,L100,Hypothetical,Hypothetical,-0.2541518322121099,4
+slr1638,slr1638_112,slr1638,L300,Hypothetical,Hypothetical,-3.9435426151276665,4
+slr1638,slr1638_112,slr1638,LD,Hypothetical,Hypothetical,-1.4776650582360367,4
+slr1638,slr1638_84,slr1638,L100,Hypothetical,Hypothetical,-0.1334854197450824,4
+slr1638,slr1638_84,slr1638,L300,Hypothetical,Hypothetical,-3.695425804425357,4
+slr1638,slr1638_84,slr1638,LD,Hypothetical,Hypothetical,-1.4863877799433463,4
 slr1796,slr1796_21,slr1796,L100,Hypothetical,Hypothetical,-0.11789312127226681,3
 slr1796,slr1796_21,slr1796,L300,Hypothetical,Hypothetical,-3.755214432186668,3
 slr1796,slr1796_21,slr1796,LD,Hypothetical,Hypothetical,-2.979427394912289,3
@@ -233,24 +197,24 @@ slr6043,slr6043_14,slr6043,LD,Transport and binding proteins,Transport and bindi
 slr6043,slr6043_31,slr6043,L100,Transport and binding proteins,Transport and binding proteins,-0.01267472547944486,3
 slr6043,slr6043_31,slr6043,L300,Transport and binding proteins,Transport and binding proteins,-4.554103734782674,3
 slr6043,slr6043_31,slr6043,LD,Transport and binding proteins,Transport and binding proteins,-5.194125611555718,3
-ssl8008,ssl8008_53,ssl8008,L100,Hypothetical,Hypothetical,-5.525514386597808,4
-ssl8008,ssl8008_53,ssl8008,L300,Hypothetical,Hypothetical,-0.4009532411971213,4
-ssl8008,ssl8008_53,ssl8008,LD,Hypothetical,Hypothetical,-4.072340208840722,4
-ssl8008,ssl8008_7,ssl8008,L100,Hypothetical,Hypothetical,-2.766909258355003,4
-ssl8008,ssl8008_7,ssl8008,L300,Hypothetical,Hypothetical,-0.8727762474543146,4
-ssl8008,ssl8008_7,ssl8008,LD,Hypothetical,Hypothetical,-2.032539808847838,4
+ssr2554,ssr2554_51,ssr2554,L100,Hypothetical,Hypothetical,-0.1836213314123652,4
+ssr2554,ssr2554_51,ssr2554,L300,Hypothetical,Hypothetical,-3.6564532820847546,4
+ssr2554,ssr2554_51,ssr2554,LD,Hypothetical,Hypothetical,-2.421393643348768,4
+ssr2554,ssr2554_67,ssr2554,L100,Hypothetical,Hypothetical,-0.11089697048547889,4
+ssr2554,ssr2554_67,ssr2554,L300,Hypothetical,Hypothetical,-2.8584285099130353,4
+ssr2554,ssr2554_67,ssr2554,LD,Hypothetical,Hypothetical,-1.8624191088021558,4
 ssr3000,ssr3000_38,ssr3000,L100,Hypothetical,Hypothetical,-0.4255438839263069,3
 ssr3000,ssr3000_38,ssr3000,L300,Hypothetical,Hypothetical,-3.294275135390396,3
 ssr3000,ssr3000_38,ssr3000,LD,Hypothetical,Hypothetical,-3.56514504575169,3
 ssr3000,ssr3000_55,ssr3000,L100,Hypothetical,Hypothetical,0.143940708787357,3
 ssr3000,ssr3000_55,ssr3000,L300,Hypothetical,Hypothetical,-4.321213980881841,3
 ssr3000,ssr3000_55,ssr3000,LD,Hypothetical,Hypothetical,-3.1468164806874843,3
-ssr3122,ssr3122_32,ssr3122,L100,Cellular processes,Cell division,0.1494243864917303,3
-ssr3122,ssr3122_32,ssr3122,L300,Cellular processes,Cell division,-4.002807430425011,3
-ssr3122,ssr3122_32,ssr3122,LD,Cellular processes,Cell division,-1.9120624612815569,3
-ssr3122,ssr3122_45,ssr3122,L100,Cellular processes,Cell division,-0.04762787950216076,3
-ssr3122,ssr3122_45,ssr3122,L300,Cellular processes,Cell division,-3.61543442447386,3
-ssr3122,ssr3122_45,ssr3122,LD,Cellular processes,Cell division,-1.924467191506157,3
+ssr3122,ssr3122_32,ssr3122,L100,Cellular processes,Cell division,0.1494243864917303,4
+ssr3122,ssr3122_32,ssr3122,L300,Cellular processes,Cell division,-4.002807430425011,4
+ssr3122,ssr3122_32,ssr3122,LD,Cellular processes,Cell division,-1.9120624612815569,4
+ssr3122,ssr3122_45,ssr3122,L100,Cellular processes,Cell division,-0.04762787950216076,4
+ssr3122,ssr3122_45,ssr3122,L300,Cellular processes,Cell division,-3.61543442447386,4
+ssr3122,ssr3122_45,ssr3122,LD,Cellular processes,Cell division,-1.924467191506157,4
 ssr3184,ssr3184_25,ssr3184,L100,Photosynthesis and respiration,Soluble electron carriers,-0.7566877049425204,3
 ssr3184,ssr3184_25,ssr3184,L300,Photosynthesis and respiration,Soluble electron carriers,-4.093400446426394,3
 ssr3184,ssr3184_25,ssr3184,LD,Photosynthesis and respiration,Soluble electron carriers,-3.382383597539751,3

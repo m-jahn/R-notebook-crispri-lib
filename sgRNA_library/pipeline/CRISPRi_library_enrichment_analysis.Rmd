@@ -44,7 +44,7 @@ of the reference genome for _Synechocystis_ sp. PCC6803.
 # load data file
 load(file = "../processed_data/CRISPRi_library_df_annotated.Rdata")
 # turn conditon into a factor for ordered plotting, input should be ungroup()ed
-df <- ungroup(df) %>% mutate(condition = factor(condition, c("L100", "L300", "LD", "LAC", "NACL")))
+df <- ungroup(df) %>% mutate(condition = factor(condition, c("L100", "L300", "LD", "Lactate", "NaCl")))
 # split into gene and ncRNA containing data and continue with gene only
 df_ncRNA <- df %>% filter(grepl("^Entry", sgRNA))
 df <- df %>% filter(!grepl("^Entry", sgRNA))
@@ -60,10 +60,16 @@ distribution of raw read fractions or log2 FCs.
 
 ```{r}
 # Number of unique sgRNAs
-paste(df$sgRNA %>% unique %>% length, "unique sgRNAs in all conditions")
-# Number of unique genes
-paste(df$locus %>% unique %>% length, "unique genes covered")
-# Missing sgRNA quantifications per condition, higher for LAC
+paste(df$sgRNA %>% unique %>% length, "unique sgRNAs targeting ORFS")
+paste(df_ncRNA$sgRNA %>% unique %>% length, "unique sgRNAs targeting ncRNAs")
+# Number of ORFs targeted with 1 or 2 sgRNAs
+df %>% filter(!duplicated(sgRNA)) %>% group_by(sgRNA_short) %>% 
+  summarize(num_sgRNAs = length(sgRNA_index)) %>% pull(num_sgRNAs) %>% table
+# Number of ncRNAs targeted with 1 or 2 sgRNAs
+df_ncRNA %>% filter(!duplicated(sgRNA)) %>% group_by(sgRNA_short) %>% 
+  summarize(num_sgRNAs = length(sgRNA_index)) %>% pull(num_sgRNAs) %>% table
+
+# Missing sgRNA quantifications per condition, higher for Lactate
 df %>% group_by(condition, induction, sgRNA) %>%
   summarise(NAs = sum(is.na(read.fraction.mean))) %>% 
   summarise(sum(NAs > 0))
@@ -87,10 +93,11 @@ bind_rows(.id = "sgRNA_target",
   group_by(sgRNA_target) %>%
   arrange(quantified) %>%
   mutate(index = 1:length(quantified)) %>%
+  #filter(sgRNA_target == "ORFs") %>% pull(quantified) %>% table
   
   xyplot(quantified ~ index | sgRNA_target, .,
     as.table = TRUE, scales = list(alternating = FALSE),
-    xlab = "sgRNA", ylab = "quantified samples",
+    xlab = "sgRNA", ylab = "quantified in n samples",
     par.settings = custom.lattice, 
     between = list(x = 0.5, y = 0.5),
     type = "b", pch = 19, cex = 0.6, lwd = 2.5,
@@ -99,7 +106,6 @@ bind_rows(.id = "sgRNA_target",
       panel.xyplot(x, y, ...)
     }
   )
-
 ```
 
 
@@ -151,7 +157,7 @@ Distribution of mean read fraction (sgRNA reads per gene divided by total number
 of reads). Broken down by condition, and color-coded by time point in days. A bimodal
 disitrubtion for some conditions indicate that a pre-selection of mutants was 
 taking place eve before growth competition experiments.
-Abbreviations: L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark-cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
+Abbreviations: L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, L300 - light with 300 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark-cycle, Lactate - addition of L-lactate, NaCl - addition of sodium chloride.
 
 -----------
 
@@ -177,12 +183,12 @@ plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` |
   par.settings = custom.lattice, cex = 0.2, pch=19,
   scales = list(alternating = FALSE),
   xlim = c(-9, 4), ylim = c(-9, 4),
-  xlab = bquote(log[2] ~ "FC sgRNA1"), ylab = bquote(log[2] ~ "FC sgRNA2"),
+  xlab = bquote(log[2] ~ "fold change sgRNA1"), ylab = bquote(log[2] ~ "fold change sgRNA2"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.xyplot(x, y, ... )
+    panel.xyplot(x, y, alpha = 0.3, ...)
     if (panel.number() %in% c(1:5, 7:11, 17:18, 23:24, 29:30)) {
-      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), ...)
+      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), na.rm = TRUE, ...)
     }
     panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
   }
@@ -206,57 +212,9 @@ Correlation of the log2 FC of sgRNA1 _versus_ sgRNA 2 for each gene,
 broken down by condition. Each panel shows an overlay of induced (blue) and uninduced (red)
 samples. Panel numbers indicate time in days.
 Abbreviations: L100 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, 
-L300 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, LD - light-dark cycle, LAC - addition of lactate, NACL - addition of sodium chloride.
-
------------
-
-#### sgRNA pair correlation, subset of ribosomal proteins
-
-Using the same strategy as above, we can also plot only ribosomal genes in order
-to see if correlation for both sgRNAs for these highly essential genes is higher.
-Here only constant light conditions 100 and 300 µmol photons m<sup>-2</sup> s<sup>-1</sup> 
-were selected.
-
-```{r, fig.width = 7.5, fig.height = 4, echo = FALSE}
-# Correlation between sgRNA 1 and 2 per gene, and condition
-plot_2sgRNA_correlation_rib <- df %>% 
-  
-  # filter out genes that don't have two sgRNAs
-  filter(Pathway.abbr == "Ribosomal proteins", condition %in% c("L100", "L300")) %>% 
-  select(c(2,3,4,9,14,15,16)) %>%
-  group_by(sgRNA_short) %>%
-  filter(timepoint > 0) %>%
-  spread(key = sgRNA_index, value = log2FoldChange) %>%
-  rename_at(vars(6:7), function(x) paste0("sgRNA-", x)) %>%
-  
-  # plot
-  xyplot(`sgRNA-2` ~ `sgRNA-1` | factor(timepoint) * condition, .,
-    groups = induction, as.table = TRUE, 
-    between = list(x = 0.5, y = 0.5),
-    par.settings = custom.lattice, cex = 0.2, pch=19,
-    scales = list(alternating = FALSE),
-    xlim = c(-9, 4), ylim = c(-9, 4),
-    xlab = bquote(log[2] ~ "FC sgRNA1"), 
-    ylab = bquote(log[2] ~ "FC sgRNA2"),
-    panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.xyplot(x, y, ... )
-      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), ...)
-      panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
-    }
-  )
-
-print(plot_2sgRNA_correlation_rib)
-```
-
-
-```{r, results = 'hide', include = FALSE}
-png("../figures/supplemental/Supplemental_figure_2sgRNA_correlation_rib.png", 
-  width = 1000, height = 530, res = 120)
-print(plot_2sgRNA_correlation_rib)
-dev.off()
-```
-
+L300 - light with 100 µmol photons m<sup>-2</sup> s<sup>-1</sup>, 
+LD - light-dark cycle, Lactate - addition of L-lactate, 
+NaCl - addition of sodium chloride.
 
 ----------
 
@@ -264,10 +222,10 @@ dev.off()
 
 A matrix is generated from sgRNA log2 FC values to apply clustering and plot
 a heatmap. The matrix should be in 'wide' format while the master data frame
-is  in 'long' format (one variable/observations per column). 
+is  in 'long' format (one variable per column, one observation per row). 
 
 
-```{r, results = 'hide'}
+```{r, message = FALSE}
 mat <- unite(df, condition, condition, induction, timepoint) %>%
   
   # combine sgRNA indices (will be rows) to help spreading
@@ -292,7 +250,7 @@ mat <- unite(df, condition, condition, induction, timepoint) %>%
   # change row names
   column_to_rownames("sgRNA") %>% ungroup %>%
 
-  # reorder columns and exclude LAC/NACL data
+  # reorder columns and exclude Lactate/NaCl data
   select(sort(colnames(.))) %>% 
   select(contains("L100"), contains("L300"), contains("LD")) %>%
   select(contains("_u_"), contains("_i_")) %>% as.matrix
@@ -337,7 +295,7 @@ dev.off()
 ----------
 
 The result from silhouette analysis of 2 to 20 clusters indicates that a cluster 
-number of 2 to 9 offers good separation, while higher cluster numbers reduce
+number of 2 to 8 offers good separation, while higher cluster numbers reduce
 silhouette width. Next, a certain number of clusters was chosen and the 
 dendrogram was split at a height that will produce the corresponding number
 of clusters. Here, `cutreeord()` from R package `vegan` was used to cut 
@@ -350,7 +308,7 @@ clusters merged into one.
 clusters <- vegan::cutreeord(cluster, k = 6); clusters %>% table
 
 # combine clusters 5 and 6 as they are very similar
-clusters <- clusters %>% recode(`2` = 1L, `1` = 2L, `3` = 4L, `4` = 3L, `6` = 5L) %>% 
+clusters <- clusters %>% recode(`5` = 4L, `4` = 5L, `6` = 5L) %>% 
   setNames(., names(clusters))
 
 # The cluster order by cutree does not correspond to the one of the dendrogram
@@ -369,14 +327,17 @@ cluster_reordered <- as.dendrogram(cluster) %>%
 ```
 
 
-```{r, include = FALSE}
+```{r, fig.height = 2, fig.width = 6}
 # custom color vector for clusters, without first color that equals last
 custom_palette <- colorspace::qualitative_hcl(
-  n = length(unique(clusters)), h = c(30, 360), c = 100, l = 50)
+  n = length(unique(clusters)), h = c(30, 360), c = 70, l = 50)
 custom_lattice <- custom.lattice()
 custom_lattice$superpose.polygon$col = custom_palette
 custom_lattice$superpose.symbol$col = custom_palette
 custom_lattice$superpose.line$col = custom_palette
+
+# display colors as a test
+plot(x = 1:5, y = rep(1, 5), pch = 19, cex = 4, col = custom_palette)
 ```
 
 ----------
@@ -402,7 +363,7 @@ plot(color_branches(cluster_reordered,
 plot_heatmap <- levelplot(
   # limit plotted range to log2 FC of -5 to 5 (32 fold)
   mat[as.hclust(cluster_reordered)$order, ] %>% replace(., . > 5, 5) %>% replace(., . < -5, -5),
-  col.regions = colorRampPalette(c(custom_palette[4], grey(0.95), custom_palette[1])),
+  col.regions = colorRampPalette(c(custom_palette[4], grey(0.98), custom_palette[1])),
   as.table = TRUE, aspect = "fill", 
   xlab = "sgRNA", ylab = "time [d]",
   scales = list(alternating = FALSE, x = list(draw = FALSE))
@@ -425,9 +386,7 @@ dev.off()
 png("../figures/main/CRISPRi_library_heatmap.png", width = 1800, height = 300, res = 165)
 print(plot_heatmap)
 dev.off()
-
 ```
-
 
 ----------
 
@@ -451,7 +410,7 @@ plot_library_depletion <- xyplot(log2FoldChange ~ generations | paste(condition,
   groups = cluster, type = "l", between = list(x = 0.5, y = 0.5), 
   as.table = TRUE, layout = c(length(unique(clusters)), 3),
   col = paste0(custom_lattice$superpose.polygon$col, "20"),
-  xlab = "generations", ylab = bquote(log[2] ~ "FC"), 
+  xlab = "generations", ylab = bquote(log[2] ~ "fold change"), 
   ylim = c(-8, 4), xlim = c(0, 40),
   scales = list(alternating = FALSE), pch = 16, cex = 0.7, 
   par.settings = custom_lattice,
@@ -534,8 +493,8 @@ TopGoResultFiltered <- left_join(as_tibble(TopGoResult), read_csv("../processed_
   by = c("GO.ID" = "term_ID")) %>%
   
   # trim data frame by p.value and GO term node size
-  filter(dispensability <= 0.5,
-    elimFisher < 0.03,
+  filter(dispensability <= 0.55,
+    elimFisher <= 0.03,
     Annotated >= 5,
     Annotated <= 200) %>%
   
@@ -574,60 +533,6 @@ plot_TopGO_table <- xyplot(factor(TermAbbr, unique(TermAbbr)) ~ as.numeric(elimF
       col = custom_lattice$superpose.polygon$col[subscripts])
   }
 )
-```
-
-
-```{r, fig.width = 5, fig.height = 5, warning = FALSE, message = FALSE}
-# custom function to plot single sgRNAs per most enriched GO terms
-plot.sgRNAs <- function(data, comment = NULL) {
-  
-  xyplot(log2FoldChange ~ factor(timepoint), 
-    data, as.table=TRUE, groups = cluster,
-    xlab = "time [d]", ylab = bquote(log[2] ~ "FC"), 
-    between = list(x = 0.5, y = 0.5),
-    layout = c(5, 4),
-    ylim = c(-9, 3), pch = 19, cex = 0.2, lwd = 2, 
-    par.settings = custom_lattice,
-    scales = list(alternating = FALSE),
-    panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.superpose(x, y, ...)
-      panel.text(3, 2, labels = comment, cex = 0.6, col = grey(0.5))
-    },
-    panel.groups = function(x, y, ...) {
-      panel.stripplot(x, y, jitter.data = TRUE, amount = 0.2, horizontal = FALSE, ...)
-      panel.smoother(x, y, ...)
-    }
-  )
-}
-
-# make plots with genes for the most enriched GO terms
-plot.list <- filter(TopGoResultFiltered, cluster != 5) %>%
-  
-  # select top 4 terms per cluster by p-value
-  group_by(cluster) %>% slice(1:4) %>%
-  
-  # pass only the abbreviated GO term/cluster combination
-  pull(TermAbbr) %>% lapply(., function(x) {
-  
-    # extract sgRNA or gene IDs
-    sgRNAs = filter(TopGoResultFiltered, TermAbbr %in% x)$SigGenes %>%
-      strsplit(split = ",") %>%
-      unlist
-  
-    # generate plot of subsetted data
-    plot.sgRNAs(
-      data = filter(df, sgRNA %in% sgRNAs, induction == "i") %>%
-        mutate(log2FoldChange = coalesce(log2FoldChange, 0)),
-      comment = paste(length(sgRNAs), "sgRNAs")
-    )
-  }) %>%
-  
-  setNames(filter(TopGoResultFiltered, cluster != 5) %>% 
-    group_by(cluster) %>% slice(1:4) %>% 
-    pull(TermAbbr) %>% substr(1, 15))
-
-print(do.call(c, plot.list))
 ```
 
 
@@ -686,7 +591,7 @@ both sgRNAs present). The overlap
 
 ```{r}
 # choose one of: c("L100", "L300"), c("L100", "LD"), c("L300", "LD")
-light_conditions <- c("L300", "LD")
+light_conditions <- c("L100", "L300")
 
 plot_global_fitness <- df %>%
     
@@ -704,7 +609,7 @@ plot_global_fitness <- df %>%
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.stripplot(as.numeric(x)-0.25, y, jitter.data = TRUE, amount = 0.14, 
-        pch = ".", cex = 2, horizontal = FALSE, ...)
+        pch = 19, cex = 0.3, horizontal = FALSE, alpha = 0.2, ...)
       panel.violin(as.numeric(x)+0.25, y, horizontal = FALSE, box.ratio = 0.5, 
         border = grey(0.5), col = custom_palette[panel.number()], ...)
     }
@@ -766,7 +671,7 @@ plot_diff_fitness <- xyplot(diff_fitness_score ~ factor(Process.abbr) | factor(c
 ```{r}
 df_selected_genes <- filter(df_selected_fitness, 
   !between(diff_fitness_score, -3, 3)) %>% 
-  pull(sgRNA_short)
+  pull(sgRNA_short) %>% sort
     
 plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations | 
       paste0(cluster, "   ", sgRNA_short), 
@@ -777,7 +682,7 @@ plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations |
       cust$superpose.polygon$col = c("#00989D", "#00989D", "#D33F6A", "#D33F6A"); cust}, 
     type = "l", layout = c(6, 3), 
     scales = list(alternating = FALSE, cex = 0.8),
-    ylim = c(-10, 10), xlim = c(0, 17), ylab = bquote(log[2] ~ "FC"),
+    ylim = c(-10, 10), xlim = c(0, 17), ylab = bquote(log[2] ~ "fold change"),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.key(light_conditions, points = FALSE, col = c("#D33F6A", "#00989D"),
@@ -810,18 +715,17 @@ dev.off()
 
 
 ```{r, results = 'hide', include = FALSE}
-# Supplemental Dataset S4: table with most different sgRNAs as *.csv
-filter(df, 
-  sgRNA_short %in% (filter(df_selected_fitness, 
-    !between(diff_fitness_score, -3, 3)) %>% 
-    pull(sgRNA_short) %>% c(., "ndhD3", "sll0871", "slr0379", "slr1302")),
-  timepoint == 0, induction == "i", condition %in% c("L100", "L300", "LD")
-  ) %>% ungroup %>%
-  
-  select(locus, sgRNA, sgRNA_short, condition, Process, 
-    Pathway, fitness_score, cluster) %>%
-  
-  write_csv("../processed_data/Supplemental_data_S4.csv")
+  # Supplemental Dataset S5: table with most different sgRNAs as *.csv
+  filter(df, 
+    sgRNA_short %in% (filter(df_selected_fitness, 
+      !between(diff_fitness_score, -3, 3)) %>% pull(sgRNA_short)),
+    timepoint == 0, induction == "i", condition %in% c("L100", "L300", "LD")
+    ) %>% ungroup %>%
+    
+    select(locus, sgRNA, sgRNA_short, condition, Process, 
+      Pathway, fitness_score, cluster) %>%
+    
+    write_csv("../processed_data/Supplemental_data_S5.csv")
 ```
 
 
@@ -860,7 +764,7 @@ grid.text(label = c("a", "b", "c"), x = c(0.03, 0.03, 0.03),
 
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/supplemental/Supplemental_figure_fitness_L100_LD.svg", width = 5, height = 8)
+svg("../figures/supplemental/Supplemental_figure_fitness_L300_LD.svg", width = 5, height = 8)
 print(plot_global_fitness, position = c(0, 0.72, 1, 1), more = TRUE)
 print(plot_diff_fitness, position = c(0, 0.39, 1, 0.78), more = TRUE)
 print(plot_top_diff_fitness, position = c(-0.02, 0, 1, 0.46))
@@ -952,6 +856,7 @@ plot_top_diff_LD_single <- xyplot(log2FoldChange ~ generations | paste0(cluster,
   type = "l", layout = c(6, 4), 
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-10, 10), xlim = c(0, 17),
+  ylab = bquote(log[2] ~ "fold change"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.key(c("LD", "L300"), points = FALSE, col = c("#D33F6A", "#00989D"),
@@ -1006,21 +911,21 @@ giving those targets more confidence compared to single hit sgRNAs.
 
 ```{r,  fig.width = 6, fig.height = 2.5, warning = FALSE}
 # volcanoplot with potential boundaries for enriched sgRNAs
-plot_lactate_volcano <- df %>% filter(condition %in%  c("LAC", "NACL") & timepoint > 8) %>% 
+plot_lactate_volcano <- df %>% filter(condition %in%  c("Lactate", "NaCl") & timepoint > 8) %>% 
   filter(!is.na(log2FoldChange), !is.na(padj)) %>%
   
   xyplot(-log10(padj) ~ log2FoldChange | 
       paste0(condition, "  ", timepoint, " d") %>% factor(., unique(.)[c(2,3,1,4)]), ., 
     as.table = TRUE, groups = induction, layout = c(4, 1),
     par.settings = custom.lattice, 
-    xlab = bquote(log[2] ~ "FC"), ylab = bquote(-log[10] ~ "p-value"),
+    xlab = bquote(log[2] ~ "fold change"), ylab = bquote(-log[10] ~ "p-value"),
     col = c("#D33F6A", "#00989D"),
-    cex = 0.2, pch = 19, between = list(x = 0.5, y = 0.5),
+    cex = 0.3, pch = 19, between = list(x = 0.5, y = 0.5),
     scales = list(alternating = FALSE),
     ylim = c(- 20, 200), xlim = c(-10, 10),
     panel = function(x, y, groups, subscripts, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.xyplot(x, y, groups = groups, subscripts = subscripts, ...)
+      panel.xyplot(x, y, groups = groups, subscripts = subscripts, alpha = 0.3, ...)
       # only quadrants for induced genes
       panel.quadrants(x[groups[subscripts] == "i"], y[groups[subscripts] == "i"], 
         h = 20, v = 2, labels = "events")
@@ -1037,13 +942,13 @@ print(plot_lactate_volcano)
 # filter most enriched sgRNAs according to pvalue and log FC boundaries 
 # (75 sgRNAs in 32d induced, 22 uninduced. The 24 sgRNAs in 16d sample are all
 # contained in 75 sgRNAs at 32d)
-candidates <- filter(df, condition %in% "LAC", 
+candidates <- filter(df, condition %in% "Lactate", 
   induction == "i",
   log2FoldChange > 2, log10(padj) <= -20) %>%
   pull(sgRNA) %>% unique
 
-# check which ones fall into same criteria for NACL control ('false positives')
-falsepos <- filter(df, condition %in% "NACL", 
+# check which ones fall into same criteria for NaCl control ('false positives')
+falsepos <- filter(df, condition %in% "NaCl", 
   log2FoldChange > 2 & log10(padj) <= -20) %>%
   pull(sgRNA) %>% unique
 
@@ -1054,7 +959,7 @@ candidates %in% falsepos %>% any
 
 ```{r}
 # generate subset df with candidate sgRNAs only
-df_lac <- filter(df, sgRNA %in% candidates & condition %in% c("NACL", "LAC"))
+df_lac <- filter(df, sgRNA %in% candidates & condition %in% c("NaCl", "Lactate"))
 head(df_lac)
 ```
 
@@ -1064,9 +969,9 @@ head(df_lac)
 # subset data according to 1 or 2 sgRNA per gene enriched
 df_selected_fitness <- df_lac %>% 
   
-  # consider only LAC, induced
+  # consider only Lactate, induced condition
   group_by(sgRNA_short) %>% 
-  filter(condition == "LAC", induction == "i") %>%
+  filter(condition == "Lactate", induction == "i") %>%
   
   # summarise average fitness and number sgRNAs per gene
   summarise(
@@ -1085,9 +990,9 @@ plot_1sgRNAs <- xyplot(log2FoldChange ~ generations |
     factor(sgRNA_short, arrange(df_lac, Process.abbr) %>% 
       pull(sgRNA_short) %>% unique),
   df_lac %>% group_by(condition, sgRNA_short) %>%
-  filter(condition == "LAC", induction == "i", length(sgRNA_index) == 6), 
+  filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
-  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
   par.settings = custom.lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-10, 15), xlim = c(0, 30.5), # c(-7, 1)
@@ -1103,7 +1008,7 @@ as.layer(
     factor(sgRNA_short, arrange(df_lac, Process.abbr)
       %>% pull(sgRNA_short) %>% unique),
     df_lac %>% group_by(condition, sgRNA_short) %>%
-      filter(condition == "NACL", induction == "i", length(sgRNA_index) == 3),
+      filter(condition == "NaCl", induction == "i", length(sgRNA_index) == 3),
     type = "l", groups = sgRNA, as.table = TRUE,
     panel = function(x, y, ...) {
       panel.xyarea(x, y, col.line = grey(0.5, 0.5), border = NA, origin = 0, ...)
@@ -1116,7 +1021,7 @@ print(plot_1sgRNAs)
 ```
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/supplemental/Supplemental_figure_LAC_enrichment_1sgRNA.svg", width = 8, height = 6)
+svg("../figures/supplemental/Supplemental_figure_lactate_enrichment_1sgRNA.svg", width = 8, height = 6)
 print(plot_1sgRNAs)
 dev.off()
 ```
@@ -1141,9 +1046,9 @@ plot_2sgRNAs <- xyplot(log2FoldChange ~ generations |
   factor(sgRNA_short, arrange(df_lac, Process.abbr) %>% 
     pull(sgRNA_short) %>% unique),
   df_lac %>% group_by(condition, sgRNA_short) %>%
-    filter(condition == "LAC", induction == "i", length(sgRNA_index) == 12), 
+    filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(4, 2),
-  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
   par.settings = custom.lattice, 
   between = list(x = 0.5, y = 0.5),
   scales = list(alternating = FALSE, cex = 0.8),
@@ -1161,7 +1066,7 @@ as.layer(
     factor(sgRNA_short, arrange(df_lac, Process.abbr)
       %>% pull(sgRNA_short) %>% unique),
     df_lac %>% group_by(condition, sgRNA_short) %>%
-      filter(condition == "NACL", induction == "i", length(sgRNA_index) == 6),
+      filter(condition == "NaCl", induction == "i", length(sgRNA_index) == 6),
     type = "l", groups = sgRNA, as.table = TRUE,
     panel = function(x, y, ...) {
       panel.xyarea(x, y, col.line = grey(0.5, 0.5), border = NA, origin = 0, ...)
@@ -1202,7 +1107,7 @@ specific growth rates from sliding window over time.
 # 20190815_MC2:
 # 1 and 2: NT0 (control strain)
 # 3 and 4: ilvA (tube No. 4 might be contaminated)
-  # 5 and 6: sll1712
+# 5 and 6: sll1712
 # 7 and 8: bcp2
 
 # 20190826_MC4:
@@ -1221,29 +1126,35 @@ plot_knockouts_OD <- bind_rows(
     .id = "cultivation"
   ) %>%
   
-  # filter extensively for only NT0 control, bcp2 and aroH
+  # filter to include only NT0 control, bcp2, ilvA (1st replicate ) and aroH
   filter(
     between(batchtime_h, 0, 100), od_led == 720,
     (cultivation == 1 & channel_id %in% c(5,6)) | 
-    (cultivation == 2 & channel_id %in% c(1,2,7,8))
+    (cultivation == 2 & channel_id %in% c(1,2,3,7,8))
   ) %>%
   
   mutate(strain = NA) %>%
   mutate_cond(cultivation == 1 & channel_id %in% c(5,6), strain = "aroH") %>%
   mutate_cond(cultivation == 2 & channel_id %in% c(1,2), strain = "NT0") %>%
+  mutate_cond(cultivation == 2 & channel_id %in% c(3  ), strain = "ilvA") %>%
   mutate_cond(cultivation == 2 & channel_id %in% c(7,8), strain = "bcp2") %>%
+  
+  # correct measurements for 1 ilvA replicate where OD was distorted by ceiling (?)
+  mutate_cond(strain == "ilvA" & between(batchtime_h, 90.5, 94.75) & od_led == 720,
+    od_corr = od_corr-0.03) %>%
   
   # plot
   xyplot(od_corr ~ batchtime_h, .,
-    group = factor(strain, unique(strain)[c(2,3,1)]), 
+    groups = factor(strain, c("NT0", "bcp2", "aroH", "ilvA")), 
     xlab = "time [h]", ylab = bquote(OD['720 nm']),
     as.table = TRUE, par.settings = custom.lattice,
-    pch = 19, cex = 0.15, xlim = c(0, 100), 
-    panel = function(x, y, ...) {
+    pch = 19, cex = 0.1, 
+    xlim = c(0, 100), 
+    panel = function(x, y, groups, subscripts, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.xyplot(x, y, ...)
-      panel.key(c("NT0", "bcp2", "aroH"), points = FALSE, 
-        lines = TRUE, lwd = 1.5, cex = 0.65)
+      panel.xyplot(x, y, groups = groups, subscripts = subscripts, ...)
+      panel.key(points = FALSE, lines = TRUE, 
+        lwd = 1.5, cex = 0.65, groups = groups)
     }
   )
   
@@ -1273,7 +1184,7 @@ plot_knockouts_mu <- read_csv("../raw_data/growth_rate_knockouts.csv") %>%
   xyplot(mean_growth_rate ~ factor(strain, unique(strain)[c(6,2,9,8,10,4,7,5,1,3)]), .,
     xlab = "strain", ylab = bquote(mu ~ h^-1),
     as.table = TRUE, par.settings = custom.lattice, col = grey(0.2),
-    fill = rep(c("white", grey(0.9), grey(0.7)), c(1,7,2)),
+    fill = c("white", rep(grey(0.9), 9)),
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)), ylim = c(0, 0.045), lwd = 1.2,
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -1300,19 +1211,18 @@ df_abs <- read_csv("../raw_data/abs_spectrum_lactate.csv") %>%
   gather(strain, absorption, NT0:NT0_no_lactate) %>%
   
   # filter for most interesting
-  filter(strain %in% c("NT0", "bcp2", "aroH", "ilvA", "sll1496", "gltX")) %>%
+  filter(strain %in% c("NT0", "bcp2", "aroH", "ilvA")) %>%
   
   # reshape strain to factor
-  mutate(strain = factor(strain, c("NT0", "bcp2", "aroH", "ilvA", "sll1496", "gltX")))
+  mutate(strain = factor(strain, c("NT0", "bcp2", "aroH", "ilvA")))
   
   
 # plot absorption spectra
 plot_lac_spectra_1 <- xyplot(absorption ~ wavelength_nm, df_abs, groups = strain,
   par.settings = custom.lattice, type = "l",
-  #auto.key = list(columns = 4, points = FALSE, lines = TRUE, cex = 0.7),
-  ylim = c(0.8, 2.4), xlim = c(350, 800),
+  ylim = c(1.0, 2.4), xlim = c(350, 750),
   xlab = "wavelength [nm]", ylab = "absorption [a.u.]",
-  lwd = 2, scales = list(alternating = FALSE), as.table = TRUE,
+  lwd = 1.5, scales = list(alternating = FALSE), as.table = TRUE,
   panel=function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, ...)
@@ -1320,8 +1230,7 @@ plot_lac_spectra_1 <- xyplot(absorption ~ wavelength_nm, df_abs, groups = strain
       rep(2.15, 3), length = 0.05, col = grey(0.3))
     panel.text(c(490, 630, 680), 2.3, c("CT", "PC", "CA"), 
       cex = 0.6, col = grey(0.3))
-    panel.key(labels = levels(df_abs$strain), points = FALSE, 
-      lines = TRUE, cex = 0.7, corner = c(0.01, 0.05))
+    panel.key(points = FALSE, cex = 0.7, corner = c(0.01, 0.05), ...)
   }
 )
 
@@ -1344,10 +1253,10 @@ plot_lac_spectra_2 <- df_abs %>%
   
   # plot ratios
   xyplot(absorption ~ strain | factor(pigment, unique(pigment)[3:1]), ., 
-    col = custom.lattice()$superpose.line$col,
+    groups = strain,
     par.settings = custom.lattice, lwd = 2, pch = 19,
     layout = c(3, 1), xlab = "", ylab = "",
-    scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.65)), 
+    scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)), 
     as.table = TRUE,
     panel=function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -1367,7 +1276,7 @@ print(plot_lac_spectra_2)
 ```{r, fig.width = 6, fig.height = 10}
 print(plot_lactate_volcano, position = c(0, 0.76, 1, 1), more = TRUE)
 print(plot_2sgRNAs, position = c(0.01, 0.45, 1, 0.79), more = TRUE)
-print(plot_knockouts_mu, position = c(0, 0.22, 0.63, 0.49), more = TRUE)
+print(plot_knockouts_mu, position = c(-0.015, 0.22, 0.63, 0.49), more = TRUE)
 print(plot_knockouts_OD, position = c(0.6, 0.24, 1, 0.49), more = TRUE)
 print(plot_lac_spectra_1, position = c(0, 0, 0.42, 0.25), more = TRUE)
 print(plot_lac_spectra_2, position = c(0.36, -0.01, 1, 0.25))
@@ -1381,7 +1290,7 @@ grid.text(label = c("a", "b", "c", "d", "e", "f"), gp = gpar(cex = 1.2),
 svg("../figures/main/Figure5.svg", width = 6, height = 10)
 print(plot_lactate_volcano, position = c(0, 0.76, 1, 1), more = TRUE)
 print(plot_2sgRNAs, position = c(0.01, 0.45, 1, 0.79), more = TRUE)
-print(plot_knockouts_mu, position = c(0, 0.22, 0.63, 0.49), more = TRUE)
+print(plot_knockouts_mu, position = c(-0.015, 0.22, 0.63, 0.49), more = TRUE)
 print(plot_knockouts_OD, position = c(0.6, 0.24, 1, 0.49), more = TRUE)
 print(plot_lac_spectra_1, position = c(0, 0, 0.42, 0.25), more = TRUE)
 print(plot_lac_spectra_2, position = c(0.36, -0.01, 1, 0.25))
@@ -1396,7 +1305,7 @@ dev.off()
 **Figure 5. Enrichment of sgRNAs related to lactate tolerance.**
 Strains with improved tolerance to lactate were obtained from cultivation of the sgRNA mutant library
 in presence of 150 mM lactate for 16 and 32 days. Controls included an uninduced sgRNA mutant library, 
-and a library grown in presence of equimolar concentration of sodium chloride (NACL).
+and a library grown in presence of equimolar concentration of sodium chloride (NaCl).
 **a** The volcano plot shows enrichment of 78 sgRNAs under lactate after 32 d,
 (threshold: log2 FC $\geq$ 2, -log10 p-value $\geq$ 20), while only 8 sgRNAs were enriched
 in the NaCl control.
@@ -1424,14 +1333,16 @@ The analysis applied here is identical to the above described analysis of enrich
 
 
 ```{r}
-# filter for sgRNAs different between LAC and NACL
-candidates_depl <- filter(df, condition %in% c("NACL", "LAC"), induction == "i", timepoint == 0) %>%
-
-  # optional filter for sgRNAs that have both sgRNAs detected in NACL and LAC
+# filter for sgRNAs different between Lactate and NaCl
+candidates_depl <- filter(df, 
+    condition %in% c("NaCl", "Lactate"), 
+    induction == "i", timepoint == 0) %>%
+  
+  # optional filter for sgRNAs that have both sgRNAs detected in NaCl and Lactate
   group_by(sgRNA_short) %>% filter(length(sgRNA_index) == 4) %>%
 
-  # filter by highest fitness diff between sgRNA of two conditions (NACL-LAC)
-  # higher for stronger LAC depletion
+  # filter by highest fitness diff between sgRNA of two conditions (NaCl-Lactate)
+  # higher for stronger Lactate depletion
   group_by(sgRNA) %>% summarise(diff_fitness_score = diff(fitness_score)) %>%
 
   # sort by differential fitness score and pull out candidates
@@ -1441,7 +1352,7 @@ candidates_depl <- filter(df, condition %in% c("NACL", "LAC"), induction == "i",
 
 ```{r}
 # generate subset df with candidate sgRNAs only
-df_lac_depl <- filter(df, sgRNA %in% candidates_depl, condition %in% c("NACL", "LAC"))
+df_lac_depl <- filter(df, sgRNA %in% candidates_depl, condition %in% c("NaCl", "Lactate"))
 head(df_lac_depl)
 ```
 
@@ -1449,7 +1360,7 @@ head(df_lac_depl)
 ```{r}
 # subset data according to 1 or 2 sgRNA per gene enriched
 df_selected_fitness <- df_lac_depl %>% group_by(sgRNA_short) %>% 
-  filter(condition == "LAC", induction == "i") %>% 
+  filter(condition == "Lactate", induction == "i") %>% 
   summarise(
     average_fitness = mean(unique(fitness_score), na.rm =TRUE),
     Process = unique(Process.abbr),
@@ -1472,9 +1383,9 @@ plot_depl_1sgRNAs <- xyplot(log2FoldChange ~ generations |
     factor(sgRNA_short, arrange(df_lac_depl, Process.abbr) %>% 
       pull(sgRNA_short) %>% unique),
   df_lac_depl %>% group_by(condition, sgRNA_short) %>%
-  filter(condition == "LAC", induction == "i", length(sgRNA_index) == 6), 
+  filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
-  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
   par.settings = custom.lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), # c(-7, 1)
@@ -1490,7 +1401,7 @@ as.layer(
     factor(sgRNA_short, arrange(df_lac_depl, Process.abbr)
       %>% pull(sgRNA_short) %>% unique),
     df_lac_depl %>% group_by(condition, sgRNA_short) %>%
-      filter(condition == "NACL", induction == "i", length(sgRNA_index) == 3),
+      filter(condition == "NaCl", induction == "i", length(sgRNA_index) == 3),
     type = "l", groups = sgRNA, as.table = TRUE,
     panel = function(x, y, ...) {
       panel.xyarea(x, y, col.line = grey(0.5, 0.5), border = NA, origin = 0, ...)
@@ -1505,9 +1416,9 @@ plot_depl_2sgRNAs <- xyplot(log2FoldChange ~ generations |
   factor(sgRNA_short, arrange(df_lac_depl, Process.abbr) %>% 
     pull(sgRNA_short) %>% unique),
   df_lac_depl %>% group_by(condition, sgRNA_short) %>%
-    filter(condition == "LAC", induction == "i", length(sgRNA_index) == 12), 
+    filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(6, 1),
-  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "FC"),
+  as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
   par.settings = custom.lattice, 
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), 
@@ -1524,7 +1435,7 @@ as.layer(
     factor(sgRNA_short, arrange(df_lac_depl, Process.abbr)
       %>% pull(sgRNA_short) %>% unique),
     df_lac_depl %>% group_by(condition, sgRNA_short) %>%
-      filter(condition == "NACL", induction == "i", length(sgRNA_index) == 6),
+      filter(condition == "NaCl", induction == "i", length(sgRNA_index) == 6),
     type = "l", groups = sgRNA, as.table = TRUE,
     panel = function(x, y, ...) {
       panel.xyarea(x, y, col.line = grey(0.5, 0.5), border = NA, origin = 0, ...)
@@ -1542,7 +1453,7 @@ grid.text(label = c("a", "b"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(c
 
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/supplemental/Supplemental_figure_LAC_depletion.svg", width = 8, height = 12)
+svg("../figures/supplemental/Supplemental_figure_Lactate_depletion.svg", width = 8, height = 12)
 print(plot_depl_1sgRNAs, position = c(0, 0.21, 1, 1), more = TRUE)
 print(plot_depl_2sgRNAs, position = c(0, 0, 1, 0.22))
 grid.text(label = c("a", "b"), x = c(0.03, 0.03), y = c(0.98, 0.22), gp = gpar(cex = 1.2))
