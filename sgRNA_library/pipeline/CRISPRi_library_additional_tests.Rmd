@@ -76,11 +76,11 @@ df_ms <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis
 
   # select only the interesting columns
   select(locus, condition, mean.mass.fraction.norm, ANOVA, ANOVA.adj) %>%
-  
+
   # -------------------------
   # this block is for CO2
   # -------------------------
-  # filter(sample == "CO2", concentration == 1) %>% 
+  # filter(sample == "CO2", concentration == 1) %>%
   # 
   # # rename a column
   # rename(locus = protein) %>%
@@ -100,15 +100,6 @@ df_ms <- read_csv("../../../../../Experiments/20171204_MS_CO2/CO2_light/analysis
 # between proteomics and CRISPRi library gene sets)
 df_ms %>% group_by(condition, timepoint, induction, sgRNA_index) %>% 
   summarise(sum(mean.mass.fraction.norm, na.rm = TRUE)) %>% head
-
-
-# # optionally reduce data to only the sgRNA with the smallest effect
-# df_ms <- df_ms %>% group_by(condition, induction, sgRNA_short) %>%
-# summarise(
-#   fitness_score = min(fitness_score),
-#   ANOVA.adj = min(ANOVA.adj)
-# )
-
 ```
 
 ----------
@@ -177,7 +168,7 @@ plot_fitness_ANOVA_bw <- df_ms %>% filter(timepoint == 0) %>%
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.violin(x, y, horizontal = FALSE, border = NA, col = grey(0.7, 0.5))
       panel.bwplot(x, y, horizontal = FALSE, pch = "|", do.out = FALSE, ... )
-      panel.pvalue(x, y, fixed_pos = -1, std = 5, 
+      panel.pvalue(x, y, fixed_pos = 8, std = 5, 
         col = rep(c("#CC476B", "#00526D"), c(3,2))
       )
     }
@@ -332,7 +323,6 @@ df_mu %>% head
 
 # save the data
 write_csv(df_mu, "../processed_data/CRISPRi_library_df_growthrates.csv")
-
 ```
 
 
@@ -344,7 +334,7 @@ df_mu <- read_csv("../processed_data/CRISPRi_library_df_growthrates.csv")
 ----------
 
 The result from the growth models is the estimated parameter, the mutant growth rate,
-and the predicted depletion/enrichment over time in FC (`FC_fit`). 
+and the predicted depletion/enrichment over time in fold change (`FC_fit`). 
 However, a first necessary check is to see how many genes failed to get a growth model fitted. 
 Second, the distribution of mutant growth rates can be plotted.
 
@@ -434,7 +424,7 @@ plot_mutant_mu <- lapply(c("FC", "FC_fit"), function(var) {
     groups = paste(induction, sgRNA_index), col = rep(c("#00526D", "#CC476B"), each = 2),
     as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(5, 1),
     par.settings = custom.lattice, type = "l", lwd = 2,
-    xlab = "time [h]", ylab = bquote(log[2] ~ "FC"), 
+    xlab = "time [h]", ylab = bquote(log[2] ~ "fold change"), 
     xlim = c(0, 400), ylim = c(-5, 10),
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
@@ -472,16 +462,12 @@ plot_mutant_mu_2 <- lapply(list(list_calvin, list_photores, list_faster), functi
     groups = induction, 
     as.table = TRUE, between = list(x = 0.3, y = 0.3), 
     par.settings = custom.lattice, layout = c(1, 2),
-    pch = 19, col = c("#00526D", "#CC476B"),
-    #main = "Mutant growth rate obtained from depletion/enrichment model",
-    xlab = "", ylab = "µ [% pop. average]", 
+    pch = 19, xlab = "", ylab = "µ [% pop. average]", 
     ylim = ylim, 
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.abline(h = 100, col = grey(0.5), lty = 2)
-      panel.superpose(x, y, ...)
-    }, panel.groups = function(x, y, ...) {
       panel.errbars(x, y, ewidth = 0, ...)
     }
   )
@@ -520,7 +506,7 @@ dev.off()
 
 1. Complete original data frame (including ncRNAs) with extra columns for
    mutant growth rate relative growth rate change in %. 
-   This is **Supplemental Data S3**.
+   This is **Supplemental Data S4**.
 
 ```{r, message = FALSE}
 # merge master data frame with predicted growth rates
@@ -545,15 +531,22 @@ df_all <- df_mu %>% ungroup %>%
   left_join(df_all, .) %>%
   
   # remove unnecessary columns
-  select(-FC, -Gene.ontology.IDs, -Process.abbr, -Pathway.abbr)
+  select(
+    -FC, -Gene.ontology.IDs, -Process.abbr, -Pathway.abbr,
+    -baseMean, -lfcSE, -stat, -pvalue, -Gene.names, -Length, 
+    -MolWeight, -location, -start_bp, -end_bp, -Process, -Pathway
+  )
+```
 
+
+```{r, message = FALSE}
 # and save to disk
-write_csv(df_all, "../processed_data/Supplemental_data_S3.csv")
+write_csv(df_all, "../processed_data/Supplemental_data_S4.csv")
 ```
 
 
 2. Selected genes for photorespiation, Calvin cycle, and increased growth rate.
-   This is **Supplemental Data S5**.
+   This is **Supplemental Data S6**.
 
 ```{r}
 df_all %>% ungroup %>% 
@@ -571,7 +564,7 @@ df_all %>% ungroup %>%
     average_growth_rate, mean_mutant_growth_rate, 
     mutant_growth_rate_percent) %T>% print %>% 
   
-  write_csv("../processed_data/Supplemental_data_S5.csv")
+  write_csv("../processed_data/Supplemental_data_S6.csv")
 ```
 
 ----------
@@ -613,7 +606,7 @@ plot_volcanoplot <- df_rnaseq %>%
   xyplot(-log10(padj) ~ setNames(log2FoldChange, Name) | 
       factor(Condition), ., 
     as.table = TRUE, groups = Significance,
-    xlab = bquote(log[2] ~ "FC"), ylab = bquote(-log[10] ~ "p-value"),
+    xlab = bquote(log[2] ~ "fold change"), ylab = bquote(-log[10] ~ "p-value"),
     par.settings = custom.lattice, layout = c(4, 1),
     cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#00526D"),
     scales = list(alternating = FALSE), 
@@ -624,7 +617,7 @@ plot_volcanoplot <- df_rnaseq %>%
       # trim extremely far outside p-values to -log10(p) = 50 so that they are still
       # in visible range
       y <- replace(y, y >= 50, 50)
-      panel.xyplot(x, y, ...)
+      panel.xyplot(x, y, alpha = 0.5, ...)
       # select top diff expr genes and plot labels
       sel <- which(!between(x, -1, 1) & y >= 20 |
         (names(x) %in% c("sll1969", "slr1340", "slr1916", "ssl2982")[panel.number()]))
@@ -823,13 +816,9 @@ kegga_result %>% select(Pathway, P.1:P.2) %>% rename(up = P.1, down = P.2) %>%
 
 #### Network analysis
 
-Two more strategies can be applied to find biologically interesting patterns
-or even just hypothesis for the change in growth rate of mutants _versus_ control.
-One of those is network interaction analysis of sig. regulated genes, and the 
-other is simply looking at interesting candidates that alone can have an effect.
-Known examples for genes with positive effect (or at least correlation) on growth 
-rate would be ribosomal genes, central carbon metabolism enzymes or ATP synthase 
-(references).
+The next step is looking at interesting candidates that can potentially have an effect on
+growth rate. Known examples for genes with positive correlation with growth 
+rate would be ribosomal genes, central carbon metabolism enzymes or ATP synthase.
 
 
 ```{r, message = FALSE}
@@ -849,10 +838,16 @@ df_sig_genes <- clusters %>%
     filter(!duplicated(locus))) %>%
   
   arrange(cluster, Condition, log2FoldChange)
-
-#write_csv(df_sig_genes, "../processed_data/Supplemental_data_S6.csv")
 ```
 
+
+Save list of genes with significant change in at least one of four conditions 
+(CRISPRi repression mutants) as **Supplemental Data S7**.
+
+
+```{r, message = FALSE}
+write_csv(df_sig_genes, "../processed_data/Supplemental_data_S7.csv")
+```
 
 ---------
 
@@ -939,7 +934,7 @@ selected_genes <- c(selected_genes, "sll1316",
 
 plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, locus) | 
       factor(Condition), df_sig_genes, as.table = TRUE, 
-    xlab = bquote(log[2] ~ "FC"), ylab = "",
+    xlab = bquote(log[2] ~ "fold change"), ylab = "",
     par.settings = custom.lattice, layout = c(4, 1),
     scales = list(alternating = FALSE), xlim = c(-6, 6),
     panel = function(x, y, ...) {
@@ -958,33 +953,6 @@ plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, locus) |
 
 print(plot_dots)
 ```
-
-
-```{r, fig.width = 8, fig.height = 4}
-df_sig_genes %>% 
-  
-  # summarize number of genes up or down regulated
-  group_by(Condition, Process.abbr) %>%
-  summarize(
-    n_upreg_genes = sum(log2FoldChange > 1),
-    n_downreg_genes = sum(log2FoldChange < -1)
-  ) %>%
-  
-  barchart(factor(Process.abbr) ~ n_upreg_genes + -1*n_downreg_genes | 
-      factor(Condition), .,
-    col = c("darkorange", "steelblue"), border = NA,
-    as.table = TRUE, 
-    xlab = bquote("diff. expressed genes" ~ (-1 >= log[2]~"FC" >= 1)), ylab = "",
-    par.settings = custom.lattice, layout = c(4, 1), xlim = c(-20, 20),
-    scales = list(alternating = FALSE),
-    panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.abline(v = 0, lwd = 1.5, lty = 2, col = grey(0.5))
-      panel.barchart(x, y, origin = 0, ...)
-    }
-  )
-```
-
 
 ----------
 
@@ -1044,21 +1012,22 @@ plot shows lactate production over time by selected over-producing sgRNA mutants
 ```{r, message = FALSE, error = FALSE}
 # original data was re-organized to long format
 df_lac_prod <- bind_rows(.id = "setup",
-  read_csv("../raw_data/lactate_measurement_mutants.csv"),
-  read_csv("../raw_data/lactate_measurement_mutants_2.csv")
-)
+    read_csv("../raw_data/lactate_measurement_mutants.csv"),
+    read_csv("../raw_data/lactate_measurement_mutants_2.csv")
+  ) %>%
 
-# add µmol/L*OD720 and per gDCW (using 0.4 gDCW/OD720)
-df_lac_prod <- df_lac_prod %>%
-  
+  # add µmol/L*OD720 and per gDCW (using 0.4 gDCW/OD720)
   mutate(
     lactate_µmol_L_OD = lactate_µmol_L / OD_720,
     lactate_µmol_L_gDCW = lactate_µmol_L_OD * 0.4
   ) %>%
   
-  mutate(setup = recode(setup, 
-    `1` = "shake flask", 
-    `2` = "photonfluxostat"))
+  # fitler strains and adjust metadata
+  filter(!strain %in% c("sll1906-asRNA", "trxA2")) %>%
+  mutate(
+    setup = recode(setup, `1` = "shake flask", `2` = "photonfluxostat"),
+    strain = factor(strain, unique(strain)[c(7,1:6)])
+  )
   
 # preview data
 df_lac_prod
@@ -1072,34 +1041,27 @@ combinations <- list(
   setup = rep(c("shake flask", "photonfluxostat"), each = 2)
 )
 
+# color depending on number of strains
+#cols = c(col, colorspace::rainbow_hcl(8,  start = 30, l = 50, c = 60), grey(0.5))
+custom.lattice <- custom.lattice()
+#custom.lattice$super
+  
 # dot plot
 plot_lac_prod <- lapply(1:4, function(i) {
   
-  # color depending on number of strains
-  df <- filter(df_lac_prod, setup == combinations$setup[i])
-  col = colorspace::rainbow_hcl(8,  start = 30, l = 50, c = 60)
-  if (i %in% c(1,2)) {
-    col = c(col, grey(0.5))
-  } else {
-    col = c(col[c(5,1,8)], grey(0.5))
-  }
-  
-  xyplot(get(combinations$unit[i]) ~ factor(time_h), df,
-    groups = factor(strain, unique(strain)), as.table = TRUE,
-    col = col,
+  xyplot(get(combinations$unit[i]) ~ factor(time_h), 
+    filter(df_lac_prod, setup == combinations$setup[i]),
+    groups = strain, as.table = TRUE,
     xlab = ifelse(i %in% c(3, 4), "time [h]", ""), 
     ylab = ifelse(i %in% c(1, 3), "µmol L-1", "µmol L-1 OD720-1"),
     par.settings = custom.lattice, type = "b", pch = 19,
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.superpose(x, y, ...)
-      if (i %in% c(1, 3)) {
-        panel.key(unique(df$strain), col = col, points = FALSE, cex = 0.7)
-      }
-    },
-    panel.groups = function(x, y, ...) {
       panel.errbars(x, y, ewidth = 0, ...)
+      if (i %in% c(1, 3)) {
+        panel.key(points = FALSE, cex = 0.7, ...)
+      }
     }
   )
 })
