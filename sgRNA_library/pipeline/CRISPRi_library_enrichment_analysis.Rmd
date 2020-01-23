@@ -786,6 +786,26 @@ depleted/enriched sgRNAs were selected.
 
 ----------
 
+#### Venn diagram to explore overlap between selected gene sets
+
+The following code chunk is not supposed to be executed regularly.
+It is only an additional comparison requested during review of the submitted manuscript.
+It requires that the character vector `df_selected_genes` is copied with a new name 
+corresponding to each of the three light comparisons, see three vectors used below.
+
+```{r, eval = FALSE}
+# make a Venn diagram of the three gene vectors
+venn.diagram(list(L100_L300 = L100_L300, L100_LD = L100_LD, L300_LD = L300_LD),
+  imagetype = "svg", height = 4, width = 4, 
+  filename = "../figures/supplemental/venn_light_conditions2.svg", 
+  fontfamily = "FreeSans", cat.fontfamily = "FreeSans",
+  fill = c("#E4E9F2", "#D9F0E5", "#FEE5D5"),
+  col = "white"
+)
+  ```
+
+----------
+
 #### Single differential sgRNAs between light-dark (LD) cycle and high light (L300)
 
 Related to Figure 5 ('fitness between L300 and L100) and Supplemental Figure 
