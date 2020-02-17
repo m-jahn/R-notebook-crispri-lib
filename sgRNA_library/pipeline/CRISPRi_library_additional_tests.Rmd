@@ -1012,21 +1012,21 @@ plot shows lactate production over time by selected over-producing sgRNA mutants
 ```{r, message = FALSE, error = FALSE}
 # original data was re-organized to long format
 df_lac_prod <- bind_rows(.id = "setup",
-    read_csv("../raw_data/lactate_measurement_mutants.csv"),
-    read_csv("../raw_data/lactate_measurement_mutants_2.csv")
+    read_csv("../raw_data/lactate_measurement_batch.csv"),
+    read_csv("../raw_data/lactate_measurement_photofluxostat.csv")
   ) %>%
 
-  # add µmol/L*OD720 and per gDCW (using 0.4 gDCW/OD720)
+  # add µmol/L*OD720 and per gDCW (using an average value of 0.4 gDCW/OD720)
   mutate(
     lactate_µmol_L_OD = lactate_µmol_L / OD_720,
     lactate_µmol_L_gDCW = lactate_µmol_L_OD * 0.4
   ) %>%
   
-  # fitler strains and adjust metadata
-  filter(!strain %in% c("sll1906-asRNA", "trxA2")) %>%
+  # filter strains and adjust metadata
+  filter(strain != "trxA2") %>%
   mutate(
     setup = recode(setup, `1` = "shake flask", `2` = "photonfluxostat"),
-    strain = factor(strain, unique(strain)[c(7,1:6)])
+    strain = gsub("_[0-9]*$", "", strain) %>% factor(., unique(.))
   )
   
 # preview data
@@ -1041,6 +1041,11 @@ combinations <- list(
   setup = rep(c("shake flask", "photonfluxostat"), each = 2)
 )
 
+# change color scheme to black for NT0 control
+custom_lattice <- custom.lattice()
+custom_lattice$superpose.symbol$col <- c(grey(0.2), custom.lattice$superpose.symbol$col)
+
+
 # dot plot
 plot_lac_prod <- lapply(1:4, function(i) {
   
@@ -1049,7 +1054,7 @@ plot_lac_prod <- lapply(1:4, function(i) {
     groups = strain, as.table = TRUE,
     xlab = ifelse(i %in% c(3, 4), "time [h]", ""), 
     ylab = ifelse(i %in% c(1, 3), "µmol L-1", "µmol L-1 OD720-1"),
-    par.settings = custom.lattice(), type = "b", pch = 19,
+    par.settings = custom_lattice, type = "b", pch = 19,
     scales = list(alternating = FALSE),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -1063,12 +1068,12 @@ plot_lac_prod <- lapply(1:4, function(i) {
 
 
 # conduct a t-test for the last time point
-# only gltA with the representation as µmol L-1 OD720-1 
-# is significant (p = 0.02)
+# only gltA and pcnB with the representation as µmol L-1 OD720-1 
+# is significant (p <= 0.05)
 xyplot(lactate_µmol_L_OD ~ factor(strain) | setup, 
   filter(df_lac_prod, time_h %in% c(30, 48)),
   groups = strain, layout = c(1,2),
-  par.settings = custom.lattice(), pch = 19,
+  par.settings = custom_lattice, pch = 19,
   scales = list(alternating = FALSE, x = list(rot = 35)),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
@@ -1077,7 +1082,7 @@ xyplot(lactate_µmol_L_OD ~ factor(strain) | setup,
       col = grey(0.3), ...)
   }
 )
-  
+
 print(plot_lac_prod[[1]], position = c(0,0.49,0.53,1), more = TRUE)
 print(plot_lac_prod[[2]], position = c(0.47,0.49,1,1), more = TRUE)
 print(plot_lac_prod[[3]], position = c(0.015,0,0.53,0.53), more = TRUE)
