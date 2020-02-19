@@ -14,3 +14,4 @@ sgRNA_library/processed_data/CRISPRi_library_df_cluster.Rdata
 sgRNA_library/processed_data/Supplemental_data_S4_large.csv
 sgRNA_library/processed_data/data_source*
 sgRNA_library/pipeline/CRISPRi_library_pre_depletion.R
+sgRNA_library/figures/main/Figure6_dotplot.svg
