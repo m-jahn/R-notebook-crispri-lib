@@ -165,6 +165,7 @@ plot_fitness_ANOVA_bw <- df_ms %>% filter(timepoint == 0) %>%
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)),
     xlab = bquote(-log[10] ~ "ANOVA p-value"), ylab = "fitness",
     panel = function(x, y, ...) {
+      print(table(x))
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.violin(x, y, horizontal = FALSE, border = NA, col = grey(0.7, 0.5))
       panel.bwplot(x, y, horizontal = FALSE, pch = "|", do.out = FALSE, ... )
@@ -416,12 +417,16 @@ list_faster <- c(
 ```
 
 
+
 ```{r, fig.width = 6.5, fig.height = 4.5}
+# custom color vector
+custom_palette <- RColorBrewer::brewer.pal(8, "Dark2")
+
 # plot fitted model and actual depletion together for subset of sgRNAs
 plot_mutant_mu <- lapply(c("FC", "FC_fit"), function(var) {
   xyplot(log2(get(var)) ~ timepoint | sgRNA_short, 
     df_mu %>% ungroup %>% filter(locus %in% list_faster, condition == "L300"),
-    groups = paste(induction, sgRNA_index), col = rep(c("#00526D", "#CC476B"), each = 2),
+    groups = paste(induction, sgRNA_index), col = rep(custom_palette[c(6,3)], each = 2),
     as.table = TRUE, between = list(x = 0.3, y = 0.3), layout = c(5, 1),
     par.settings = custom.lattice, type = "l", lwd = 2,
     xlab = "time [h]", ylab = bquote(log[2] ~ "fold change"), 
@@ -431,7 +436,7 @@ plot_mutant_mu <- lapply(c("FC", "FC_fit"), function(var) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.xyplot(x, y, ...)
       panel.key(c("induced", "uninduced"), corner = c(0.1,0.05), 
-        points = FALSE, lines = TRUE, cex = 0.6)
+        col = custom_palette[c(6,3)], points = FALSE, lines = TRUE, cex = 0.6)
     }
   )
 })
@@ -608,7 +613,7 @@ plot_volcanoplot <- df_rnaseq %>%
     as.table = TRUE, groups = Significance,
     xlab = bquote(log[2] ~ "fold change"), ylab = bquote(-log[10] ~ "p-value"),
     par.settings = custom.lattice, layout = c(4, 1),
-    cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#00526D"),
+    cex = 0.6, pch = 19, col = c(grey(0.5, 0.4), "#E7298A"),
     scales = list(alternating = FALSE), 
     between = list(x = 0.4, y = 0.4),
     ylim = c(-5, 55), xlim = c(-6, 6),
@@ -621,8 +626,8 @@ plot_volcanoplot <- df_rnaseq %>%
       # select top diff expr genes and plot labels
       sel <- which(!between(x, -1, 1) & y >= 20 |
         (names(x) %in% c("sll1969", "slr1340", "slr1916", "ssl2982")[panel.number()]))
-      panel.text(x[sel], y[sel]+5, labels = names(x[sel]), cex = 0.6, col = "#00526D")
-      panel.key(c("not significant", "significant"), col = c(grey(0.6), "#00526D"),
+      panel.text(x[sel], y[sel]+5, labels = names(x[sel]), cex = 0.6, col = "#E7298A")
+      panel.key(c("not significant", "significant"), col = c(grey(0.6), "#E7298A"),
         pch = 19, corner = c(0.1, 0.9), cex = 0.7)
     }
   )
@@ -661,7 +666,7 @@ sig_genes_mat <- df_rnaseq %>% filter(Name %in% sig_genes) %>%
 
 # plot genes
 plot_heatmap <- levelplot(sig_genes_mat,
-  col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(26),
+  col.regions = colorRampPalette(rev(RColorBrewer::brewer.pal(5, "PuOr"))), 
   as.table = TRUE, aspect = "fill", at = seq(-3, 3, 0.25),
   xlab = paste0("gene (n=", length(sig_genes), ")"),
   ylab = "",
@@ -905,7 +910,7 @@ plot_sig_genes <- lapply(1:2, function(clust) {
 
   # plot 
   levelplot(
-    col.regions = colorRampPalette(c("steelblue", grey(0.95), "darkorange"))(26),
+    col.regions = colorRampPalette(rev(RColorBrewer::brewer.pal(5, "PuOr"))),
     as.table = TRUE, aspect = "fill", at = seq(-3, 3, 0.25),
     xlab = "", ylab = "",
     scales = list(x = list(rot = 35, cex = 0.6, col = grey(0.5)))
@@ -937,17 +942,17 @@ plot_dots <- xyplot(factor(Process.abbr) ~ setNames(log2FoldChange, locus) |
     xlab = bquote(log[2] ~ "fold change"), ylab = "",
     par.settings = custom.lattice, layout = c(4, 1),
     scales = list(alternating = FALSE), xlim = c(-6, 6),
-    panel = function(x, y, ...) {
+    panel = function(x, y, subscripts, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.abline(v = 0, lwd = 1.5, lty = 2, col = grey(0.5))
       cols = scales::rescale(x, from = c(-3, 3), to = c(1, 20)) %>%
         replace(., . < 1, 1) %>% replace(., .> 20, 20)
-      cols = colorRampPalette(c("steelblue", grey(0.7), "darkorange"))(20)[round(cols)]
+      cols = colorRampPalette(rev(RColorBrewer::brewer.pal(5, "PuOr")))(20)[round(cols)]
       panel.xyplot(x, y, pch = 19, cex = 0.6+(0.4*abs(x)), col = cols)
       sel <- which(names(x) %in% selected_genes & (x >= 1 | x <= -1))
-      panel.xyplot(x[sel], y[sel], cex = 1.2+(0.4*abs(x[sel])), col = grey(0.3))
-      panel.text(x[sel], y[sel], labels = names(sel), cex = 0.6, col = grey(0.3),
-        pos = 3, offset = -2)
+      #panel.xyplot(x[sel], y[sel], cex = 1.2+(0.4*abs(x[sel])), col = grey(0.3))
+      #panel.text(x[sel], y[sel], labels = names(sel), cex = 0.6, col = grey(0.3),
+      #  pos = 3, offset = -2)
     }
   )
 
@@ -1043,7 +1048,7 @@ combinations <- list(
 
 # change color scheme to black for NT0 control
 custom_lattice <- custom.lattice()
-custom_lattice$superpose.symbol$col <- c(grey(0.2), custom_lattice$superpose.symbol$col)
+custom_lattice$superpose.symbol$col <- RColorBrewer::brewer.pal(8, "Dark2")[c(8,4,5,6,3,2,4,5)]
 
 
 # dot plot
@@ -1134,7 +1139,7 @@ Lactate concentration was measured after 18 and 30 hours.
 
 ```{r, eval = FALSE, include = FALSE}
 # export potential Figure 6
-svg("../figures/main/Figure6_barchart.svg", width = 5.5, height = 5.5)
+svg("../figures/main/Figure6_bars.svg", width = 5.5, height = 5.5)
 print(plot_lac_prod[[1]], position = c(0,0.49,0.53,1), more = TRUE)
 print(plot_lac_prod[[2]], position = c(0.47,0.49,1,1), more = TRUE)
 print(plot_lac_prod[[3]], position = c(0.015,0,0.53,0.53), more = TRUE)

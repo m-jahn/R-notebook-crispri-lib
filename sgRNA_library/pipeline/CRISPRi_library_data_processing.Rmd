@@ -129,6 +129,7 @@ plot_median_read_count <- df_raw %>%
       panel.grid(h = -1, v = -1, col = grey(0.9))
       if (panel.number() %in% 1:9) {
         panel.barplot(x, y, ewidth = 0.3, ...)
+        panel.xyplot(x, y, ...)
       }
     }
   )
@@ -147,7 +148,6 @@ plot_unique_sgRNA <- df_raw %>%
   mutate(timepoint = plyr::mapvalues(timepoint, c(12, 30), c(16, 32))) %>%
 
   xyplot(unique_sgRNAs ~ factor(timepoint) | induction *  condition, .,
-    pch = 19, type = c("p"),
     xlab = "time [d]", ylab = "unique sgRNAs",
     as.table = TRUE, par.settings = custom.lattice, 
     scales = list(alternating = FALSE),
@@ -155,18 +155,21 @@ plot_unique_sgRNA <- df_raw %>%
       panel.grid(h = -1, v = -1, col = grey(0.9))
       if (panel.number() %in% 1:9) {
         panel.barplot(x, y, ewidth = 0.3, ...)
+        panel.xyplot(x, y, ...)
       }
     }
   )
 
 print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
 print(plot_unique_sgRNA, split = c(2,1,2,1))
+grid::grid.text(x = c(0.02, 0.52), y = c(0.97, 0.97), label = c("a", "b") , gp = gpar(cex = 1.5))
 ```
 
 ```{r, results = 'hide', include = FALSE}
 svg("../figures/supplemental/Supplemental_figure_read_counts.svg", width = 10, height = 7)
 print(plot_median_read_count, split = c(1,1,2,1), more = TRUE)
 print(plot_unique_sgRNA, split = c(2,1,2,1))
+grid::grid.text(x = c(0.02, 0.52), y = c(0.97, 0.97), label = c("a", "b") , gp = gpar(cex = 1.5))
 dev.off()
 ```
 -----------
@@ -299,7 +302,7 @@ load("../processed_data/CRISPRi_library_DESeq_result_table.Rdata")
 ```
 
 
-## Step 4: Merge with DESeq2 results and summarize data
+## Step 3: Merge with DESeq2 results and summarize data
 
 The following steps condense the raw data frame by averaging replicates,
 merging the data frame with the result from DESeq2 analysis, and adding different
@@ -332,7 +335,7 @@ df <- left_join(df, DES_result_table) %>% ungroup
 ```
 
 
-## Step 5: Annotation of data
+## Step 4: Annotation of data
 
 The data frame has to be completed with `NA` for sgRNAs missing in some 
 combinations of conditions. Here, `tidyr::complete` was used to fill these gaps. 
@@ -412,7 +415,7 @@ df <- left_join(df, read_csv("../raw_data/growth_rate_library.csv")) %>%
 ```
 
 
-## Step 6: Quality control
+## Step 5: Quality control
 
 The log2 FC that DESeq2 determines takes measures of read density or distribution 
 into account that a manually determined log2 FC does not. A good control of how 

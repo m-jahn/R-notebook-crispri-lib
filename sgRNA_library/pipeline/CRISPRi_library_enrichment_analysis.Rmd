@@ -180,7 +180,8 @@ plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` |
     rename_at(vars(6:7), function(x) paste0("sgRNA-", x)),
   groups = induction, as.table = TRUE, 
   between = list(x = 0.5, y = 0.5),
-  par.settings = custom.lattice, cex = 0.2, pch=19,
+  par.settings = custom.lattice, cex = 0.2, pch = 19,
+  col = c("#E6AB02", "#7570B3"),
   scales = list(alternating = FALSE),
   xlim = c(-9, 4), ylim = c(-9, 4),
   xlab = bquote(log[2] ~ "fold change sgRNA1"), ylab = bquote(log[2] ~ "fold change sgRNA2"),
@@ -188,9 +189,10 @@ plot_2sgRNA_correlation <- xyplot(`sgRNA-2` ~ `sgRNA-1` |
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, alpha = 0.3, ...)
     if (panel.number() %in% c(1:5, 7:11, 17:18, 23:24, 29:30)) {
-      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), na.rm = TRUE, ...)
+      panel.quadrants(x, y, h = -2, v = -2, lwd = 2, col = grey(0.3), na.rm = TRUE)
     }
-    panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, corner = c(0.1, 0.9))
+    panel.key(which.panel = 6, c("induced", "uninduced"), pch = 19, 
+      col = c("#E6AB02", "#7570B3"), corner = c(0.1, 0.9))
   }
 )
 
@@ -328,9 +330,8 @@ cluster_reordered <- as.dendrogram(cluster) %>%
 
 
 ```{r, fig.height = 2, fig.width = 6}
-# custom color vector for clusters, without first color that equals last
-custom_palette <- colorspace::qualitative_hcl(
-  n = length(unique(clusters)), h = c(30, 360), c = 70, l = 50)
+# custom color vector for clusters
+custom_palette <- RColorBrewer::brewer.pal(8, "Dark2")[c(4,5,6,3,8)]
 custom_lattice <- custom.lattice()
 custom_lattice$superpose.polygon$col = custom_palette
 custom_lattice$superpose.symbol$col = custom_palette
@@ -363,7 +364,7 @@ plot(color_branches(cluster_reordered,
 plot_heatmap <- levelplot(
   # limit plotted range to log2 FC of -5 to 5 (32 fold)
   mat[as.hclust(cluster_reordered)$order, ] %>% replace(., . > 5, 5) %>% replace(., . < -5, -5),
-  col.regions = colorRampPalette(c(custom_palette[4], grey(0.98), custom_palette[1])),
+  col.regions = colorRampPalette(rev(RColorBrewer::brewer.pal(5, "PuOr"))),
   as.table = TRUE, aspect = "fill", 
   xlab = "sgRNA", ylab = "time [d]",
   scales = list(alternating = FALSE, x = list(draw = FALSE))
@@ -591,10 +592,10 @@ both sgRNAs present). The overlap
 
 ```{r}
 # choose one of: c("L100", "L300"), c("L100", "LD"), c("L300", "LD")
-light_conditions <- c("L100", "L300")
+light_conditions <- c("L300", "LD")
 
 plot_global_fitness <- df %>%
-    
+  
   # select conditions for comparison
   filter(condition %in% light_conditions, induction == "i",
     timepoint == 0, cluster != 5) %>% 
@@ -650,7 +651,7 @@ plot_diff_fitness <- xyplot(diff_fitness_score ~ factor(Process.abbr) | factor(c
   df_selected_fitness, group = between(diff_fitness_score, -3, 3),
   xlab = "", ylab = paste0("dF (",light_conditions[2], "-", light_conditions[1], ")"),
   par.settings = custom_lattice, type = "p", pch = 19, as.table = TRUE, 
-  col = c("#D33F6A", "#00989D"),
+  col = c("#E7298A", grey(0.6)),
   scales = list(alternating = FALSE, x = list(rot = 45, cex = 0.65)), 
   ylim = c(-6, 6), between = list(x = 0.5, y = 0.5),
   panel = function(x, y, ...) {
@@ -679,13 +680,13 @@ plot_top_diff_fitness <- xyplot(log2FoldChange ~ generations |
       induction == "i", condition %in% light_conditions),
     as.table = TRUE, groups = paste(condition, sgRNA_index) %>% factor(., unique(.)[c(2,4,1,3)]), 
     par.settings = {cust = custom_lattice;
-      cust$superpose.polygon$col = c("#00989D", "#00989D", "#D33F6A", "#D33F6A"); cust}, 
+      cust$superpose.polygon$col = c("#E6AB02", "#E6AB02", "#7570B3", "#7570B3"); cust}, 
     type = "l", layout = c(6, 3), 
     scales = list(alternating = FALSE, cex = 0.8),
     ylim = c(-10, 10), xlim = c(0, 17), ylab = bquote(log[2] ~ "fold change"),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.key(light_conditions, points = FALSE, col = c("#D33F6A", "#00989D"),
+      panel.key(light_conditions, points = FALSE, col = c("#7570B3", "#E6AB02"),
         lines = TRUE, cex = 0.7, corner = c(0.05, 0.95), ...)
       panel.abline(h = 0, lty = 2, lwd = 1.5, col = grey(0.5))
       panel.xyarea(x, y, origin = 0, alpha = 0.6, ...)
@@ -808,14 +809,14 @@ venn.diagram(list(L100_L300 = L100_L300, L100_LD = L100_LD, L300_LD = L300_LD),
 
 #### Single differential sgRNAs between light-dark (LD) cycle and high light (L300)
 
-Related to Figure 5 ('fitness between L300 and L100) and Supplemental Figure 
+Related to Figure 5 ('fitness between L300 and L100') and Supplemental Figure 
 'fitness between L300 and LD', it is useful to explore also differential sgRNAs 
 where only 1 sgRNA per gene and cluster was different. The rationale is that 
 some genes are known to be required for LD survival/regulation and should have a
 condition-dependent effect on fitness. In other words several genes are known to 
 be essential for growth under LD conditions but not under constant light. Globally,
 it can be seen from Figure 2 (clustering) that only few sgRNAs are very different
-between LD and L300, and they don't form a distinct cluster. The result from this 
+between LD and L300, and they dont form a distinct cluster. The result from this 
 analysis is similar, only few single sgRNAs fall within the currently applied 
 threshold of -3 $\geq$ dF $\geq$ 3.
 
@@ -939,7 +940,7 @@ plot_lactate_volcano <- df %>% filter(condition %in%  c("Lactate", "NaCl") & tim
     as.table = TRUE, groups = induction, layout = c(4, 1),
     par.settings = custom.lattice, 
     xlab = bquote(log[2] ~ "fold change"), ylab = bquote(-log[10] ~ "p-value"),
-    col = c("#D33F6A", "#00989D"),
+    col = c("#E6AB02", "#7570B3"),
     cex = 0.3, pch = 19, between = list(x = 0.5, y = 0.5),
     scales = list(alternating = FALSE),
     ylim = c(- 20, 200), xlim = c(-10, 10),
@@ -949,7 +950,7 @@ plot_lactate_volcano <- df %>% filter(condition %in%  c("Lactate", "NaCl") & tim
       # only quadrants for induced genes
       panel.quadrants(x[groups[subscripts] == "i"], y[groups[subscripts] == "i"], 
         h = 20, v = 2, labels = "events")
-      panel.key(c("induced", "uninduced"), col = c("#D33F6A", "#00989D"), 
+      panel.key(c("induced", "uninduced"), col = c("#E6AB02", "#7570B3"), 
         pch = 19, corner = c(0.9, 0.7))
     }
   )
@@ -1006,6 +1007,11 @@ head(df_selected_fitness)
 #### Supplemental: Genes with only 1 sgRNA enriched under lactate
 
 ```{r, fig.width = 8, fig.height = 8, warning = FALSE}
+# custom color vector for clusters, without first color that equals last
+gradient <- RColorBrewer::brewer.pal(8, "Dark2")[1:7]
+custom_lattice$superpose.polygon$col <- gradient
+custom_lattice$superpose.line$col <- gradient
+
 plot_1sgRNAs <- xyplot(log2FoldChange ~ generations | 
     factor(sgRNA_short, arrange(df_lac, Process.abbr) %>% 
       pull(sgRNA_short) %>% unique),
@@ -1013,7 +1019,7 @@ plot_1sgRNAs <- xyplot(log2FoldChange ~ generations |
   filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
   as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
-  par.settings = custom.lattice, type = "p",
+  par.settings = custom_lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-10, 15), xlim = c(0, 30.5), # c(-7, 1)
   panel = function(x, y, ...) {
@@ -1062,6 +1068,10 @@ The same figure was generated for genes with 2 sgRNAs enriched. This is used in
 Figure 5.
 
 ```{r}
+custom_palette <- RColorBrewer::brewer.pal(8, "Dark2")[c(4,5,6,3,1)]
+custom_lattice$superpose.polygon$col <- custom_palette
+custom_lattice$superpose.line$col <- custom_palette
+
 plot_2sgRNAs <- xyplot(log2FoldChange ~ generations | 
   factor(sgRNA_short, arrange(df_lac, Process.abbr) %>% 
     pull(sgRNA_short) %>% unique),
@@ -1069,7 +1079,7 @@ plot_2sgRNAs <- xyplot(log2FoldChange ~ generations |
     filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(4, 2),
   as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
-  par.settings = custom.lattice, 
+  par.settings = custom_lattice, 
   between = list(x = 0.5, y = 0.5),
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-10, 10), xlim = c(0, 30.5),
@@ -1140,6 +1150,11 @@ specific growth rates from sliding window over time.
 
 ```{r, message = FALSE, fig.width = 3, fig.height = 3, warning = FALSE}
 # load cultivation data, OD680 and 720 for 2 example cultivations
+custom_palette <- RColorBrewer::brewer.pal(8, "Dark2")[c(8,4,5,6,3)]
+custom_lattice <- custom.lattice()
+custom_lattice$superpose.symbol$col <- custom_palette
+custom_lattice$superpose.line$col <- custom_palette
+
 plot_knockouts_OD <- bind_rows(
     read_csv("../raw_data/20190815_MC1_measurements.csv"),
     read_csv("../raw_data/20190815_MC2_measurements.csv"),
@@ -1167,7 +1182,7 @@ plot_knockouts_OD <- bind_rows(
   xyplot(od_corr ~ batchtime_h, .,
     groups = factor(strain, c("NT0", "bcp2", "aroH", "ilvA")), 
     xlab = "time [h]", ylab = bquote(OD['720 nm']),
-    as.table = TRUE, par.settings = custom.lattice,
+    as.table = TRUE, par.settings = custom_lattice,
     pch = 19, cex = 0.1, 
     xlim = c(0, 100), 
     panel = function(x, y, groups, subscripts, ...) {
@@ -1203,14 +1218,15 @@ plot_knockouts_mu <- read_csv("../raw_data/growth_rate_knockouts.csv") %>%
   # plot
   xyplot(mean_growth_rate ~ factor(strain, unique(strain)[c(6,2,9,8,10,4,7,5,1,3)]), .,
     xlab = "strain", ylab = bquote(mu ~ h^-1),
-    as.table = TRUE, par.settings = custom.lattice, col = grey(0.2),
+    as.table = TRUE, par.settings = custom_lattice, col = grey(0.2),
     fill = c("white", rep(grey(0.9), 9)),
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)), ylim = c(0, 0.045), lwd = 1.2,
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.barplot(x, y, ewidth = 0.3, ...)
+      panel.xyplot(x, y, ...)
       panel.pvalue(x, y, symbol = TRUE, cex_symbol = 1.2, alternative = "greater",
-        col = grey(0.2), offset = 0.2, verbose = FALSE)
+        col = grey(0.2), offset = 0.2, verbose = TRUE)
     }
   )
 
@@ -1239,7 +1255,7 @@ df_abs <- read_csv("../raw_data/abs_spectrum_lactate.csv") %>%
   
 # plot absorption spectra
 plot_lac_spectra_1 <- xyplot(absorption ~ wavelength_nm, df_abs, groups = strain,
-  par.settings = custom.lattice, type = "l",
+  par.settings = custom_lattice, type = "l",
   ylim = c(1.0, 2.4), xlim = c(350, 750),
   xlab = "wavelength [nm]", ylab = "absorption [a.u.]",
   lwd = 1.5, scales = list(alternating = FALSE), as.table = TRUE,
@@ -1274,7 +1290,7 @@ plot_lac_spectra_2 <- df_abs %>%
   # plot ratios
   xyplot(absorption ~ strain | factor(pigment, unique(pigment)[3:1]), ., 
     groups = strain,
-    par.settings = custom.lattice, lwd = 2, pch = 19,
+    par.settings = custom_lattice, lwd = 2, pch = 19,
     layout = c(3, 1), xlab = "", ylab = "",
     scales = list(alternating = FALSE, x = list(rot = 30, cex = 0.7)), 
     as.table = TRUE,
@@ -1307,7 +1323,7 @@ grid.text(label = c("a", "b", "c", "d", "e", "f"), gp = gpar(cex = 1.2),
 
 
 ```{r, results = 'hide', include = FALSE}
-svg("../figures/main/Figure5.svg", width = 6, height = 10)
+svg("../figures/main/Figure5_barchart.svg", width = 6, height = 10)
 print(plot_lactate_volcano, position = c(0, 0.76, 1, 1), more = TRUE)
 print(plot_2sgRNAs, position = c(0.01, 0.45, 1, 0.79), more = TRUE)
 print(plot_knockouts_mu, position = c(-0.015, 0.22, 0.63, 0.49), more = TRUE)
@@ -1399,6 +1415,11 @@ df_lac_depl <- filter(df_lac_depl, sgRNA_short %in% df_selected_fitness$sgRNA_sh
 
 
 ```{r}
+custom_palette <- RColorBrewer::brewer.pal(8, "Dark2")[1:7]
+custom_lattice$superpose.symbol$col <- custom_palette
+custom_lattice$superpose.line$col <- custom_palette
+
+
 plot_depl_1sgRNAs <- xyplot(log2FoldChange ~ generations | 
     factor(sgRNA_short, arrange(df_lac_depl, Process.abbr) %>% 
       pull(sgRNA_short) %>% unique),
@@ -1406,7 +1427,7 @@ plot_depl_1sgRNAs <- xyplot(log2FoldChange ~ generations |
   filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 6), 
   auto.key = list(columns = 4, points = FALSE, lines = TRUE),
   as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
-  par.settings = custom.lattice, type = "p",
+  par.settings = custom_lattice, type = "p",
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), # c(-7, 1)
   panel = function(x, y, ...) {
@@ -1439,7 +1460,7 @@ plot_depl_2sgRNAs <- xyplot(log2FoldChange ~ generations |
     filter(condition == "Lactate", induction == "i", length(sgRNA_index) == 12), 
   auto.key = list(columns = 3, points = FALSE, lines = TRUE), layout = c(6, 1),
   as.table = TRUE, groups = Process.abbr, ylab = bquote(log[2] ~ "fold change"),
-  par.settings = custom.lattice, 
+  par.settings = custom_lattice, 
   scales = list(alternating = FALSE, cex = 0.8),
   ylim = c(-6, 6), xlim = c(0, 30.5), 
   panel = function(x, y, ...) {
