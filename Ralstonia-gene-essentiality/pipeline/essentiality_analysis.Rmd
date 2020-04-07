@@ -1,0 +1,120 @@
+---
+title: "Gene essentiality analysis for *R. eutropha*"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook:
+    toc: yes
+---
+
+
+## Description
+
+This R notebook is a bioinformatics pipeline for the analysis of gene essentiality in the chemolithoautotroph *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*). Two different sources are used to investigate gene essentiality. 
+
+The **first source** is the genome scale model of *R. eutropha* published by Park et al., 2011. The model was further manually corrected, curated, and annotated by Dr. Michael Jahn and the most recent version in SBML V3 standard can be accessed on  [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models). The gene essentiality was analyzed using the very versatile `COBRApy` package for python, and the functions are documented on [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models/blob/master/Ralstonia_eutropha/essentiality_analysis.py) as well.
+
+The **second source** is a set of BarSeq experiments, where a library of barcoded transposon insertion mutants was cultivated in different media, and then sequenced. Analogously to the CRISPRi library in *Synechocystis sp.* PCC 6803 (see [Yao et al., Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7), or my  [R notebooks on github](https://github.com/m-jahn/R-notebooks)), the sequencing will reveal the quantity of each tansposon mutant before and after competetive cultivation in a specific growth medium. If mutants disappear over time, the gene that was hit by the transposon is essential for this condition. For example, if a library of mutants is cultivated using formic acid as a substrate, transposon mutants where insertion happened in a formate dehydrogenase are likely to be more depleted than mutants hit in a neutral region. A special case is the original non-selective medium that the library was cultivated in, LB medium. It conbtains all amino acids and other biomolecules originating from yeast/protein hydrolysate. This 
+
+## Data import
+
+```{r}
+# loading libraries
+library(lattice)
+library(latticeExtra)
+library(tidyverse)
+library(Rtools)
+library(stringi)
+```
+
+Import essentiality data from:
+
+ - genome scale model (1 table)
+ - BarSeq summary (2 tables)
+
+```{r, message = FALSE, warning = FALSE}
+# load model predictions for gene essentiality
+df_model <- read_csv("../data/model_gene_essentiality.csv") %>% select(-X1)
+
+# load BarSeq data with gene essentiality for the initial Tn-library (in LB medium)
+df_barseq_LB <- read_tsv("../data/barseq_gene_essentiality_LB.tab")
+
+# load BarSeq data with gene essentiality for the initial Tn-library (in LB medium)
+df_barseq_all <- read_tsv("../data/barseq_gene_essentiality_all.tab")
+```
+
+-----
+
+## Essentiality for complete medium predicted by model and BarSeq
+
+#### Processing and summarizing data
+
+The first step is to merge the two data sources and bring them into a coherent format. We perform a left join which will omit all genes from BarSeq data that are not present in the model.
+
+```{r}
+df_lb <- left_join(
+  df_model %>% select(gene, LB_medium), 
+  df_barseq_LB, by = c("gene" = "ClassicID"))
+
+head(df_lb)
+```
+
+-----
+
+The BarSeq data contains the following three categories: 1) `Unhit` for genes that we're confident do not have transposon insertions (these are very likely `essential`). 2) `Lowbar` for genes that were not `Unhit` but have too low read counts. 3) `Uncertain` for genes that neither are non-essential nor fit the categories above (mostly these `Uncertain` genes are too short to determine whether they are missing insertions just by chance). All other genes present in the model (or in *R. eutropha* in general) can be reagrded as `non-essential`.
+
+
+To get the full picture, we need to summarize genes by the following categories. These categories are chosen from the persepctive of the model being the hpyothesis, and the BarSeq data the experimental proof
+
+  - not essential in model, not in barseq (TRUE NEGATIVE)
+  - essential in model, but not in barseq (FALSE POSITIVE)
+  - not essential in model, but in barseq (FALSE NEGATIVE)
+  - essential in model, and in barseq     (TRUE POSITIVE)
+
+To obtain a summary of these categories, we simply fill up model genes with no counterpart in the LB BarSeq table with a `non-essential` label. This is a fair assumption because the BarSeq data covers virtually all genes. Genes without or very few transposon mutants (even for statistical reasons like short gene lenght) are covered in the LB BarSeq table, and all others have mutants and are therefore `non-essential` in LB.
+
+
+```{r}
+df_summary <- df_lb %>%
+  
+  # add 'non-essential' label and replace unhit with essential
+  mutate(Essentiality = Essentiality %>% 
+    replace_na("non-essential") %>%
+    replace(., . == "Unhit", "essential") %>% tolower
+    ) %>%
+  
+  # group by Essnetiality and summarize model scores
+  group_by(Essentiality) %>%
+  summarize(
+    model_essential = sum(LB_medium),
+    model_non_essential = sum(LB_medium == 0)
+  ) %>%
+  
+  # turn column into row names
+  column_to_rownames("Essentiality")
+
+print(df_summary)
+```
+
+-----
+
+#### Summary
+
+The genome scale model predicts that `r sum(df_summary$model_essential)` genes out of `r nrow(df_model)` are essential, and the BarSeq data confirms that for the majority (**true positives**), `r df_summary["essential", "model_essential"]` genes, or `r df_summary["essential", "model_essential"]/sum(df_summary$model_essential) * 100` % of predicted essential genes). The number of **false positives** from the perspective of the model is therefore `r df_summary["non-essential", "model_essential"]` genes, or `r df_summary["non-essential", "model_essential"]/sum(df_summary$model_essential) * 100` % of predicted essential genes.
+
+On the other hand, the model counts `r sum(df_summary$model_non_essential)` genes as non-essential, of which `r df_summary["non-essential", "model_non_essential"]` genes, or `r df_summary["non-essential", "model_non_essential"]/sum(df_summary$model_non_essential) * 100` % are confirmed by BarSeq data as **true negatives**. The **false negatives** sum up to `r df_summary["essential", "model_non_essential"]` genes, or `r df_summary["essential", "model_non_essential"]/sum(df_summary$model_non_essential) * 100` %.
+
+-----
+
+#### Detailed analysis of essential gene sets
+
+To curate the model and incorporate findings from BarSeq experiments, it is most interesting to look at the genes classified as false positives and false neagatives. 
+
+
+-----
+
+## Essentiality for defined media predicted by model and BarSeq
+
+
+
+
+
