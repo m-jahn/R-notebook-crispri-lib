@@ -1,9 +1,12 @@
 ---
 title: "Mapping KEGG pathways to proteins"
-output: html_notebook
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook:
+    toc: yes
 ---
 
-### Investigating protein allocation in _Ralstonia eutropha_ H16
+## Investigating protein allocation in _Ralstonia eutropha_ H16
 
 The _Ralstonia eutropha_ H16 genome was previously annotated using the EMBL-maintained tool 
 [eggNOG](http://eggnogdb.embl.de/#/app/home), see my R notebook 
@@ -27,7 +30,7 @@ proteome and deal with ambiguous protein annotation. Sources that I use are:
 - Previously expanded _R. eutropha_ annotation based on COG ([eggNOG](http://eggnogdb.embl.de/#/app/home), downloaded 2019-06-12)
 - [KEGG BRite](https://www.kegg.jp/kegg-bin/show_organism?org=reh) database for _R. eutropha_ H16 (downloaded 2018-09-10)
 
-### Problem definition 
+## Problem definition 
 
 1. Map proteins to KEGG pathways, either 'Brite' hierarchy or 'Modules'
 
@@ -36,7 +39,7 @@ proteome and deal with ambiguous protein annotation. Sources that I use are:
 3. Try to formalize biological role of pathways: size, reactions, input, output, variability
 
 
-### Task 1: Map proteins to KEGG pathways
+## Task 1: Map proteins to KEGG pathways
 
 We begin with elucidating differences between KEGG Brite and KEGG Modules. Are they the same 
 (apparently not), which one is more comprehensive or has higher coverage for _R. eutropha_?
@@ -301,31 +304,5 @@ print(reh_pathways_plot)
 svg("Ralstonia_H16_pathway_network.svg", width = 10, height = 8)
 print(reh_pathways_plot)
 dev.off()
-```
-
-
-----------
-
-### Mapping genes expression to KEGG pathways
-
-```{r}
-# UTILITY FUNCTIONS
-# -----------------
-
-# remove other classes from graph object that are not required
-# example_graph <- reh_pathways_as_graph$reh00020
-# cleaned_graph <- graph::removeNode(
-#   node = grep("ko:|cpd:|reh:", nodes(example_graph), value = TRUE), 
-#   object = example_graph)
-# 
-# par(mfrow = c(2,1))
-# plot(example_graph)
-# plot(cleaned_graph)
-
-
-# graph::subGraph(
-#   snodes = grep("path:", nodes(reh_pathways_graph), value = TRUE), 
-#   graph = reh_pathways_graph) %>% plot
-#getKEGGedgeData(reh_pathways_graph) %>% slot("entry1ID")
 ```
 
