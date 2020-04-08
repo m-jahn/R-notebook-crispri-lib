@@ -11,13 +11,13 @@ output:
 
 This R notebook is a bioinformatics pipeline for the analysis of gene essentiality in the chemolithoautotroph *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*). Two different sources are used to investigate gene essentiality. 
 
-The **first source** is the genome scale model of *R. eutropha* published by Park et al., 2011. The model was further manually corrected, curated, and annotated by Dr. Michael Jahn and the most recent version in SBML V3 standard can be accessed on  [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models). The gene essentiality was analyzed using the very versatile `COBRApy` package for python, and the functions are documented on [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models/blob/master/Ralstonia_eutropha/essentiality_analysis.py) as well.
+The **first source** is the genome scale model (GEM) of *R. eutropha* published by Park et al., 2011. The model was further manually corrected, curated, and annotated by Dr. Michael Jahn and the most recent version in SBML V3 standard can be accessed on  [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models). The gene essentiality was analyzed using the very versatile `COBRApy` package for python, and the functions are documented on [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models/blob/master/Ralstonia_eutropha/essentiality_analysis.py) as well.
 
 The **second source** is a set of BarSeq experiments, where a library of barcoded transposon insertion mutants was cultivated in different media, and then sequenced. Analogously to the CRISPRi library in *Synechocystis sp.* PCC 6803 (see [Yao et al., Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7), or my  [R notebooks on github](https://github.com/m-jahn/R-notebooks)), the sequencing will reveal the quantity of each tansposon mutant before and after competetive cultivation in a specific growth medium. If mutants disappear over time, the gene that was hit by the transposon is essential for this condition. For example, if a library of mutants is cultivated using formic acid as a substrate, transposon mutants where insertion happened in a formate dehydrogenase are likely to be more depleted than mutants hit in a neutral region. A special case is the original non-selective medium that the library was cultivated in, LB medium. It conbtains all amino acids and other biomolecules originating from yeast/protein hydrolysate. This 
 
 ## Data import
 
-```{r}
+```{r, message = FALSE}
 # loading libraries
 library(lattice)
 library(latticeExtra)
@@ -74,16 +74,16 @@ To obtain a summary of these categories, we simply fill up model genes with no c
 
 
 ```{r}
-df_summary <- df_lb %>%
+df_lb <- df_lb %>%
   
   # add 'non-essential' label and replace unhit with essential
   mutate(Essentiality = Essentiality %>% 
     replace_na("non-essential") %>%
     replace(., . == "Unhit", "essential") %>% tolower
-    ) %>%
+  )
   
   # group by Essnetiality and summarize model scores
-  group_by(Essentiality) %>%
+df_summary <- df_lb %>% group_by(Essentiality) %>%
   summarize(
     model_essential = sum(LB_medium),
     model_non_essential = sum(LB_medium == 0)
@@ -107,10 +107,85 @@ On the other hand, the model counts `r sum(df_summary$model_non_essential)` gene
 
 #### Detailed analysis of essential gene sets
 
-To curate the model and incorporate findings from BarSeq experiments, it is most interesting to look at the genes classified as false positives and false neagatives. 
+To curate the model and incorporate findings from BarSeq experiments, it is interesting to look at the genes classified as **false positives and false negatives**. 
 
+```{r}
+# filter for false positives (falsely essential in model)
+df_lb %>% filter(LB_medium == 1 & Essentiality == "non-essential") %>%
+  pull(gene)
+```
+
+```{r}
+# filter for false negatives (falsely non-essential in model)
+df_lb %>% filter(LB_medium == 0 & Essentiality == "essential") %>%
+  pull(gene) %>% .[1:30]
+```
+
+The gene sets were imported in python as lists and the corresponding model reactions and fluxes in default medium (minimal medium + fructose + NH4) retrieved from the model. The results are imported again in R for more detailed analysis.
+
+```{r, message = FALSE, warning = FALSE}
+df_false_pos = read_csv("../data/false_positive_essential_genes.csv")
+head(df_false_pos)
+
+df_false_neg = read_csv("../data/false_negative_essential_genes.csv")
+head(df_false_neg)
+```
 
 -----
+
+#### False positive
+
+Some of the false positive genes/proteins in the model are subunits in an enzyme complex that catalyzes an essential reaction. Therefore, reactions that carry no flux can be removed, and those where more than one enzyme is involved can be selected.
+
+```{r}
+# filter no-flux reactions out
+df_false_pos %>% filter(reaction_flux > 0) %>%
+  
+  # group by reaction and summarize complexes
+  group_by(reaction_name) %>%
+  summarize(
+    n_subunits = length(gene),
+    subunits = paste(gene, collapse = ", "),
+    reaction_id = paste(reaction_id, collapse = ", ")
+  ) %>%
+  
+  # filter reactions with just 1 enzyme
+  filter(n_subunits > 1) %>%
+  
+  # order by number of subunits
+  arrange(desc(n_subunits))
+```
+
+It turns out that only few reactions are multi-subunit reactions, both in the sulfur metabolism. This result means that either the GEM makes wrong assumptions about some of the essential reactions, or that there are un-annotated isoenzymes in _R. eutropha_ that can take over functionality.
+
+-----
+
+#### False negatives
+
+Next, we can take a look at the genes that the model does not regard as essential but BarSeq confirmed they are. This is e.g. very good evidence to further curate reactions in the GEM. The strategy here is identical as for false positives except that no-flux reactions are not removed, as they might carry no flux in the model (erroneously) but still be essential in _R. eutropha_.
+
+```{r}
+df_false_neg %>%
+  
+  # group by reaction and summarize complexes
+  group_by(reaction_name, reaction_id) %>%
+  summarize(
+    n_subunits = length(gene),
+    subunits = paste(gene, collapse = ", ")
+  ) %>%
+  
+  # filter reactions with just 1 enzyme
+  filter(n_subunits > 1) %>%
+  
+  # filter reactions that are highly similar = same set of enzymes
+  ungroup %>% filter(!duplicated(subunits)) %>%
+  
+  # order by number of subunits
+  arrange(desc(n_subunits))
+```
+
+There are at least 27 reactions catalyzed by **complexes with two ore more subunits** where all subunits are essential according to BarSeq, but not in the model. The most likely explanation for discrepancies are that `gene_reaction_rule` associations in the model are carefully formulated as `gene_1 OR gene_2` instead of `gene_1 AND gene_2`. These reactions can be updated in the model to the more strict `AND` rule to reflect the essentiality proven by BarSeq. Note that many reactions in the false-negative set retrieved from the model are duplicated, as one and the same complex can catalyze very similar or chained reactions (example: enzyme `Enoyl-CoA hydratase` with 5 genes catalyzes 7 very similar reactions with unique IDs (`ENCOAH1`, `ENCOAH2`,`ENCOAH3`, ...). All of those need to be updated.
+
 
 ## Essentiality for defined media predicted by model and BarSeq
 
