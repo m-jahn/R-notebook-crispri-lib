@@ -2,7 +2,8 @@
 title: "Gene essentiality analysis for *R. eutropha*"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
-  html_notebook:
+  html_notebook: 
+    theme: spacelab
     toc: yes
 ---
 
@@ -156,7 +157,7 @@ df_false_pos %>% filter(reaction_flux > 0) %>%
   arrange(desc(n_subunits))
 ```
 
-It turns out that only few reactions are multi-subunit reactions, both in the sulfur metabolism. This result means that either the GEM makes wrong assumptions about some of the essential reactions, or that there are un-annotated isoenzymes in _R. eutropha_ that can take over functionality.
+It turns out that only few reactions are multi-subunit reactions, mostly in the sulfur metabolism. This result means that either the GEM makes wrong assumptions about some of the essential reactions, or that there are un-annotated isoenzymes in _R. eutropha_ that can take over functionality.
 
 -----
 
@@ -178,7 +179,7 @@ df_false_neg %>%
   filter(n_subunits > 1) %>%
   
   # filter reactions that are highly similar = same set of enzymes
-  ungroup %>% filter(!duplicated(subunits)) %>%
+  #ungroup %>% filter (!duplicated(subunits)) %>%
   
   # order by number of subunits
   arrange(desc(n_subunits))
