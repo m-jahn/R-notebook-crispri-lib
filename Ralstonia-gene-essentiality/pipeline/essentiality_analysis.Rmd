@@ -49,12 +49,18 @@ df_barseq_all <- read_tsv("../data/barseq_gene_essentiality_all.tab")
 
 #### Processing and summarizing data
 
-The first step is to merge the two data sources and bring them into a coherent format. We perform a left join which will omit all genes from BarSeq data that are not present in the model.
+The first step is to merge the two data sources and bring them into a coherent format. We perform a left join which will omit all genes from BarSeq data that are not present in the model. Before that, we have to deal with the problem of ambiguity of locusTags between `classicID` (2006 sequencing, original annotation) and new `locusID` (re-annotation of gene loci). The problem that arises is that one `classicID` often spans more than one of the new loci. A simple but not probably not very clean solution is to keep only the one classicID and map it to the strictest verdict from BarSeq (`unhit` takes precedence over `uncertain`, and then `lowbar`)
 
 ```{r}
+# remove duplicated classic locusTags in BarSeq data before joining
+df_barseq_LB <- df_barseq_LB %>% group_by(ClassicID) %>%
+  arrange(desc(Essentiality %>% as.factor)) %>%
+  slice(1)
+  
 df_lb <- left_join(
-  df_model %>% select(gene, LB_medium), 
-  df_barseq_LB, by = c("gene" = "ClassicID"))
+  df_model %>% select(gene, contains("reaction_"), LB_medium), 
+  df_barseq_LB, 
+  by = c("gene" = "ClassicID"))
 
 head(df_lb)
 ```
@@ -80,11 +86,19 @@ df_lb <- df_lb %>%
   # add 'non-essential' label and replace unhit with essential
   mutate(Essentiality = Essentiality %>% 
     replace_na("non-essential") %>%
-    replace(., . == "Unhit", "essential") %>% tolower
+    recode(
+      Unhit = "essential", 
+      Uncertain = "probably essential", 
+      Lowbar = "probably essential"
+    )
   )
   
-  # group by Essnetiality and summarize model scores
-df_summary <- df_lb %>% group_by(Essentiality) %>%
+# group by Essentiality and summarize model scores
+df_summary <- df_lb %>% 
+  # remove duplicated genes that participate in 
+  # several reactions
+  filter(!duplicated(gene)) %>%
+  group_by(Essentiality) %>%
   summarize(
     model_essential = sum(LB_medium),
     model_non_essential = sum(LB_medium == 0)
@@ -104,89 +118,112 @@ The genome scale model predicts that `r sum(df_summary$model_essential)` genes o
 
 On the other hand, the model counts `r sum(df_summary$model_non_essential)` genes as non-essential, of which `r df_summary["non-essential", "model_non_essential"]` genes, or `r df_summary["non-essential", "model_non_essential"]/sum(df_summary$model_non_essential) * 100` % are confirmed by BarSeq data as **true negatives**. The **false negatives** sum up to `r df_summary["essential", "model_non_essential"]` genes, or `r df_summary["essential", "model_non_essential"]/sum(df_summary$model_non_essential) * 100` %.
 
------
-
-#### Detailed analysis of essential gene sets
-
-To curate the model and incorporate findings from BarSeq experiments, it is interesting to look at the genes classified as **false positives and false negatives**. 
-
-```{r}
-# filter for false positives (falsely essential in model)
-df_lb %>% filter(LB_medium == 1 & Essentiality == "non-essential") %>%
-  pull(gene)
-```
-
-```{r}
-# filter for false negatives (falsely non-essential in model)
-df_lb %>% filter(LB_medium == 0 & Essentiality == "essential") %>%
-  pull(gene) %>% .[1:30]
-```
-
-The gene sets were imported in python as lists and the corresponding model reactions and fluxes in default medium (minimal medium + fructose + NH4) retrieved from the model. The results are imported again in R for more detailed analysis.
-
-```{r, message = FALSE, warning = FALSE}
-df_false_pos = read_csv("../data/false_positive_essential_genes.csv")
-head(df_false_pos)
-
-df_false_neg = read_csv("../data/false_negative_essential_genes.csv")
-head(df_false_neg)
-```
 
 -----
 
-#### False positive
+#### Model essential genes/reactions
 
-Some of the false positive genes/proteins in the model are subunits in an enzyme complex that catalyzes an essential reaction. Therefore, reactions that carry no flux can be removed, and those where more than one enzyme is involved can be selected.
+To further curate the model and incorporate findings from BarSeq experiments, it is interesting to look at the genes classified as **false positives and false negatives**. We can assume that all LB essential genes are the core essential genes. To have a closer look on the reactions catalyzed by the LB essential genes (both true and false positives), the corresponding model reactions for all genes were already included in the imported table `df_model` and `df_lb`. 
 
-```{r}
-# filter no-flux reactions out
-df_false_pos %>% filter(reaction_flux > 0) %>%
+While there is overlap between essentiality as judged by the model and by experimental validation, there are also discrepancies. The model can yield false positive essentiality as a consequence of enzymes (or subunits thereoff) that catalyze an essential reaction, while in reality this reaction can be catalyzed by other isoenzymes or enzyme complexes.
+
+On the other hand, genes that the model does not regard as essential but BarSeq confirmed they are, are false negatives. Here, the underlying cause can be that the model annotates reactions with several isoenzymes while in reality only one is the key enzyme. Also, the `COBRApy` essentiality analysis only counts genes as essential if a knockout shows no growth at all. It does not take **beneficial** or **partially deleterious** knock outs into account. This is e.g. very good evidence to further curate reactions in the GEM. 
+
+
+```{r, fig.width = 8, fig.height = 10}
+df_essential <- df_lb %>% 
   
-  # group by reaction and summarize complexes
+  # select only model essential genes
+  filter(LB_medium == 1) %>%
+  
+  # group by reaction and summarize n enzymes
   group_by(reaction_name) %>%
-  summarize(
-    n_subunits = length(gene),
-    subunits = paste(gene, collapse = ", "),
-    reaction_id = paste(reaction_id, collapse = ", ")
-  ) %>%
-  
-  # filter reactions with just 1 enzyme
-  filter(n_subunits > 1) %>%
+  mutate(n_enzymes = length(unique(gene))) %>%
   
   # order by number of subunits
-  arrange(desc(n_subunits))
+  ungroup %>%
+  arrange(desc(n_enzymes), reaction_name)
+
+# summary table
+head(df_essential)
+
+# plot model essential reactions
+plot_model_essential <- barchart(
+  reaction_name %>% substr(1,45) %>% factor(., rev(unique(.))) ~ LB_medium,
+  df_essential %>% group_by(reaction_name) %>%
+    filter(!duplicated(gene)) %>% ungroup %>% slice(1:61),
+  groups = Essentiality %>% factor(., unique(.)), 
+  par.settings = custom.lattice(),
+  col = c("#FF4800", "#F79400", "#E6DE4A"),
+  stack = TRUE, 
+  main = "model essential genes (top 50 reactions ordered by subunits)",
+  xlim = c(0, 5), xlab = "# enzymes/subunits",
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.barchart(x, y, ...)
+    panel.key(..., pch = 15, corner = c(0.97, 0.95))
+  }
+)
+
+print(plot_model_essential)
 ```
 
-It turns out that only few reactions are multi-subunit reactions, mostly in the sulfur metabolism. This result means that either the GEM makes wrong assumptions about some of the essential reactions, or that there are un-annotated isoenzymes in _R. eutropha_ that can take over functionality.
+It turns out that only few reactions are multi-subunit reactions where all annotated genes are required (`AND` rule). Regarding the false-positive reactions (`non-essential` genes by BarSeq) it is likely that there are un-annotated isoenzymes in _R. eutropha_ that can take over functionality. Or the GEM makes wrong assumptions about essentiality of the particular reaction.
 
 -----
 
-#### False negatives
+#### Model non-essential genes/reactions
 
-Next, we can take a look at the genes that the model does not regard as essential but BarSeq confirmed they are. This is e.g. very good evidence to further curate reactions in the GEM. The strategy here is identical as for false positives except that no-flux reactions are not removed, as they might carry no flux in the model (erroneously) but still be essential in _R. eutropha_.
+We repeat the same process as above for the non-essential genes in the model. This is only interesting for one purpose, analyzing the **false-negative** genes, i.e. the ones that are non-essential according to the model but not according to BarSeq. We quantify reactions with a large number of false-negative genes.
 
-```{r}
-df_false_neg %>%
+```{r, fig.width = 8, fig.height = 10}
+df_non_essential <- df_lb %>% 
   
-  # group by reaction and summarize complexes
-  group_by(reaction_name, reaction_id) %>%
-  summarize(
-    n_subunits = length(gene),
-    subunits = paste(gene, collapse = ", ")
+  # select only model non-essential genes
+  filter(LB_medium == 0) %>%
+  
+  # group by reaction and summarize number of (probably) essential enzymes
+  group_by(reaction_name) %>% 
+  arrange(reaction_id) %>%
+  filter(!duplicated(gene)) %>%
+  mutate(
+    n_enzymes = length(gene),
+    n_essential = sum(Essentiality %in% c("essential", "probably essential"))
   ) %>%
   
-  # filter reactions with just 1 enzyme
-  filter(n_subunits > 1) %>%
-  
-  # filter reactions that are highly similar = same set of enzymes
-  #ungroup %>% filter (!duplicated(subunits)) %>%
-  
   # order by number of subunits
-  arrange(desc(n_subunits))
+  ungroup %>%
+  arrange(desc(n_essential), reaction_name)
+
+# summary table
+head(df_non_essential)
+
+# plot top model non-essential reactions; 
+# unspecific reactions (many of associated subunits/isoenzymes) are removed.
+# We achieve this by allowing only reactions with at least 25 % essential genes
+plot_model_non_essential <- barchart(
+  reaction_name %>% substr(1,45) %>% factor(., rev(unique(.))) ~ LB_medium+1,
+  df_non_essential %>% filter(n_essential/n_enzymes >= 0.25) %>% 
+    filter(!reaction_id %in% c("NADH5", "NADH16", "SUCDi")) %>% slice(1:160),
+  groups = Essentiality %>% factor(., unique(.)), 
+  par.settings = custom.lattice(), 
+  col = c("#FF4800", "#F79400", "#E6DE4A"),
+  stack = TRUE, 
+  main = "model non-essential genes (top 50 reactions ordered by subunits)",
+  xlim = c(0, 18), xlab = "# enzymes/subunits",
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.barchart(x, y, ...)
+    panel.key(..., pch = 15, corner = c(0.97, 0.95))
+  }
+)
+
+print(plot_model_non_essential)
 ```
 
-There are at least 27 reactions catalyzed by **complexes with two ore more subunits** where all subunits are essential according to BarSeq, but not in the model. The most likely explanation for discrepancies are that `gene_reaction_rule` associations in the model are carefully formulated as `gene_1 OR gene_2` instead of `gene_1 AND gene_2`. These reactions can be updated in the model to the more strict `AND` rule to reflect the essentiality proven by BarSeq. Note that many reactions in the false-negative set retrieved from the model are duplicated, as one and the same complex can catalyze very similar or chained reactions (example: enzyme `Enoyl-CoA hydratase` with 5 genes catalyzes 7 very similar reactions with unique IDs (`ENCOAH1`, `ENCOAH2`,`ENCOAH3`, ...). All of those need to be updated.
+There are at least 25 reactions catalyzed by **two ore more subunits or associated genes** that are essential according to BarSeq data, but not in the model. These are reactions where at least 25 % of the annotated genes are essential according to BarSeq. The most likely explanation for discrepancies between *in silico* and *in vivo* essentiality is that `gene_reaction_rule` associations in the model are formulated as isoenzymes (`gene_1 OR gene_2`) instead of enzyme complexes (`gene_1 AND gene_2`). These reactions can be curated in the model with the help of external databases such as Kegg and Uniprot. In clear cases where BarSeq data and databases agree, gene association can be changed to `AND` rule.
 
+<!-- Note: Add section with export of gene essentiality comparison for Escher -->
 
 ## Essentiality for defined media predicted by model and BarSeq
 
