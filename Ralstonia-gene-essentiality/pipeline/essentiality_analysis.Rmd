@@ -47,7 +47,7 @@ df_barseq_all <- read_tsv("../data/barseq_gene_essentiality_all.tab")
 
 ## Essentiality for complete medium predicted by model and BarSeq
 
-#### Processing and summarizing data
+### Processing and summarizing data
 
 The first step is to merge the two data sources and bring them into a coherent format. We perform a left join which will omit all genes from BarSeq data that are not present in the model. Before that, we have to deal with the problem of ambiguity of locusTags between `classicID` (2006 sequencing, original annotation) and new `locusID` (re-annotation of gene loci). The problem that arises is that one `classicID` often spans more than one of the new loci. A simple but not probably not very clean solution is to keep only the one classicID and map it to the strictest verdict from BarSeq (`unhit` takes precedence over `uncertain`, and then `lowbar`)
 
@@ -121,7 +121,7 @@ On the other hand, the model counts `r sum(df_summary$model_non_essential)` gene
 
 -----
 
-#### Model essential genes/reactions
+### Model essential genes/reactions
 
 To further curate the model and incorporate findings from BarSeq experiments, it is interesting to look at the genes classified as **false positives and false negatives**. We can assume that all LB essential genes are the core essential genes. To have a closer look on the reactions catalyzed by the LB essential genes (both true and false positives), the corresponding model reactions for all genes were already included in the imported table `df_model` and `df_lb`. 
 
@@ -157,7 +157,7 @@ plot_model_essential <- barchart(
   col = c("#FF4800", "#F79400", "#E6DE4A"),
   stack = TRUE, 
   main = "model essential genes (top 50 reactions ordered by subunits)",
-  xlim = c(0, 5), xlab = "# enzymes/subunits",
+  xlim = c(0, 16), xlab = "# enzymes/subunits",
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.barchart(x, y, ...)
@@ -172,7 +172,7 @@ It turns out that only few reactions are multi-subunit reactions where all annot
 
 -----
 
-#### Model non-essential genes/reactions
+### Model non-essential genes/reactions
 
 We repeat the same process as above for the non-essential genes in the model. This is only interesting for one purpose, analyzing the **false-negative** genes, i.e. the ones that are non-essential according to the model but not according to BarSeq. We quantify reactions with a large number of false-negative genes.
 
@@ -210,7 +210,7 @@ plot_model_non_essential <- barchart(
   col = c("#FF4800", "#F79400", "#E6DE4A"),
   stack = TRUE, 
   main = "model non-essential genes (top 50 reactions ordered by subunits)",
-  xlim = c(0, 18), xlab = "# enzymes/subunits",
+  xlim = c(0, 16), xlab = "# enzymes/subunits",
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.barchart(x, y, ...)
@@ -223,11 +223,66 @@ print(plot_model_non_essential)
 
 There are at least 25 reactions catalyzed by **two ore more subunits or associated genes** that are essential according to BarSeq data, but not in the model. These are reactions where at least 25 % of the annotated genes are essential according to BarSeq. The most likely explanation for discrepancies between *in silico* and *in vivo* essentiality is that `gene_reaction_rule` associations in the model are formulated as isoenzymes (`gene_1 OR gene_2`) instead of enzyme complexes (`gene_1 AND gene_2`). These reactions can be curated in the model with the help of external databases such as Kegg and Uniprot. In clear cases where BarSeq data and databases agree, gene association can be changed to `AND` rule.
 
-<!-- Note: Add section with export of gene essentiality comparison for Escher -->
+```{r, include= FALSE}
+# export figures
+svg(filename = "../figures/model_essential_genes.svg", width = 16, height = 10)
+print(plot_model_essential, split = c(1,1,2,1), more = TRUE)
+print(plot_model_non_essential, split = c(2,1,2,1))
+dev.off()
+```
 
-## Essentiality for defined media predicted by model and BarSeq
+----------
+
+### Overlay essentiality information on metabolic network
+
+To get an overview about gene essentiality as predicted by the genome scale model, and as determined using BarSeq experimental data, we can overlay both types of information on the `Escher` map of the core metabolic network. AS with reactions, Escher takes a `*.csv` file as input with gene IDs in the first column and either one or two extra columns with experimental values. Here, the experimental values are simply model predictions for essentiality in one column and essentiality determined by BarSeq in the next, using binary encoding (`0 = non-essential`, `1 = essential`). `Probably essential` is counted as essential for the time being.
+
+The encoding was chosen because Escher's data overlay for gene expression uses the fold change by default. First, gene expression values are aggregated per reaction and then the relative difference is color-coded. Example: for an arbitrary reaction the difference in essentiality is calculated as `dE = abs(mean(E_model_gene_A, E_model_gene_B) - mean(E_barseq_gene_A, E_barseq_gene_B))`.
+
+```{r}
+# simplify the master data frame to one gene per row, and 
+# remove all unnecessary columns
+df_lb %>% filter(!duplicated(gene)) %>%
+  
+  # gene ID, model prediction, BarSeq experiment
+  select(gene, LB_medium, Essentiality) %>%
+  
+  # recode categories to binary
+  mutate(Essentiality = Essentiality %>% recode(
+    `non-essential` = 0, 
+    `essential` = 1,
+    `probably essential` = 1
+    )
+  ) %>%
+  
+  # rename columns for clarity
+  rename(model = LB_medium, barseq = Essentiality) %>%
+  
+  # export as csv
+  write_csv("../data/escher_gene_essentiality.csv")
+```
+
+----------
+
+After loading the latest map of the *R. eutropha* core metabolic network in `Escher`, the exported essentiality information was overlaid using the `Data` --> `Load gene data` menu and the result plotted as `.svg` and `*.png` files.
+
+```{r, fig.width = 10, fig.height = 5, out.width = "100%", fig.align = 'center'}
+# load result from Escher overlay
+knitr::include_graphics("../figures/escher_map_essential_genes.png")
+```
 
 
+### Conclusions
+
+- There is **very good overlap** between model predictions of essentiality and BarSeq data
+- **70.3 % of model-essential genes** are also essential by BarSeq (71 out of 101)
+- The biggest error of model predictions are false negatives (161 genes falsely predicted to be non-essential)
+- Reasons for this are first and foremost: model counts only zero growth phenotype as essential (fatal mutant)
+- This could be adressed by simulating if KOs are **beneficial but not essential for growth**
+- Second most important reasons could be that isoenzymes are falsely annotated (model uses alternative gene/isoenzyme that doesn't work in reality, or not at the same rate)
+- I have used several of the BarSeq predictions to correct obvious errors in enzyme stoichiometry in the GEM (`AND` rule instead of `OR` rule)
+- All changes are documented on the model's github repository and can be reverted
+- I don't plan to analyze the BarSeq data further for now that as it's a considerable effort
 
 
 
