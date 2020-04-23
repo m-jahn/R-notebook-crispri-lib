@@ -13,7 +13,7 @@
    viewBox="0 0 504 288"
    version="1.1"
    id="svg1069"
-   sodipodi:docname="model_selected_genes (copy).svg"
+   sodipodi:docname="model_selected_genes_mod.svg"
    inkscape:version="0.92.3 (2405546, 2018-03-11)"
    inkscape:export-filename="/home/michael/Documents/SciLifeLab/Resources/R_projects/R-notebooks/Ralstonia-gene-essentiality/figures/model_selected_genes_mod.png"
    inkscape:export-xdpi="200"
@@ -42,13 +42,15 @@
      inkscape:window-height="1023"
      id="namedview1071"
      showgrid="false"
-     inkscape:zoom="3.2046596"
-     inkscape:cx="344.37198"
-     inkscape:cy="124.94407"
+     inkscape:zoom="1.7836186"
+     inkscape:cx="421.56269"
+     inkscape:cy="219.0024"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
-     inkscape:current-layer="surface262" />
+     inkscape:current-layer="surface262"
+     showguides="true"
+     inkscape:guide-bbox="true" />
   <defs
      id="defs274">
     <g
@@ -741,6 +743,62 @@
       <path
          d="M 178.339844 156 L 240 156 L 240 171 L 178.339844 171 Z M 178.339844 156 "
          id="path271" />
+    </clipPath>
+    <clipPath
+       id="clip9-5">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,202 H 239 v 15 h -60.66016 z m 0,0"
+         id="path250-3" />
+    </clipPath>
+    <clipPath
+       id="clip10-5">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,202 H 240 v 15 h -61.66016 z m 0,0"
+         id="path253-6" />
+    </clipPath>
+    <clipPath
+       id="clip11-2">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,156 H 239 v 15 h -60.66016 z m 0,0"
+         id="path256-9" />
+    </clipPath>
+    <clipPath
+       id="clip12-1">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,156 H 240 v 15 h -61.66016 z m 0,0"
+         id="path259-2" />
+    </clipPath>
+    <clipPath
+       id="clip13-7">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,110 H 239 v 15 h -60.66016 z m 0,0"
+         id="path262-0" />
+    </clipPath>
+    <clipPath
+       id="clip14-9">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,110 H 240 v 15 h -61.66016 z m 0,0"
+         id="path265-3" />
+    </clipPath>
+    <clipPath
+       id="clip15-6">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,64 H 239 v 15 h -60.66016 z m 0,0"
+         id="path268-0" />
+    </clipPath>
+    <clipPath
+       id="clip16-6">
+      <path
+         inkscape:connector-curvature="0"
+         d="M 178.33984,64 H 240 v 15 h -61.66016 z m 0,0"
+         id="path271-2" />
     </clipPath>
   </defs>
   <g
@@ -2097,7 +2155,7 @@
        id="path724"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:#f59400;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
+       style="fill:#e6de4a;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
        d="m 299.26953,131.91797 h 60.46484 v -13.78516 h -60.46484 z m 0,0"
        id="path726"
        inkscape:connector-curvature="0" />
@@ -2129,7 +2187,7 @@
        id="path736"
        inkscape:connector-curvature="0" />
     <path
-       style="fill:#f59400;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
+       style="fill:#e6de4a;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
        d="m 299.26953,85.96875 h 60.46484 V 72.183594 h -60.46484 z m 0,0"
        id="path738"
        inkscape:connector-curvature="0" />
@@ -2156,7 +2214,7 @@
          inkscape:connector-curvature="0" />
     </g>
     <path
-       style="fill:#f59400;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
+       style="fill:#e6de4a;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;stroke-opacity:1"
        d="m 238.80469,223.81641 h 60.46484 v -13.78516 h -60.46484 z m 0,0"
        id="path748"
        inkscape:connector-curvature="0" />
@@ -2200,7 +2258,7 @@
     <g
        style="fill:#191919;fill-opacity:1"
        id="g776"
-       transform="translate(0,7.5)">
+       transform="translate(60.394927,7.5)">
       <use
          xlink:href="#glyph2-1"
          x="191.07031"
@@ -2247,7 +2305,7 @@
     <g
        style="fill:#191919;fill-opacity:1"
        id="g796"
-       transform="translate(0,7.5)">
+       transform="translate(-60.572846,7.5)">
       <use
          xlink:href="#glyph2-2"
          x="245.03516"
@@ -2958,180 +3016,277 @@
          id="use990" />
     </g>
     <g
-       style="fill:rgb(96.862745%,58.039216%,0%);fill-opacity:1;"
-       id="g1020">
+       style="fill:#e6de4a;fill-opacity:1"
+       id="g1020"
+       transform="translate(0,10.18463)">
       <use
          xlink:href="#glyph1-16"
-         x="370.726562"
-         y="216.923828"
-         id="use994" />
+         x="370.72656"
+         y="216.92383"
+         id="use994"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-7"
-         x="376.064453"
-         y="216.923828"
-         id="use996" />
+         x="376.06445"
+         y="216.92383"
+         id="use996"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-16"
-         x="381.402344"
-         y="216.923828"
-         id="use998" />
+         x="381.40234"
+         y="216.92383"
+         id="use998"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-21"
-         x="386.740234"
-         y="216.923828"
-         id="use1000" />
+         x="386.74023"
+         y="216.92383"
+         id="use1000"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-18"
-         x="389.936523"
-         y="216.923828"
-         id="use1002" />
+         x="389.93652"
+         y="216.92383"
+         id="use1002"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-8"
-         x="395.274414"
-         y="216.923828"
-         id="use1004" />
+         x="395.27441"
+         y="216.92383"
+         id="use1004"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-8"
-         x="400.074219"
-         y="216.923828"
-         id="use1006" />
+         x="400.07422"
+         y="216.92383"
+         id="use1006"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-18"
-         x="404.874023"
-         y="216.923828"
-         id="use1008" />
+         x="404.87402"
+         y="216.92383"
+         id="use1008"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-16"
-         x="410.211914"
-         y="216.923828"
-         id="use1010" />
+         x="410.21191"
+         y="216.92383"
+         id="use1010"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-22"
-         x="415.549805"
-         y="216.923828"
-         id="use1012" />
+         x="415.5498"
+         y="216.92383"
+         id="use1012"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-11"
-         x="418.216797"
-         y="216.923828"
-         id="use1014" />
+         x="418.2168"
+         y="216.92383"
+         id="use1014"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-17"
-         x="420.349609"
-         y="216.923828"
-         id="use1016" />
+         x="420.34961"
+         y="216.92383"
+         id="use1016"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
       <use
          xlink:href="#glyph1-14"
          x="425.6875"
-         y="216.923828"
-         id="use1018" />
+         y="216.92383"
+         id="use1018"
+         width="100%"
+         height="100%"
+         style="fill:#e6de4a;fill-opacity:1" />
     </g>
     <g
-       style="fill:rgb(90.196078%,87.058824%,29.019608%);fill-opacity:1;"
-       id="g1058">
+       style="fill:#f59400;fill-opacity:1"
+       id="g1058"
+       transform="translate(0,-10.5)">
       <use
          xlink:href="#glyph1-9"
-         x="370.726562"
-         y="227.005859"
-         id="use1022" />
+         x="370.72656"
+         y="227.00586"
+         id="use1022"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-10"
-         x="376.064453"
-         y="227.005859"
-         id="use1024" />
+         x="376.06445"
+         y="227.00586"
+         id="use1024"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-7"
-         x="379.260742"
-         y="227.005859"
-         id="use1026" />
+         x="379.26074"
+         y="227.00586"
+         id="use1026"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-12"
-         x="384.598633"
-         y="227.005859"
-         id="use1028" />
+         x="384.59863"
+         y="227.00586"
+         id="use1028"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-17"
-         x="389.936523"
-         y="227.005859"
-         id="use1030" />
+         x="389.93652"
+         y="227.00586"
+         id="use1030"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-12"
-         x="395.274414"
-         y="227.005859"
-         id="use1032" />
+         x="395.27441"
+         y="227.00586"
+         id="use1032"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-14"
-         x="400.612305"
-         y="227.005859"
-         id="use1034" />
+         x="400.6123"
+         y="227.00586"
+         id="use1034"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-25"
-         x="402.745117"
-         y="227.005859"
-         id="use1036" />
+         x="402.74512"
+         y="227.00586"
+         id="use1036"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-5"
-         x="407.544922"
-         y="227.005859"
-         id="use1038" />
+         x="407.54492"
+         y="227.00586"
+         id="use1038"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-18"
-         x="410.211914"
-         y="227.005859"
-         id="use1040" />
+         x="410.21191"
+         y="227.00586"
+         id="use1040"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-8"
-         x="415.549805"
-         y="227.005859"
-         id="use1042" />
+         x="415.5498"
+         y="227.00586"
+         id="use1042"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-8"
-         x="420.349609"
-         y="227.005859"
-         id="use1044" />
+         x="420.34961"
+         y="227.00586"
+         id="use1044"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-18"
-         x="425.149414"
-         y="227.005859"
-         id="use1046" />
+         x="425.14941"
+         y="227.00586"
+         id="use1046"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-16"
-         x="430.487305"
-         y="227.005859"
-         id="use1048" />
+         x="430.4873"
+         y="227.00586"
+         id="use1048"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-22"
-         x="435.825195"
-         y="227.005859"
-         id="use1050" />
+         x="435.8252"
+         y="227.00586"
+         id="use1050"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-11"
-         x="438.492188"
-         y="227.005859"
-         id="use1052" />
+         x="438.49219"
+         y="227.00586"
+         id="use1052"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-17"
          x="440.625"
-         y="227.005859"
-         id="use1054" />
+         y="227.00586"
+         id="use1054"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
       <use
          xlink:href="#glyph1-14"
-         x="445.962891"
-         y="227.005859"
-         id="use1056" />
+         x="445.96289"
+         y="227.00586"
+         id="use1056"
+         width="100%"
+         height="100%"
+         style="fill:#f59400;fill-opacity:1" />
     </g>
     <path
        style=" stroke:none;fill-rule:nonzero;fill:rgb(100%,28.235294%,0%);fill-opacity:1;"
        d="M 462.726562 206.054688 L 467.527344 206.054688 L 467.527344 201.253906 L 462.726562 201.253906 Z M 462.726562 206.054688 "
        id="path1060" />
     <path
-       style=" stroke:none;fill-rule:nonzero;fill:rgb(96.862745%,58.039216%,0%);fill-opacity:1;"
-       d="M 462.726562 216.136719 L 467.527344 216.136719 L 467.527344 211.335938 L 462.726562 211.335938 Z M 462.726562 216.136719 "
-       id="path1062" />
+       style="fill:#e6de4a;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="m 462.72656,226.32135 h 4.80078 v -4.80078 h -4.80078 z m 0,0"
+       id="path1062"
+       inkscape:connector-curvature="0" />
     <path
-       style=" stroke:none;fill-rule:nonzero;fill:rgb(90.196078%,87.058824%,29.019608%);fill-opacity:1;"
-       d="M 462.726562 226.214844 L 467.527344 226.214844 L 467.527344 221.414062 L 462.726562 221.414062 Z M 462.726562 226.214844 "
-       id="path1064" />
+       style="fill:#f59400;fill-opacity:1;fill-rule:nonzero;stroke:none"
+       d="m 462.72656,215.71484 h 4.80078 v -4.80078 h -4.80078 z m 0,0"
+       id="path1064"
+       inkscape:connector-curvature="0" />
     <path
        style="fill:none;stroke-width:0.75;stroke-linecap:round;stroke-linejoin:round;stroke:rgb(0%,0%,0%);stroke-opacity:1;stroke-miterlimit:10;"
        d="M 178.339844 236.992188 L 480.664062 236.992188 L 480.664062 44.007812 L 178.339844 44.007812 Z M 178.339844 236.992188 "
