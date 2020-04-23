@@ -14,7 +14,9 @@ This R notebook is a bioinformatics pipeline for the analysis of gene essentiali
 
 The **first source** is the genome scale model (GEM) of *R. eutropha* published by Park et al., 2011. The model was further manually corrected, curated, and annotated by Dr. Michael Jahn and the most recent version in SBML V3 standard can be accessed on  [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models). The gene essentiality was analyzed using the very versatile `COBRApy` package for python, and the functions are documented on [github.com/m-jahn](https://github.com/m-jahn/genome-scale-models/blob/master/Ralstonia_eutropha/essentiality_analysis.py) as well.
 
-The **second source** is a set of BarSeq experiments, where a library of barcoded transposon insertion mutants was cultivated in different media, and then sequenced. Analogously to the CRISPRi library in *Synechocystis sp.* PCC 6803 (see [Yao et al., Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7), or my  [R notebooks on github](https://github.com/m-jahn/R-notebooks)), the sequencing will reveal the quantity of each tansposon mutant before and after competetive cultivation in a specific growth medium. If mutants disappear over time, the gene that was hit by the transposon is essential for this condition. For example, if a library of mutants is cultivated using formic acid as a substrate, transposon mutants where insertion happened in a formate dehydrogenase are likely to be more depleted than mutants hit in a neutral region. A special case is the original non-selective medium that the library was cultivated in, LB medium. It conbtains all amino acids and other biomolecules originating from yeast/protein hydrolysate. This 
+The **second source** is a set of BarSeq experiments, where a library of barcoded transposon insertion mutants was cultivated in different media, and then sequenced. Analogously to the CRISPRi library in *Synechocystis sp.* PCC 6803 (see [Yao et al., Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7), or my  [R notebooks on github](https://github.com/m-jahn/R-notebooks)), the sequencing will reveal the quantity of each tansposon mutant before and after competetive cultivation in a specific growth medium. If mutants disappear over time, the gene that was hit by the transposon is essential for this condition. For example, if a library of mutants is cultivated using formic acid as a substrate, transposon mutants where insertion happened in a formate dehydrogenase are likely to be more depleted than mutants hit in a neutral region. 
+
+In this notebook I only include data from a non-selective medium (LB medium) that the library was initially cultivated in. It contains all amino acids and other biomolecules originating from yeast/protein hydrolysate. This `complete` medium supplies cells with many ready-made biomolecules so that only a minimal set of genes becomes really essential.
 
 ## Data import
 
@@ -38,9 +40,6 @@ df_model <- read_csv("../data/model_gene_essentiality.csv") %>% select(-X1)
 
 # load BarSeq data with gene essentiality for the initial Tn-library (in LB medium)
 df_barseq_LB <- read_tsv("../data/barseq_gene_essentiality_LB.tab")
-
-# load BarSeq data with gene essentiality for the initial Tn-library (in LB medium)
-df_barseq_all <- read_tsv("../data/barseq_gene_essentiality_all.tab")
 ```
 
 -----
@@ -223,7 +222,7 @@ print(plot_model_non_essential)
 
 There are at least 25 reactions catalyzed by **two ore more subunits or associated genes** that are essential according to BarSeq data, but not in the model. These are reactions where at least 25 % of the annotated genes are essential according to BarSeq. The most likely explanation for discrepancies between *in silico* and *in vivo* essentiality is that `gene_reaction_rule` associations in the model are formulated as isoenzymes (`gene_1 OR gene_2`) instead of enzyme complexes (`gene_1 AND gene_2`). These reactions can be curated in the model with the help of external databases such as Kegg and Uniprot. In clear cases where BarSeq data and databases agree, gene association can be changed to `AND` rule.
 
-```{r, include= FALSE}
+```{r, include = FALSE}
 # export figures
 svg(filename = "../figures/model_essential_genes.svg", width = 16, height = 10)
 print(plot_model_essential, split = c(1,1,2,1), more = TRUE)
@@ -269,6 +268,49 @@ After loading the latest map of the *R. eutropha* core metabolic network in `Esc
 ```{r, fig.width = 10, fig.height = 5, out.width = "100%", fig.align = 'center'}
 # load result from Escher overlay
 knitr::include_graphics("../figures/escher_map_essential_genes.png")
+```
+
+### Detailed analysis of selected essential reactions
+
+Some of the reactions that have several essential genes associated (BarSeq) turned out to be non-essential according to the model. At first impression it is surprising that some of the annotated genes turn out as essential in BarSeq, when they are actually *iso-enzymes*, not *subunits* (`OR` instead of `AND` concatenation).
+
+The following section sheds some light on selected reactions that have several essential **isoenzymes**. This is a contradiction as isoenzymes should be able to compensate for each others.
+
+```{r, fig.width = 7, fig.height = 4}
+df_selected_reactions <- df_lb %>%
+  
+  # filter data for selected reactions
+  filter(reaction_id %in% c("RBPC", "PRUK", "RPE", "TKT1"))
+  
+plot_selected <- barchart(
+  paste(reaction_id, "\n", reaction_name) ~ rep(1, length(reaction_id)),
+  df_selected_reactions,
+  groups = Essentiality %>% factor(., unique(.)),
+  par.settings = custom.lattice(),
+  box.width = 0.3, stack = TRUE,
+  col = c("#FF4800", "#F79400", "#E6DE4A"),
+  main = "selected reactions with iso-enzymes",
+  xlim = c(0, 5), xlab = "# enzymes/subunits",
+  gene = df_selected_reactions$gene,
+  panel = function(x, y, gene = gene, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    # add text labels to plot
+    y_coor =  as.numeric(factor(y))
+    x_coor = unlist(sapply(table(y_coor), function(x) 1:x))
+    panel.barchart(x, y, ...)
+    panel.text(x_coor-0.5, sort(y_coor), labels = gene[order(y_coor)], cex = 0.75, col = grey(0.1))
+    panel.key(..., pch = 15, corner = c(0.97, 0.05))
+  }
+)
+
+print(plot_selected)
+```
+
+```{r, include = FALSE}
+# export figures
+svg(filename = "../figures/model_selected_genes.svg", width = 7, height = 4)
+print(plot_selected)
+dev.off()
 ```
 
 
