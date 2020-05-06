@@ -15,7 +15,7 @@ This means the pipelines were created for a particular purpose or data analysis 
 but are not further developed or maintained.
 
 The pipelines and their documentation collected here therefore come with no warranty
-regarding stability or executability in future R versions. However, all care was taken to
+regarding stability or runability in future R versions. However, all care was taken to
 guarantee scientific accuracy and adhere to good scientific practice in terms of statistics,
 reproducibility and code documentation. Please report any errors by filing a github issue.
 
@@ -24,11 +24,10 @@ reproducibility and code documentation. Please report any errors by filing a git
 The pipelines collected in this repository are self-contained and executable. 
 The code _and_ the documentation are part of one and the same R markdown document
 for each pipeline. The pipelines themselves can be downloaded and executed 
-from the `pipeline` sub-folders. To simply view the code chunks and their 
-corresponding output, follow the links to the rendered `*.html` reports under 
-[Contents](#Contents).
+from the `pipeline` sub-folders. To simply view the rendered pipelines follow 
+the links to the `*.html` reports under   [Contents](#Contents).
 
-To download the repository on your local drive use `git clone` in your terminal:
+To download the repository on your local drive use `git clone` in a (linux) terminal:
 
 ``` bash
 cd /your-target-folder
@@ -39,6 +38,7 @@ Open a pipeline with Rstudio and execute code (chunks) with the `Run` button.
 Alternatively, open an interactive R session and render the R markdown pipeline:
 
 ``` bash
+require(rmarkdown)
 rmarkdown::render("pipeline.Rmd")
 ```
 
@@ -48,6 +48,7 @@ rmarkdown::render("pipeline.Rmd")
 #### Genome annotation
 
 - [_Ralstonia eutropha_ COG re-annotation](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_genome_re_annotation.nb.html)
+- [_Ralstonia eutropha_ gene essentiality analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_essentiality_analysis.nb.html)
 
 #### CRISPRi library in _Synechocystis_ sp. PCC6803 (submitted paper)
 
