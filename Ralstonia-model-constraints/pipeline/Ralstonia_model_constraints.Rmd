@@ -1,0 +1,149 @@
+---
+title: "Constraints for an *R. eutropha* resource allocation model"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook: 
+    theme: spacelab
+    toc: yes
+---
+
+
+## Description
+
+This R notebook is a bioinformatics pipeline to **collect constraints for a genome scale, resource allocation model** in the chemolithoautotroph *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*).
+
+A resource allocation model can be coarse-grained (few symbolic reactions) or have genome scale detail (all known biochemical reactions and their associated genes). However, both types of models need to be constrained by a set of parameters to make realistic predictions. Depending on the model frame work, constraints can be equality constraints (example: turnover number of an enzyme E kcat<sub>E</sub> = 100 s<sup>-1</sup>), or inequality constraints (0 s<sup>-1</sup> <= kcat<sub>E</sub> <= 100 s<sup>-1</sup>). 
+
+This notebook has the purpose to collect **constant and growth-rate dependent constraints** as they are used in [RBA models](https://sysbioinra.github.io/RBApy/). In RBApy, apparent enzyme efficiencies (_kapp_), protein abundance, molecular machine abundance (protein/macromolecule complexes), and fluxes can be constrained. RBApy has the following possibilities for custom constraints.
+
+- constants (example: `A = 0.1`)
+- linear relationship, e.g. with growth rate µ (example: `B = 2 * µ + 0.1`)
+- Michaelis-Menthen like kinetics for kapp (example: `kapp = kcat * [S] / ([S] + Km)`)
+
+Different types of data were collected to constrain at least two major determinants of a resource allocation model.
+
+1. **turnover number `kcat`**: Organism-specific values can be downloaded from enzyme data base BRENDA. In this case we use a precompiled file `max_KCAT.txt` from another resource allocation algorithm, [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases)
+2. **protein abundance**: protein abundance was determined with mass spcetrometry globally for *R. eutropha* using different growth rates and carbon sources. This data will be used to estimate and constrain enzyme abundance, and non-enzyme protein abundance.
+
+
+## Libraries
+
+```{r, message = FALSE}
+# loading libraries
+library(lattice)
+library(latticeExtra)
+library(latticetools)
+library(tidyverse)
+library(stringi)
+```
+
+## Turnover numbers
+
+### Import data from GECKO
+
+The precompiled turnover numbers were downloaded from [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases) and apparently created Aug 16, 2018. The table contains all possible kcat values per enzyme class. It also contains a rudimentary phylogenetic classification (bacteria, archae, eukaryota, and so on) that can be used to strip matching kcat values with regular expressions.
+
+```{r, message = FALSE, warning = FALSE}
+# load kcat data
+df_kcat <- read_tsv("../data/GECKO_20200505_max_KCAT.tsv", col_names = FALSE)[-5] %>%
+  set_names(c("EC_number", "substrate", "organism", "kcat"))
+
+# preview data
+head(df_kcat)
+```
+
+### Overview of bacterial kcat values
+
+We trim the dataset to include only `bacteria`. Then we extract species annotation using regular expressions, and plot an examplary subset of the data. The goal here is to test if the kcat values are normal-distributed, if there are outliers, and how common outliers are for specific species or EC numbers. These precautions are taken to make sure that the (maximum) kcat values we select are representative, and not extreme measurements that are unlikely to exist under unphysiological conditions (most values in BRENDA are inferred from *in vitro* measurements though).
+
+```{r}
+# split organism column in three
+df_kcat <- df_kcat %>% separate(organism, c("species", "phylogeny", "org_id"), sep = "//") %>%
+  
+  # replace placeholder star with NA
+  mutate_all(function(x) na_if(x, "*")) %>%
+  
+  # filter for 'bacteria' key word
+  filter(grepl('bacteria', phylogeny))
+
+head(df_kcat)
+```
+
+Now that the data is in a reasonable shape, `kcat` value distributions can be plotted broken down by EC number, substrate or organism.
+
+```{r, fig.width = 9, fig.height = 7}
+df_kcat <- df_kcat %>% 
+  
+  # determine number of values per reactions
+  group_by(EC_number) %>%
+  mutate(n_kcat_values = length(kcat))
+  
+# plot
+histogram(~ log10(kcat) | EC_number, 
+  filter(df_kcat, n_kcat_values >= 30),
+  groups = species, breaks = seq(-5, 5, 0.5), 
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  par.settings = custom.lattice, border = "white",
+  scales =list(alternating = FALSE), ylim = c(-5, 60),
+  panel = function(x, ...){
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.histogram(x, ...)
+  }
+)
+```
+
+It becomes quite clear that some of the kcat value distributions contain extreme outliers (1 to 2 orders of magnitude). Extreme values are biologically possible because the kcat can be different for different substrates or organism. Nevertheless it is wise to focus on the majority vote, and exclude kcat values that deviate too much. We filter the 5 % upper and lower quantile if more than 5 kcat values are available per reaction.
+
+```{r, fig.width = 9, fig.height = 7}
+df_kcat <- df_kcat %>%
+  
+  # filter the central 90 % of values (discard upper and lower 5 %)
+  filter(!(n_kcat_values >= 5 & 
+    (kcat < quantile(kcat, 0.05) | kcat > quantile(kcat, 0.95))
+  ))
+
+# plot
+histogram(~ log10(kcat) | EC_number, 
+  filter(df_kcat, n_kcat_values >= 30),
+  groups = species, breaks = seq(-5, 5, 0.5), 
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  par.settings = custom.lattice, border = "white",
+  scales =list(alternating = FALSE), ylim = c(-5, 60),
+  panel = function(x, ...){
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.histogram(x, ...)
+  }
+)
+```
+
+### Function to retrieve kcat values as model constraints
+
+The last step is to devise a function that will match annotated EC numbers from the metabolic model with kcat values from the BRENDA database. It needs to perform the following steps sequentially. For each enzyme E, 
+
+1. look up possible EC numbers in data base
+2. if a *Ralstonia*/*Cupriavidus* entry is available, choose it
+3. else look up *Burkholderiales* and take the median of the subset
+4. else look up *betaproteobacteria* and take the median of the subset
+5. else if none of these categories are available, take the median of all
+
+```{r}
+# The function is implemented in a vesatile standalone way
+# so that it can be reused and adapated any time
+get_kcat <- function(
+  kcat_data, EC_number, 
+  species, phylogeny) {
+  
+  # 
+  
+}
+
+```
+
+
+
+```{r, message = FALSE, warning = FALSE}
+# load model reactions
+df_model <- read_csv("../data/model_reactions.csv")[-1]
+head(df_model)
+```
+
