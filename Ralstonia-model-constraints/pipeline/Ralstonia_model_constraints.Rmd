@@ -63,6 +63,9 @@ df_kcat <- df_kcat %>% separate(organism, c("species", "phylogeny", "org_id"), s
   # replace placeholder star with NA
   mutate_all(function(x) na_if(x, "*")) %>%
   
+  # clip 'EC' away from EC number
+  mutate(EC_number = gsub("^EC", "", EC_number)) %>%
+  
   # filter for 'bacteria' key word
   filter(grepl('bacteria', phylogeny))
 
@@ -126,24 +129,115 @@ The last step is to devise a function that will match annotated EC numbers from 
 4. else look up *betaproteobacteria* and take the median of the subset
 5. else if none of these categories are available, take the median of all
 
-```{r}
-# The function is implemented in a vesatile standalone way
-# so that it can be reused and adapated any time
-get_kcat <- function(
-  kcat_data, EC_number, 
-  species, phylogeny) {
-  
-  # 
-  
-}
+The function is implemented in a versatile self-contained way so that it can be reused and adapated any time.
+It takes the following input parameters:
 
+- `kcat_data` - data frame with kcat values (imported directly from GECKO). Needs at least columns 'EC_number', 'species', 'phylogeny', and 'kcat'
+- `ec_number` - the EC number to look up
+- `species` - the name of the target species
+- `phylogeny` - a set of search terms to look up in order of decreasing specificity
+- `fun_aggregate` - the function to aggregate a selection of kcat values, like max, mean, median, and so on
+
+```{r}
+# main retrieval function
+get_kcat <- function(
+  ec_number, kcat_data,
+  species = NULL, phylogeny = NULL,
+  fun_aggregate = median) {
+  
+  # remove NA kcats from input and filter by EC number
+  kcat_data <- kcat_data %>% ungroup %>%
+    filter(!is.na(kcat), EC_number %in% ec_number)
+  
+  # return NA if EC number is not present
+  if (nrow(kcat_data) == 0) {
+    return(NA)
+  }
+  
+  # filter by species
+  index <- FALSE
+  if (!is.null(species)) {
+    index <- grepl(species, kcat_data[["species"]])
+    if (any(index)) kcat_data <- filter(kcat_data, index)
+  }
+  
+  # filter by phylogenetic terms
+  if (!is.null(phylogeny) & !any(index)) {
+    for (key in phylogeny) {
+      index <- grepl(key, kcat_data[["phylogeny"]])
+      if (any(index)) kcat_data <- filter(kcat_data, index); break
+    }
+  }
+  
+  # aggregate values
+  kcat_data %>% pull(kcat) %>% fun_aggregate
+}
 ```
 
+Now let's test function using regular expressions!
 
+```{r}
+get_kcat(
+  ec_number = "1.1.1.1",
+  kcat_data = df_kcat,
+  species = "[Cc]upriavidus|[Rr]alstonia",
+  phylogeny = c("[Bb]urkholderiales", "[Bb]etaproteobacteria")
+)
+```
+
+### Retrieve kcat values and export
+
+The final step is to apply the function to each EC number that is present in the model. We retrieve only **full matches**, not partial matches like `1.2.3.-`. We also retrieve the **median kcat values** if several are available. If this appears to be over-constraining a resource allocation model, we could also select the **maximum kcat** instead. We then plot the distribution of `kcat` values on a log10 scale. We can see from the quantiles that the central 75 % of `kcat` values lie between 2.0 and 45.0.
 
 ```{r, message = FALSE, warning = FALSE}
 # load model reactions
 df_model <- read_csv("../data/model_reactions.csv")[-1]
 head(df_model)
+
+# retrieve kcat values and add new column to reaction data
+df_model$kcat <- sapply(df_model$EC_number, USE.NAMES = FALSE, function(ec_number) {
+  # preprocessing ec strings
+  ec_number %>% str_replace_all("\\[|\\]|'", "") %>% 
+    str_split(", ") %>% unlist %>%
+    get_kcat(df_kcat,
+      species = "[Cc]upriavidus|[Rr]alstonia", 
+      phylogeny = c("[Bb]urkholderiales", "[Bb]etaproteobacteria")
+    )
+})
+
+# quantiles
+df_model$kcat %>% quantile(na.rm = TRUE)
+
+# overview about kcat value distribution
+histogram(~ kcat, df_model,
+  breaks = seq(-7, 7, 0.25), 
+  par.settings = custom.lattice, border = "white",
+  scales = list(x = list(log = 10)),
+  panel = function(x, ...){
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.abline(v = -7:7, col = grey(0.9))
+    panel.histogram(x, ...)
+  }
+)
+```
+
+---------
+
+The final step is to export the data frame in a format that is suitable for RBApy input. In this case the format requirements are:
+
+- tab-separated values, no header
+- units in `1/h` instead of `1/s` (x 3600)
+- reaction ID in column 1, format (`R_`)`ID_enzyme` or `ID_transporter`
+- max kcat in column 2
+- min kcat in column 3 (backward efficiency, can be identical)
+- no NA values (only complete rows)
+
+```{r}
+df_model %>%
+  select(reaction_id, kcat) %>%
+  mutate(reaction_id = paste0("R_", reaction_id, "_enzyme")) %>%
+  mutate(kcat = kcat * 3600, kcat_2 = kcat) %>%
+  filter(!is.na(kcat)) %>%
+  write_tsv("../data/enzyme_efficiency.tsv", col_names = FALSE)
 ```
 
