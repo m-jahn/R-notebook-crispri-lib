@@ -52,9 +52,9 @@ df_kcat <- read_tsv("../data/GECKO_20200505_max_KCAT.tsv", col_names = FALSE)[-5
 head(df_kcat)
 ```
 
-### Overview of bacterial kcat values
+### Overview of kcat values
 
-We trim the dataset to include only `bacteria`. Then we extract species annotation using regular expressions, and plot an examplary subset of the data. The goal here is to test if the kcat values are normal-distributed, if there are outliers, and how common outliers are for specific species or EC numbers. These precautions are taken to make sure that the (maximum) kcat values we select are representative, and not extreme measurements that are unlikely to exist under unphysiological conditions (most values in BRENDA are inferred from *in vitro* measurements though).
+The first step is to reformat the data to a more usable shape. Then, we extract species annotation using regular expressions, and plot an examplary subset of the data. The goal here is to test if the kcat values are normal-distributed, if there are outliers, and how common outliers are for specific species or EC numbers. These precautions are taken to make sure that the (maximum) kcat values we select are representative, and not extreme measurements that are unlikely to exist under unphysiological conditions (most values in BRENDA are inferred from *in vitro* measurements though).
 
 ```{r}
 # split organism column in three
@@ -64,10 +64,7 @@ df_kcat <- df_kcat %>% separate(organism, c("species", "phylogeny", "org_id"), s
   mutate_all(function(x) na_if(x, "*")) %>%
   
   # clip 'EC' away from EC number
-  mutate(EC_number = gsub("^EC", "", EC_number)) %>%
-  
-  # filter for 'bacteria' key word
-  filter(grepl('bacteria', phylogeny))
+  mutate(EC_number = gsub("^EC", "", EC_number))
 
 head(df_kcat)
 ```
@@ -83,8 +80,7 @@ df_kcat <- df_kcat %>%
   
 # plot
 histogram(~ log10(kcat) | EC_number, 
-  filter(df_kcat, n_kcat_values >= 30),
-  groups = species, breaks = seq(-5, 5, 0.5), 
+  filter(df_kcat, n_kcat_values >= 75),
   as.table = TRUE, between = list(x = 0.5, y = 0.5),
   par.settings = custom.lattice, border = "white",
   scales =list(alternating = FALSE), ylim = c(-5, 60),
@@ -107,8 +103,7 @@ df_kcat <- df_kcat %>%
 
 # plot
 histogram(~ log10(kcat) | EC_number, 
-  filter(df_kcat, n_kcat_values >= 30),
-  groups = species, breaks = seq(-5, 5, 0.5), 
+  filter(df_kcat, n_kcat_values >= 75),
   as.table = TRUE, between = list(x = 0.5, y = 0.5),
   par.settings = custom.lattice, border = "white",
   scales =list(alternating = FALSE), ylim = c(-5, 60),
@@ -187,38 +182,56 @@ get_kcat(
 
 ### Retrieve kcat values and export
 
-The final step is to apply the function to each EC number that is present in the model. We retrieve only **full matches**, not partial matches like `1.2.3.-`. We also retrieve the **median kcat values** if several are available. If this appears to be over-constraining a resource allocation model, we could also select the **maximum kcat** instead. We then plot the distribution of `kcat` values on a log10 scale. We can see from the quantiles that the central 75 % of `kcat` values lie between 2.0 and 45.0.
+The final step is to apply the function to each EC number that is present in the model. We retrieve only **full matches**, not partial matches like `1.2.3.-`. We retrieve the **minimum, median, and maximum kcat values** per reaction if several are available. Depending on the issue of over-constraining a resource allocation model, we can select the optimal/most realistic option. 
 
 ```{r, message = FALSE, warning = FALSE}
 # load model reactions
 df_model <- read_csv("../data/model_reactions.csv")[-1]
 head(df_model)
 
+# preprocessing EC numbers
+df_model <- df_model %>%
+  mutate(EC_number = EC_number %>% 
+    str_replace_all("\\[|\\]|'", ""))
+
 # retrieve kcat values and add new column to reaction data
-df_model$kcat <- sapply(df_model$EC_number, USE.NAMES = FALSE, function(ec_number) {
-  # preprocessing ec strings
-  ec_number %>% str_replace_all("\\[|\\]|'", "") %>% 
-    str_split(", ") %>% unlist %>%
-    get_kcat(df_kcat,
-      species = "[Cc]upriavidus|[Rr]alstonia", 
-      phylogeny = c("[Bb]urkholderiales", "[Bb]etaproteobacteria")
-    )
-})
+for (fn in c("min", "median", "max")) {
+  df_model[[paste0("kcat_", fn)]] <- sapply(
+    df_model$EC_number, USE.NAMES = FALSE, function(ec_number) {
+      ec_number %>% str_split(", ") %>% unlist %>%
+      get_kcat(
+        df_kcat,
+        fun_aggregate = get(fn),
+        species = "[Cc]upriavidus|[Rr]alstonia", 
+        phylogeny = c("[Bb]urkholderiales", "[Bb]etaproteobacteria")
+      )
+    }
+  )
+}
+```
 
-# quantiles
-df_model$kcat %>% quantile(na.rm = TRUE)
+Next we will have a look at the distribution of the retrieved minimal, maximal and median `kcat` values. We plot the distribution of `kcat` values on a log10 scale. The spread of `kcat` values is on average around 2 orders of magnitude between minimum and maximum (global medians around 1, 10, 100, see figure below). From the quantile analysis it seems that the central 75 % of `kcat` values lie between 2 and 53 with a global median of 11.1 1/s (median kcats). This is extremely close to an average default kcat of 12.5 1/s suggested in Bulovic et al., 2019, but lower than the default values used in CobraME (65 1/s) and ETFL (172 1/s).
 
+```{r, fig.width = 8}
 # overview about kcat value distribution
-histogram(~ kcat, df_model,
-  breaks = seq(-7, 7, 0.25), 
+histogram(~ kcat_min + kcat_median + kcat_max, 
+  df_model,
+  breaks = seq(-7, 7, 0.3), 
   par.settings = custom.lattice, border = "white",
-  scales = list(x = list(log = 10)),
+  scales = list(alternating = FALSE, x = list(log = 10)),
   panel = function(x, ...){
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.abline(v = -7:7, col = grey(0.9))
+    med = median(x, na.rm = TRUE)
+    panel.abline(v = med, col = grey(0.4), lty = 2, lwd = 1.5)
+    panel.text(-4, 3, label = paste0("m = ", round(10^med, 3), " 1/s"), col = grey(0.4))
     panel.histogram(x, ...)
   }
 )
+
+# use quantiles on log 10 scaled kcats and scale back 
+# (we want data normally distributed)
+quantile(log10(df_model$kcat_median), na.rm = TRUE) %>% {10^.}
 ```
 
 ---------
@@ -233,11 +246,14 @@ The final step is to export the data frame in a format that is suitable for RBAp
 - no NA values (only complete rows)
 
 ```{r}
-df_model %>%
-  select(reaction_id, kcat) %>%
+df_export <- df_model %>%
+  select(reaction_id, kcat_median) %>% rename(kcat = kcat_median) %>%
   mutate(reaction_id = paste0("R_", reaction_id, "_enzyme")) %>%
   mutate(kcat = kcat * 3600, kcat_2 = kcat) %>%
-  filter(!is.na(kcat)) %>%
-  write_tsv("../data/enzyme_efficiency.tsv", col_names = FALSE)
+  filter(!is.na(kcat))
+
+write_tsv(df_export, "../data/enzyme_efficiency.tsv", col_names = FALSE)
+write_tsv(df_export, "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/enzyme_efficiency.tsv", col_names = FALSE)
 ```
+
 
