@@ -45,10 +45,11 @@ rmarkdown::render("pipeline.Rmd")
 
 ### Contents
 
-#### Genome annotation
+#### Ralstonia resource allocation
 
 - [_Ralstonia eutropha_ COG re-annotation](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_genome_re_annotation.nb.html)
 - [_Ralstonia eutropha_ gene essentiality analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_essentiality_analysis.nb.html)
+- [_Ralstonia eutropha_ model constraints](https://m-jahn.github.io/R-notebooks/Ralstonia_model_constraints.nb.html)
 
 #### CRISPRi library in _Synechocystis_ sp. PCC6803 (submitted paper)
 

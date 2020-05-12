@@ -253,7 +253,82 @@ df_export <- df_model %>%
   filter(!is.na(kcat))
 
 write_tsv(df_export, "../data/enzyme_efficiency.tsv", col_names = FALSE)
+```
+
+```{r, include = FALSE}
+# also export directly to RBA model folder
 write_tsv(df_export, "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/enzyme_efficiency.tsv", col_names = FALSE)
 ```
+
+----------
+
+## Fraction of protein per compartment
+
+The RBA model takes as another input parameter (or constraint) the fraction of protein per compartment. This constraint is important as it allows the cell to have only a limited amount of protein in cytoplasm or membrane compartments, for example. This constraint can be constant or it can be growth rate dependent e.g. by a linear relationship. The RBA modeling framework contains a function to estimate fraction of protein per compartment using input data that is available:
+
+- `Experiment` - cultivations with different known growth rates (steady state)
+- `ProteinData` - protein abundances (estimated using MS)
+- `LocationData` - protein localization (annotated and predicted)
+
+We re-format available data to the standard required by `RBApy/estim`, see RBApy manual for details. THe first step is to prepare cultivation data with growth rates. We focus on the standard condition as a training data set (fructose as carbon source, no NH4+ limitation).
+
+```{r}
+df_experiment <- data.frame(
+  Experiment_ID = paste0("FRC ", c(0.05,0.1, 0.15, 0.2, 0.25)),
+  growth_rate = c(0.05, 0.1, 0.15, 0.2, 0.25)
+)
+```
+
+The next step is to prepare a table with protein abundance and localization. Protein abundance can be in any unit according to the RBApy manual, but it's best to use `mol fraction` instead of `mass fraction` as all other RBApy functions also use `mmol`. The `mol fraction` is already available in the processed data set.
+
+```{r}
+# import proteomics data
+load("~/Documents/SciLifeLab/Resources/R_projects/ShinyProt/data/Ralstonia_eutropha.Rdata")
+
+# filter only required conditions
+df_protein <- Ralstonia_eutropha %>% filter(grepl("FRC ", condition)) %>%
+  
+  # select only required columns and spread to long format
+  select(condition, locus_tag, growthrate, Psortb_localization, mol_fraction) %>%
+  set_names(c("condition", "protein", "growthrate", "location", "mol_fraction")) %>%
+  
+  # match localization names to model, simplify
+  mutate(location = recode(location, Unknown = "Cytoplasm", Cytoplasmic = "Cytoplasm")) %>%
+  mutate(location = replace(location, location != "Cytoplasm", "Cell_membrane"))
+
+head(df_protein)
+```
+
+Now we can summarize the data by taking the sum of `mol fraction` over conditions and localizations. A simple approach to finding linear functions, where all proteins of all locations sum to one for a specific growth rate, would be to fit linear models for all compartments esxcept one (e.g. cytoplasmic proteins, the major compartment). This one will then get a linear model fitted from the residual protein mass. We expect the error for `Cytoplasm` to be very small, as it is the biggest compartment. However it turned out that the linear models fitted to both compartments perfectly sum to one.
+
+```{r, fig.width = 6, fig.height = 3.5}
+df_prot_per_comp <- df_protein %>% 
+  group_by(growthrate, location) %>%
+  summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE))
+
+# we can see a slight increase in cytoplasmic proteins
+# and decrease in cell membrane proteins with rowth rate
+xyplot(prot_per_compartment ~ growthrate | location, 
+  df_prot_per_comp,
+  groups = location, ylim = c(-0.1, 1.1),
+  par.settings = custom.lattice,
+  scales = list(alternating = FALSE),
+  panel = function(x, y, ...){
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.xyplot(x, y, ...)
+    panel.lmlineq(x, y, r.squared = TRUE, 
+      fontfamily = "FreeSans", pos = 3, offset = 0.6, ...)
+  }
+)
+
+# The two models sum to one for any rbitrary growth rate
+fit_cell_membrane = function(mu) 0.152 - 0.178*mu
+fit_cytoplasm = function(mu) 0.848 + 0.178*mu
+
+print(fit_cell_membrane(0.123) + fit_cytoplasm (0.123))
+
+```
+
+
 
 
