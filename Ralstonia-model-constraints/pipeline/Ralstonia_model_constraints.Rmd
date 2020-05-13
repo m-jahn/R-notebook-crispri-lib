@@ -37,6 +37,13 @@ library(tidyverse)
 library(stringi)
 ```
 
+```{r}
+# define some local input and output directories
+# WARNING: THESE ARE NOT PART OF THE GITHUB REPOSITORY
+RBA_dir <- "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/"
+prot_dir <- "../../../ShinyProt/data/"
+```
+
 ## Turnover numbers
 
 ### Import data from GECKO
@@ -255,9 +262,10 @@ df_export <- df_model %>%
 write_tsv(df_export, "../data/enzyme_efficiency.tsv", col_names = FALSE)
 ```
 
-```{r, include = FALSE}
+
+```{r, include = FALSE, eval = FALSE}
 # also export directly to RBA model folder
-write_tsv(df_export, "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/enzyme_efficiency.tsv", col_names = FALSE)
+write_tsv(df_export, paste0(RBA_dir, "enzyme_efficiency.tsv"), col_names = FALSE)
 ```
 
 ----------
@@ -270,7 +278,7 @@ The RBA model takes as another input parameter (or constraint) the fraction of p
 - `ProteinData` - protein abundances (estimated using MS)
 - `LocationData` - protein localization (annotated and predicted)
 
-We re-format available data to the standard required by `RBApy/estim`, see RBApy manual for details. THe first step is to prepare cultivation data with growth rates. We focus on the standard condition as a training data set (fructose as carbon source, no NH4+ limitation).
+We re-format available data to the standard required by `RBApy/estim`, see RBApy manual for details. The first step is to prepare cultivation data with growth rates. We focus on the standard condition as a training data set (fructose as carbon source, no NH4+ limitation).
 
 ```{r}
 df_experiment <- data.frame(
@@ -279,14 +287,15 @@ df_experiment <- data.frame(
 )
 ```
 
-The next step is to prepare a table with protein abundance and localization. Protein abundance can be in any unit according to the RBApy manual, but it's best to use `mol fraction` instead of `mass fraction` as all other RBApy functions also use `mmol`. The `mol fraction` is already available in the processed data set.
+The next step is to prepare a table with protein abundance and localization. Protein abundance can be in any unit according to the RBApy manual, but it's best to use `mol fraction` instead of `mass fraction`, as all other RBApy functions also use `mmol`. The `mol fraction` is already available in the processed data set. The built-in `estim` functions don't seem to be well supported in python3 and raise errors. We therefore do the estimation manually by fitting linear models to the growthrate-protein abundance relationship. The idea is similar to the RBA `estim` function but less complicated.
 
 ```{r}
 # import proteomics data
-load("~/Documents/SciLifeLab/Resources/R_projects/ShinyProt/data/Ralstonia_eutropha.Rdata")
+load(paste0(prot_dir, "Ralstonia_eutropha.Rdata"))
 
-# filter only required conditions
-df_protein <- Ralstonia_eutropha %>% filter(grepl("FRC ", condition)) %>%
+# simplify condition strings
+df_protein <- Ralstonia_eutropha %>% ungroup %>%
+  mutate(condition = sapply(condition, function(x) unlist(stri_extract_all_words(x))[1])) %>%
   
   # select only required columns and spread to long format
   select(condition, locus_tag, growthrate, Psortb_localization, mol_fraction) %>%
@@ -299,34 +308,110 @@ df_protein <- Ralstonia_eutropha %>% filter(grepl("FRC ", condition)) %>%
 head(df_protein)
 ```
 
-Now we can summarize the data by taking the sum of `mol fraction` over conditions and localizations. A simple approach to finding linear functions, where all proteins of all locations sum to one for a specific growth rate, would be to fit linear models for all compartments esxcept one (e.g. cytoplasmic proteins, the major compartment). This one will then get a linear model fitted from the residual protein mass. We expect the error for `Cytoplasm` to be very small, as it is the biggest compartment. However it turned out that the linear models fitted to both compartments perfectly sum to one.
+Now we can summarize the data by taking the sum of `mol fraction` over conditions and localizations. A simple approach to finding linear functions, where all proteins of all locations sum to one for a specific growth rate, would be to fit linear models for all compartments except one (e.g. cytoplasmic proteins, the biggest compartment). This one will then get a linear model fitted from the residual protein mass. We expect the error for `Cytoplasm` to be very small, as it is the biggest compartment. However it turned out that the linear models fitted to both compartments perfectly sum to one (see below).
 
-```{r, fig.width = 6, fig.height = 3.5}
-df_prot_per_comp <- df_protein %>% 
-  group_by(growthrate, location) %>%
-  summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE))
+```{r, message = FALSE}
+# First retrieve the proteins that are not part of the model, which is needed
+# to  calculate non-enzymatic fraction later on
+model_genes <- c(
+  read_tsv(paste0(RBA_dir, "protein_summary.tsv"))$IDENTIFIER,
+  read_tsv(paste0(RBA_dir, "ribosome.tsv"))[["Gene names"]],
+  read_tsv(paste0(RBA_dir, "chaperones.tsv"))[["Gene names"]]
+)
 
+# extract locus_tags only
+model_genes <- model_genes %>% stri_extract_first_regex(
+  pattern = "H16_[A-Z][0-9]{4}|PHG[0-9]{3}")
+
+# add new NE_protein column
+df_prot_per_comp <- df_protein %>%
+  mutate(NE_protein = !protein %in% model_genes) %>%
+  group_by(condition, location, growthrate)
+```
+
+
+```{r, fig.width = 9, fig.height = 5}
 # we can see a slight increase in cytoplasmic proteins
 # and decrease in cell membrane proteins with rowth rate
-xyplot(prot_per_compartment ~ growthrate | location, 
-  df_prot_per_comp,
-  groups = location, ylim = c(-0.1, 1.1),
+xyplot(prot_per_compartment ~ growthrate | condition * location, 
+  #summarize relative NE protein fraction per compartment
+  df_prot_per_comp %>%
+    summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)),
+  groups = location, ylim = c(-0.15, 1.15),
   par.settings = custom.lattice,
   scales = list(alternating = FALSE),
-  panel = function(x, y, ...){
+  panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.superpose(x, y, ...)
+  }, panel.groups = function(x, y, ...) {
     panel.xyplot(x, y, ...)
-    panel.lmlineq(x, y, r.squared = TRUE, 
-      fontfamily = "FreeSans", pos = 3, offset = 0.6, ...)
+    panel.lmlineq(x, y, r.squared = TRUE,
+      pos = 3, offset = 0.6, ...)
   }
 )
 
-# The two models sum to one for any rbitrary growth rate
+# The two models sum to one for any arbitrary growth rate
 fit_cell_membrane = function(mu) 0.152 - 0.178*mu
 fit_cytoplasm = function(mu) 0.848 + 0.178*mu
 
-print(fit_cell_membrane(0.123) + fit_cytoplasm (0.123))
+# raise error if compartments don't sum to one
+stopifnot(fit_cell_membrane(0.123) + fit_cytoplasm (0.123) == 1)
+```
 
+----------
+
+## Fraction of non-enzymatic protein per compartment
+
+The previous calculation determined how the total protein pool is distributed over compartments. In this section, we will go one level deeper and determine the fraction of **non-enzymatic protein** per compartment, analogously to the previous calculation. That means every compartment's protein pool is further subdivided into two sectors, enzymatic and non-anzymatic proteins, and these sectors can have --again-- a linear dependency on growth rate. According to the RBApy manual, the proteins that are **considered non-enzymatic are all proteins not acting as enzymes or molecular machines** in the model (such as ribosomes, chaperones, DNA polymerase and so on). Non-enzymatic (NE) proteins are therefore all proteins not captured by the RBA model at all. The fraction of NE proteins per compartment is a percentage of the proteins for that compartment only (each compartment sums to 1).
+
+```{r, fig.width = 9, fig.height = 5}
+# determine NE protein per compartment
+df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
+  summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
+  summarize(ne_prot_per_compartment = 
+    prot_per_compartment[2]/sum(prot_per_compartment)
+  ) %>%
+  
+# the fraction of NE protein per compartment decreases with growth rate
+xyplot(ne_prot_per_compartment ~ growthrate | condition * location, .,
+  groups = location, ylim = c(-0.15, 1.15),
+  par.settings = custom.lattice,
+  scales = list(alternating = FALSE),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.superpose(x, y, ...)
+  }, panel.groups = function(x, y, ...) {
+    panel.xyplot(x, y, ...)
+    panel.lmlineq(x, y, r.squared = TRUE,
+      pos = 3, offset = 0.6, ...)
+  }
+)
+```
+
+**Summary:**
+Regardless of the cultivation condition or substrate limitation, it is possible to see growth rate dependent trends. Overall, the fraction of cytoplasmic proteins increases slightly with growth rate while membrane-associated proteins decrease. This makes sense as often expression of transporters is downregulated if bacteria don't need to scavenge substrates. We also see that the absolute majority of proteins is located in the cytoplasm (> 85% under all conditions).
+
+The non-enzymatic fraction of proteins (proteins *not covered* by the model) decreases with growth rate from around 60% o 50% for cytoplasmic proteins, but is relatively constant for membrane associated ones. Most membrane-associated proteins (90% of mol fraction) are not covered by the model. The following figure summarizes all growth rate dependent trends.
+
+```{r, fig.width = 9, fig.height = 2.8}
+df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
+  summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
+  ungroup %>% mutate(
+    location = recode(location, Cytoplasm = "CP", Cell_membrane = "CM"),
+    location = paste(location, ifelse(NE_protein, "NE", "E"), sep ="_")) %>%
+  filter(condition == "FRC") %>%
+  
+  xyplot( ~ prot_per_compartment | growthrate * condition, .,
+    groups = factor(location), scales = list(draw = FALSE),
+    par.settings = custom.lattice,
+    col = c("#56D16F", "#258F2C", "#D68B1C", "#A3660A"),
+    cex = 0.6, border = grey(0.3),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.piechart(x, diameter_inner = 0.1, 
+        diameter_sector = 0.15, ...)
+    }
+  )
 ```
 
 
