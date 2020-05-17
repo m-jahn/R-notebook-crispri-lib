@@ -14,15 +14,15 @@ This R notebook is a bioinformatics pipeline to **collect constraints for a geno
 
 A resource allocation model can be coarse-grained (few symbolic reactions) or have genome scale detail (all known biochemical reactions and their associated genes). However, both types of models need to be constrained by a set of parameters to make realistic predictions. Depending on the model frame work, constraints can be equality constraints (example: turnover number of an enzyme E kcat<sub>E</sub> = 100 s<sup>-1</sup>), or inequality constraints (0 s<sup>-1</sup> <= kcat<sub>E</sub> <= 100 s<sup>-1</sup>). 
 
-This notebook has the purpose to collect **constant and growth-rate dependent constraints** as they are used in [RBA models](https://sysbioinra.github.io/RBApy/). In RBApy, apparent enzyme efficiencies (_kapp_), protein abundance, molecular machine abundance (protein/macromolecule complexes), and fluxes can be constrained. RBApy has the following possibilities for custom constraints.
+This notebook has the purpose to collect **constant and growth-rate dependent constraints** as they are used in [RBA models](https://sysbioinra.github.io/RBApy/). In RBApy, apparent enzyme efficiencies (k<sub>app</sub>), protein abundance, molecular machine abundance (protein/macromolecule complexes), and fluxes can be constrained. RBApy has the following possibilities for custom constraints.
 
 - constants (example: `A = 0.1`)
 - linear relationship, e.g. with growth rate µ (example: `B = 2 * µ + 0.1`)
-- Michaelis-Menthen like kinetics for kapp (example: `kapp = kcat * [S] / ([S] + Km)`)
+- Michaelis-Menthen like kinetics for k<sub>app</sub> (example: `kapp = kcat * [S] / ([S] + Km)`)
 
 Different types of data were collected to constrain at least two major determinants of a resource allocation model.
 
-1. **turnover number `kcat`**: Organism-specific values can be downloaded from enzyme data base BRENDA. In this case we use a precompiled file `max_KCAT.txt` from another resource allocation algorithm, [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases)
+1. **turnover number `k<sub>kat</sub>`**: Organism-specific values can be downloaded from enzyme data base BRENDA. In this case we use a precompiled file `max_KCAT.txt` from another resource allocation algorithm, [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases)
 2. **protein abundance**: protein abundance was determined with mass spcetrometry globally for *R. eutropha* using different growth rates and carbon sources. This data will be used to estimate and constrain enzyme abundance, and non-enzyme protein abundance.
 
 
@@ -44,11 +44,11 @@ RBA_dir <- "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/
 prot_dir <- "../../../ShinyProt/data/"
 ```
 
-## Turnover numbers
+## k<sub>app</sub> estimation using BRENDA
 
 ### Import data from GECKO
 
-The precompiled turnover numbers were downloaded from [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases) and apparently created Aug 16, 2018. The table contains all possible kcat values per enzyme class. It also contains a rudimentary phylogenetic classification (bacteria, archae, eukaryota, and so on) that can be used to strip matching kcat values with regular expressions.
+The precompiled turnover numbers were downloaded from [GECKO](https://github.com/SysBioChalmers/GECKO/tree/master/databases) and apparently created Aug 16, 2018. The table contains all possible k<sub>kat</sub> values per enzyme class. It also contains a rudimentary phylogenetic classification (bacteria, archae, eukaryota, and so on) that can be used to strip matching k<sub>kat</sub> values with regular expressions.
 
 ```{r, message = FALSE, warning = FALSE}
 # load kcat data
@@ -59,9 +59,9 @@ df_kcat <- read_tsv("../data/GECKO_20200505_max_KCAT.tsv", col_names = FALSE)[-5
 head(df_kcat)
 ```
 
-### Overview of kcat values
+### Overview of k<sub>kat</sub> values
 
-The first step is to reformat the data to a more usable shape. Then, we extract species annotation using regular expressions, and plot an examplary subset of the data. The goal here is to test if the kcat values are normal-distributed, if there are outliers, and how common outliers are for specific species or EC numbers. These precautions are taken to make sure that the (maximum) kcat values we select are representative, and not extreme measurements that are unlikely to exist under unphysiological conditions (most values in BRENDA are inferred from *in vitro* measurements though).
+The first step is to reformat the data to a more usable shape. Then, we extract species annotation using regular expressions, and plot an examplary subset of the data. The goal here is to test if the k<sub>kat</sub> values are normal-distributed, if there are outliers, and how common outliers are for specific species or EC numbers. These precautions are taken to make sure that the (maximum) k<sub>kat</sub> values we select are representative, and not extreme measurements that are unlikely to exist under unphysiological conditions (most values in BRENDA are inferred from *in vitro* measurements though).
 
 ```{r}
 # split organism column in three
@@ -76,7 +76,7 @@ df_kcat <- df_kcat %>% separate(organism, c("species", "phylogeny", "org_id"), s
 head(df_kcat)
 ```
 
-Now that the data is in a reasonable shape, `kcat` value distributions can be plotted broken down by EC number, substrate or organism.
+Now that the data is in a reasonable shape, k<sub>kat</sub> value distributions can be plotted broken down by EC number, substrate or organism.
 
 ```{r, fig.width = 9, fig.height = 7}
 df_kcat <- df_kcat %>% 
@@ -98,7 +98,7 @@ histogram(~ log10(kcat) | EC_number,
 )
 ```
 
-It becomes quite clear that some of the kcat value distributions contain extreme outliers (1 to 2 orders of magnitude). Extreme values are biologically possible because the kcat can be different for different substrates or organism. Nevertheless it is wise to focus on the majority vote, and exclude kcat values that deviate too much. We filter the 5 % upper and lower quantile if more than 5 kcat values are available per reaction.
+It becomes quite clear that some of the k<sub>kat</sub> value distributions contain extreme outliers (1 to 2 orders of magnitude). Extreme values are biologically possible because the k<sub>kat</sub> can be different for different substrates or organism. Nevertheless it is wise to focus on the majority vote, and exclude k<sub>kat</sub> values that deviate too much. We filter the 5 % upper and lower quantile if more than 5 k<sub>kat</sub> values are available per reaction.
 
 ```{r, fig.width = 9, fig.height = 7}
 df_kcat <- df_kcat %>%
@@ -121,9 +121,9 @@ histogram(~ log10(kcat) | EC_number,
 )
 ```
 
-### Function to retrieve kcat values as model constraints
+### Function to retrieve k<sub>kat</sub> values as model constraints
 
-The last step is to devise a function that will match annotated EC numbers from the metabolic model with kcat values from the BRENDA database. It needs to perform the following steps sequentially. For each enzyme E, 
+The last step is to devise a function that will match annotated EC numbers from the metabolic model with k<sub>kat</sub> values from the BRENDA database. It needs to perform the following steps sequentially. For each enzyme E, 
 
 1. look up possible EC numbers in data base
 2. if a *Ralstonia*/*Cupriavidus* entry is available, choose it
@@ -134,11 +134,11 @@ The last step is to devise a function that will match annotated EC numbers from 
 The function is implemented in a versatile self-contained way so that it can be reused and adapated any time.
 It takes the following input parameters:
 
-- `kcat_data` - data frame with kcat values (imported directly from GECKO). Needs at least columns 'EC_number', 'species', 'phylogeny', and 'kcat'
+- `kcat_data` - data frame with k<sub>kat</sub> values (imported directly from GECKO). Needs at least columns 'EC_number', 'species', 'phylogeny', and 'kcat'
 - `ec_number` - the EC number to look up
 - `species` - the name of the target species
 - `phylogeny` - a set of search terms to look up in order of decreasing specificity
-- `fun_aggregate` - the function to aggregate a selection of kcat values, like max, mean, median, and so on
+- `fun_aggregate` - the function to aggregate a selection of k<sub>kat</sub> values, like max, mean, median, and so on
 
 ```{r}
 # main retrieval function
@@ -187,9 +187,9 @@ get_kcat(
 )
 ```
 
-### Retrieve kcat values and export
+### Retrieve k<sub>kat</sub> values and export
 
-The final step is to apply the function to each EC number that is present in the model. We retrieve only **full matches**, not partial matches like `1.2.3.-`. We retrieve the **minimum, median, and maximum kcat values** per reaction if several are available. Depending on the issue of over-constraining a resource allocation model, we can select the optimal/most realistic option. 
+The final step is to apply the function to each EC number that is present in the model. We retrieve only **full matches**, not partial matches like `1.2.3.-`. We retrieve the **minimum, median, and maximum k<sub>kat</sub> values** per reaction if several are available. Depending on the issue of over-constraining a resource allocation model, we can select the optimal/most realistic option. 
 
 ```{r, message = FALSE, warning = FALSE}
 # load model reactions
@@ -217,7 +217,7 @@ for (fn in c("min", "median", "max")) {
 }
 ```
 
-Next we will have a look at the distribution of the retrieved minimal, maximal and median `kcat` values. We plot the distribution of `kcat` values on a log10 scale. The spread of `kcat` values is on average around 2 orders of magnitude between minimum and maximum (global medians around 1, 10, 100, see figure below). From the quantile analysis it seems that the central 75 % of `kcat` values lie between 2 and 53 with a global median of 11.1 1/s (median kcats). This is extremely close to an average default kcat of 12.5 1/s suggested in Bulovic et al., 2019, but lower than the default values used in CobraME (65 1/s) and ETFL (172 1/s).
+Next we will have a look at the distribution of the retrieved minimal, maximal and median k<sub>kat</sub> values. We plot the distribution of k<sub>kat</sub> values on a log10 scale. The spread of k<sub>kat</sub> values is on average around 2 orders of magnitude between minimum and maximum (global medians around 1, 10, 100, see figure below). From the quantile analysis it seems that the central 75 % of k<sub>kat</sub> values lie between 2 and 53 with a global median of 11.1 1/s (median k<sub>kat</sub>s). This is extremely close to an average default k<sub>kat</sub> of 12.5 1/s suggested in Bulovic et al., 2019, but lower than the default values used in CobraME (65 1/s) and ETFL (172 1/s).
 
 ```{r, fig.width = 8}
 # overview about kcat value distribution
@@ -248,8 +248,8 @@ The final step is to export the data frame in a format that is suitable for RBAp
 - tab-separated values, no header
 - units in `1/h` instead of `1/s` (x 3600)
 - reaction ID in column 1, format (`R_`)`ID_enzyme` or `ID_transporter`
-- max kcat in column 2
-- min kcat in column 3 (backward efficiency, can be identical)
+- max k<sub>kat</sub> in column 2
+- min k<sub>kat</sub> in column 3 (backward efficiency, can be identical)
 - no NA values (only complete rows)
 
 ```{r}
@@ -270,32 +270,159 @@ write_tsv(df_export, paste0(RBA_dir, "enzyme_efficiency.tsv"), col_names = FALSE
 
 ----------
 
-## Fraction of protein per compartment
+## k<sub>app</sub> estimation using proteomics/fluxomics
 
-The RBA model takes as another input parameter (or constraint) the fraction of protein per compartment. This constraint is important as it allows the cell to have only a limited amount of protein in cytoplasm or membrane compartments, for example. This constraint can be constant or it can be growth rate dependent e.g. by a linear relationship. The RBA modeling framework contains a function to estimate fraction of protein per compartment using input data that is available:
+### Background
 
-- `Experiment` - cultivations with different known growth rates (steady state)
-- `ProteinData` - protein abundances (estimated using MS)
-- `LocationData` - protein localization (annotated and predicted)
+The second approach of estimating k<sub>app</sub> values is to perform an estimation based on in-house measurements instead of using published k<sub>cat</sub> values from literature ot databases. The k<sub>app</sub> constants are actually a collective parameter, a helper construct to link enzyme fluxes to enzyme abundance, so that flux v = k<sub>app</sub> * [E]. The k<sub>app</sub> then besomes a single parameter that in reality includes the kinetic parameters of the enzyme, so that k<sub>app</sub> ~ k<sub>cat</sub> * [S]/([S] + K<sub>m</sub>). The reality becomes even more complicated taking substrate and product concentrations ([S], [P]), affinities (Km), and thermodynamic parameters into account.
 
-We re-format available data to the standard required by `RBApy/estim`, see RBApy manual for details. The first step is to prepare cultivation data with growth rates. We focus on the standard condition as a training data set (fructose as carbon source, no NH4+ limitation).
+However, the idea is that the k<sub>app</sub> parameter is kept constant for different conditions, while the flux (and the enzyme abundance) is allowed to change. We can then find different scenarios for enzyme saturation states:
 
-```{r}
-df_experiment <- data.frame(
-  Experiment_ID = paste0("FRC ", c(0.05,0.1, 0.15, 0.2, 0.25)),
-  growth_rate = c(0.05, 0.1, 0.15, 0.2, 0.25)
-)
-```
+- the flux through an enzyme and therefore its abundance increases in the model, **but not in measured enzyme abundance**: --> k<sub>app</sub> is higher than estimated, **enzyme not saturated**
+- the flux through an enzyme and therefore its abundance increases in the model, **and in measured enzyme abundance**: --> k<sub>app</sub> is correctly estimated, **enzyme is saturated**
 
-The next step is to prepare a table with protein abundance and localization. Protein abundance can be in any unit according to the RBApy manual, but it's best to use `mol fraction` instead of `mass fraction`, as all other RBApy functions also use `mmol`. The `mol fraction` is already available in the processed data set. The built-in `estim` functions don't seem to be well supported in python3 and raise errors. We therefore do the estimation manually by fitting linear models to the growthrate-protein abundance relationship. The idea is similar to the RBA `estim` function but less complicated.
+### Fluxomics and proteomics input
+
+To estimate k<sub>app</sub> from available data, we only need to reformulate the simplified rate equation to:  k<sub>app</sub> =  v / [E]. For this purpose, we need two types of information:
+
+1. **enzyme abundance in mmol gDCW<sup>-1</sup>** for the same substrate uptake rate. This data was obtained by MS measurements. The relative protein *mass fraction* was determined by dividing MS intensity per protein by sum of all intensities. The *mass fraction* (g/g total protein) was then converted to protein concentration in *mmol/gDCW* by multiplying it with estimated protein concentration of 0.65 g protein/gDCW (done previously), and then dividing by molar mass of each protein (g/mol).
+2. **flux per enzyme, in mmol h<sup>-1</sup> gDCW<sup>-1</sup>** for the highest possible substrate uptake rates (to have realistic enzyme saturation). This information is obtained from FBA simulations that were further constrained to realistic flux distributions using data from [Alagesan *et al*., 2017](http://dx.doi.org/10.1007/s11306-017-1302-z).
+ 
+**Determine enzyme abundance for a standard condition:**
 
 ```{r}
 # import proteomics data
 load(paste0(prot_dir, "Ralstonia_eutropha.Rdata"))
 
 # simplify condition strings
-df_protein <- Ralstonia_eutropha %>% ungroup %>%
-  mutate(condition = sapply(condition, function(x) unlist(stri_extract_all_words(x))[1])) %>%
+Ralstonia_eutropha <- Ralstonia_eutropha %>% ungroup %>%
+  mutate(condition = sapply(condition, function(x){
+    unlist(stri_extract_all_words(x))[1]}
+  ))
+
+# make new data frame to merge fluxomics and proteomics data
+df_flux_protein <- Ralstonia_eutropha %>%
+  
+  # select only required columns and filter for fructose, highest mu
+  select(condition, locus_tag, growthrate, mass_g_per_gDCW, MolWeight) %>%
+  filter(condition == "FRC", growthrate == 0.25) %>%
+  
+  # calculate protein concentration in mmol/gDCW. 
+  # MW in kDa must be converted to g/mol, and concentration to mmol
+  mutate(conc_mmol_gDCW = mass_g_per_gDCW * 1000 / (MolWeight * 1000))
+```
+
+**Determine reaction fluxes for same standard condition:**
+
+```{r, message = FALSE}
+# import FBA simulation for the highest tested substrate uptake rate,
+# qS_fructose = 3.03 mmol/gDCW*h (unlimited NH4+)
+df_fba <- read_csv("../data/FBA_fru_3.03_nh4_10.0.csv") %>%
+  
+  # add genes per reaction from model annotation
+  left_join(df_model) %>%
+  # remove all reactions with no genes annotated
+  filter(!is.na(genes)) %>% 
+  select(reaction_id, flux_mmol_gDCW_h, reaction_name, genes) %>%
+  # make all fluxes positive and filter extremely small ones
+  mutate(flux_mmol_gDCW_h = abs(flux_mmol_gDCW_h)) %>%
+  filter(flux_mmol_gDCW_h > 10^-10) %>%
+  
+  # spread genes/enzymes, determine number of reactions per enzyme
+  separate_rows(genes, sep = ", ")
+```
+
+### Determine k<sub>app</sub> values
+
+The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction.
+
+```{r}
+df_flux_protein <- left_join(df_fba, df_flux_protein, by = c("genes" = "locus_tag")) %>%
+  
+  # distribute protein abundance to different reactions per enzyme
+  group_by(genes) %>%
+  mutate(conc_mmol_gDCW = conc_mmol_gDCW/length(unique(reaction_id))) %>%
+  
+  # sum up protein allocation per reaction
+  group_by(reaction_id, flux_mmol_gDCW_h) %>%
+  summarize(conc_mmol_gDCW = sum(conc_mmol_gDCW, na.rm = TRUE)) %>%
+  
+  # estimate k_app by dividing flux v by allocated protein concentration
+  filter(flux_mmol_gDCW_h != 0, conc_mmol_gDCW != 0) %>%
+  mutate(
+    k_app_h = flux_mmol_gDCW_h/sum(conc_mmol_gDCW, na.rm = TRUE),
+    k_app_s = k_app_h / 3600)
+```
+
+----------
+
+Analyze the distribution of estimated k<sub>app</sub> values. We expect a distribution similar to the one in Bulovic et al., with the majority of values within 10<sup>-1</sup> and 10<sup>3</sup>. Some reactions were outliers with values lower than 10<sup>-10</sup> s<sup>-1</sup>. These reactions carry very little flux in the model, but still have high enzyme abundance, and were therefore removed from the list to not distort k_app disitrubtion. Examples were e.g. reactions MICTS, DBTS, PHAS, ACALD, SUCDi, MALS. Some of these enzymes like MALS (malate synthase, glyoxylate shunt) or SUCDi (succinate dehydrogenase) are indeed important in metabolism but were either not used under the chosen condition, or are isoenzymes/isoreactions of others that carry the majority of the flux instead (SUCD1 instead of SUCDi).
+
+```{r, fig.width = 7, fig.height = 3}
+arrange(df_flux_protein, k_app_s) %>%
+  
+  xyplot(1:length(k_app_s) ~ k_app_s,.,
+    pch = 19, cex = 0.6,
+    labels = .[["reaction_id"]],
+    xlab = expression("k"[app]*" s"^-1), ylab = "",
+    par.settings = custom.lattice,
+    scales = list(x = list(log = 10)),
+    panel = function(x, y, subscripts, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.directlabel(x, y, subscripts = subscripts,
+        draw_box = TRUE, box_line = TRUE, x_boundary = c(-3,-1.5), ...)
+      panel.directlabel(x, y, subscripts = subscripts,
+        draw_box = TRUE, box_line = TRUE, x_boundary = c(2, 4), ...)
+    }
+  )
+
+# basic statistics about k_app distribution
+arrange(df_flux_protein, k_app_s) %>%
+  pull(k_app_s) %>% quantile
+```
+
+In order to simulate different amounts of enzyme saturation, we can also multiply k<sub>app</sub> with a correction factor. Currently, the median of k<sub>app</sub> value distribution is 10-fold lower than the median reported in Bulovic *et al*., 2019. It represents full saturation at each enzyme to yield the flux distribution obtained via FBA. To simulate lower enzyme saturation and relax constraints on the resource allocation, we could e.g. simulate 10 % saturation (multiplication of k<sub>app</sub> with 10). 
+
+```{r}
+df_flux_protein <- df_flux_protein %>%
+  mutate(k_app_h = k_app_h*10, k_app_s = k_app_s*10)
+
+# basic statistics about k_app distribution
+arrange(df_flux_protein, k_app_s) %>%
+  pull(k_app_s) %>% quantile
+```
+
+
+---------
+
+The final step is to export the data frame in a format that is suitable for RBApy input.
+
+```{r}
+df_export <- df_flux_protein %>% ungroup %>%
+  select(reaction_id, k_app_h) %>%
+  mutate(reaction_id = paste0("R_", reaction_id, "_enzyme")) %>%
+  mutate(k_app_h_2 = k_app_h)
+
+write_tsv(df_export, "../data/enzyme_efficiency_protflux.tsv", col_names = FALSE)
+```
+
+
+```{r, include = FALSE, eval = FALSE}
+# also export directly to RBA model folder
+write_tsv(df_export, paste0(RBA_dir, "enzyme_efficiency_protflux.tsv"), col_names = FALSE)
+```
+
+----------
+
+## Fraction of protein per compartment
+
+The RBA model takes as another input parameter (or constraint) the fraction of protein per compartment. This constraint is important as it allows the cell to have only a limited amount of protein in cytoplasm or membrane compartments, for example. This constraint can be constant or it can be growth rate dependent e.g. by a linear relationship.
+
+The first step is to prepare a **table with protein abundance and localization**. Protein abundance can be in any unit according to the RBApy manual, but it's best to use `mol fraction` instead of `mass fraction`, as all other RBApy functions also use `mmol`. The `mol fraction` is already available in the processed data set. The built-in `estim` functions don't seem to be well supported in python3 and raise errors. We therefore do the estimation manually by fitting linear models to the growth rate-protein abundance relationship. The idea is similar to the RBA `estim` function but less complicated. We focus on the standard condition as a **training data set** (fructose as carbon source, no NH4+ limitation).
+
+```{r}
+df_protein <- Ralstonia_eutropha %>% 
   
   # select only required columns and spread to long format
   select(condition, locus_tag, growthrate, Psortb_localization, mol_fraction) %>%
@@ -308,7 +435,7 @@ df_protein <- Ralstonia_eutropha %>% ungroup %>%
 head(df_protein)
 ```
 
-Now we can summarize the data by taking the sum of `mol fraction` over conditions and localizations. A simple approach to finding linear functions, where all proteins of all locations sum to one for a specific growth rate, would be to fit linear models for all compartments except one (e.g. cytoplasmic proteins, the biggest compartment). This one will then get a linear model fitted from the residual protein mass. We expect the error for `Cytoplasm` to be very small, as it is the biggest compartment. However it turned out that the linear models fitted to both compartments perfectly sum to one (see below).
+Now we can summarize the data by taking the sum of `mol fraction` over conditions and localizations. A simple approach to finding linear functions, where all proteins of all locations sum to one for a specific growth rate, would be to fit linear models for all compartments except one (e.g. cytoplasmic proteins, the biggest compartment). This one will then get a linear model fitted from the residual protein mass. We would expect the error for `Cytoplasm` to be neglibly small as it is the biggest compartment. However it turned out that the linear models fitted to both compartments perfectly sum to one already (see below). An estimation from residual protein fraction is therefore not necessary.
 
 ```{r, message = FALSE}
 # First retrieve the proteins that are not part of the model, which is needed
@@ -351,8 +478,8 @@ xyplot(prot_per_compartment ~ growthrate | condition * location,
 )
 
 # The two models sum to one for any arbitrary growth rate
-fit_cell_membrane = function(mu) 0.152 - 0.178*mu
 fit_cytoplasm = function(mu) 0.848 + 0.178*mu
+fit_cell_membrane = function(mu) 0.152 - 0.178*mu
 
 # raise error if compartments don't sum to one
 stopifnot(fit_cell_membrane(0.123) + fit_cytoplasm (0.123) == 1)
@@ -386,14 +513,21 @@ xyplot(ne_prot_per_compartment ~ growthrate | condition * location, .,
       pos = 3, offset = 0.6, ...)
   }
 )
+
+# These two models describe the relative fraction of NE 
+# proteins *within* a compartment
+fit_ne_cytoplasm = function(mu) 0.585 - 0.631*mu
+fit_ne_cell_membrane = function(mu) 0.862 - 0.298*mu
 ```
+
+----------
 
 **Summary:**
 Regardless of the cultivation condition or substrate limitation, it is possible to see growth rate dependent trends. Overall, the fraction of cytoplasmic proteins increases slightly with growth rate while membrane-associated proteins decrease. This makes sense as often expression of transporters is downregulated if bacteria don't need to scavenge substrates. We also see that the absolute majority of proteins is located in the cytoplasm (> 85% under all conditions).
 
 The non-enzymatic fraction of proteins (proteins *not covered* by the model) decreases with growth rate from around 60% o 50% for cytoplasmic proteins, but is relatively constant for membrane associated ones. Most membrane-associated proteins (90% of mol fraction) are not covered by the model. The following figure summarizes all growth rate dependent trends.
 
-```{r, fig.width = 9, fig.height = 2.8}
+```{r, fig.width = 9, fig.height = 2.6}
 df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
   summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
   ungroup %>% mutate(
@@ -407,7 +541,6 @@ df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
     col = c("#56D16F", "#258F2C", "#D68B1C", "#A3660A"),
     cex = 0.6, border = grey(0.3),
     panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.piechart(x, diameter_inner = 0.1, 
         diameter_sector = 0.15, ...)
     }
