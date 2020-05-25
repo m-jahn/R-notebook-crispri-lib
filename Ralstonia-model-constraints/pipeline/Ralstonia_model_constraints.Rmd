@@ -262,19 +262,13 @@ df_export <- df_model %>%
 write_tsv(df_export, "../data/enzyme_efficiency.tsv", col_names = FALSE)
 ```
 
-
-```{r, include = FALSE, eval = FALSE}
-# also export directly to RBA model folder
-write_tsv(df_export, paste0(RBA_dir, "enzyme_efficiency.tsv"), col_names = FALSE)
-```
-
 ----------
 
 ## k<sub>app</sub> estimation using proteomics/fluxomics
 
 ### Background
 
-The second approach of estimating k<sub>app</sub> values is to perform an estimation based on in-house measurements instead of using published k<sub>cat</sub> values from literature ot databases. The k<sub>app</sub> constants are actually a collective parameter, a helper construct to link enzyme fluxes to enzyme abundance, so that flux v = k<sub>app</sub> * [E]. The k<sub>app</sub> then besomes a single parameter that in reality includes the kinetic parameters of the enzyme, so that k<sub>app</sub> ~ k<sub>cat</sub> * [S]/([S] + K<sub>m</sub>). The reality becomes even more complicated taking substrate and product concentrations ([S], [P]), affinities (Km), and thermodynamic parameters into account.
+The second approach of estimating k<sub>app</sub> values is to perform an estimation based on in-house measurements instead of using published k<sub>cat</sub> values from literature or databases. The k<sub>app</sub> constants are actually a collective parameter, a helper construct to link enzyme fluxes to enzyme abundance, so that flux v = k<sub>app</sub> * [E]. The k<sub>app</sub> then becomes a single parameter that in reality includes the kinetic parameters of the enzyme, so that k<sub>app</sub> ~ k<sub>cat</sub> * [S]/([S] + K<sub>m</sub>). The reality becomes even more complicated taking substrate and product concentrations ([S], [P]), affinities (Km), and thermodynamic parameters into account.
 
 However, the idea is that the k<sub>app</sub> parameter is kept constant for different conditions, while the flux (and the enzyme abundance) is allowed to change. We can then find different scenarios for enzyme saturation states:
 
@@ -287,8 +281,10 @@ To estimate k<sub>app</sub> from available data, we only need to reformulate the
 
 1. **enzyme abundance in mmol gDCW<sup>-1</sup>** for the same substrate uptake rate. This data was obtained by MS measurements. The relative protein *mass fraction* was determined by dividing MS intensity per protein by sum of all intensities. The *mass fraction* (g/g total protein) was then converted to protein concentration in *mmol/gDCW* by multiplying it with estimated protein concentration of 0.65 g protein/gDCW (done previously), and then dividing by molar mass of each protein (g/mol).
 2. **flux per enzyme, in mmol h<sup>-1</sup> gDCW<sup>-1</sup>** for the highest possible substrate uptake rates (to have realistic enzyme saturation). This information is obtained from FBA simulations that were further constrained to realistic flux distributions using data from [Alagesan *et al*., 2017](http://dx.doi.org/10.1007/s11306-017-1302-z).
- 
-**Determine enzyme abundance for a standard condition:**
+
+----------
+
+**Determine enzyme abundance for a standard condition.** Import Ralstonia mass fraction for the standard condition, growth on fructose without nitrogen limitation, fixed growth rate of µ = 0.25 h<sup>-1</sup>, substrate uptake rate qS = 3.03 mmol gDCW<sup>-1</sup> h<sup>-1</sup>.
 
 ```{r}
 # import proteomics data
@@ -310,108 +306,109 @@ df_flux_protein <- Ralstonia_eutropha %>%
   # calculate protein concentration in mmol/gDCW. 
   # MW in kDa must be converted to g/mol, and concentration to mmol
   mutate(conc_mmol_gDCW = mass_g_per_gDCW * 1000 / (MolWeight * 1000))
-```
 
-**Determine reaction fluxes for same standard condition:**
-
-```{r, message = FALSE}
-# import FBA simulation for the highest tested substrate uptake rate,
-# qS_fructose = 3.03 mmol/gDCW*h (unlimited NH4+)
-df_fba <- read_csv("../data/FBA_fru_3.03_nh4_10.0.csv") %>%
-  
-  # add genes per reaction from model annotation
-  left_join(df_model) %>%
-  # remove all reactions with no genes annotated
-  filter(!is.na(genes)) %>% 
-  select(reaction_id, flux_mmol_gDCW_h, reaction_name, genes) %>%
-  # make all fluxes positive and filter extremely small ones
-  mutate(flux_mmol_gDCW_h = abs(flux_mmol_gDCW_h)) %>%
-  filter(flux_mmol_gDCW_h > 10^-10) %>%
-  
-  # spread genes/enzymes, determine number of reactions per enzyme
-  separate_rows(genes, sep = ", ")
-```
-
-### Determine k<sub>app</sub> values
-
-The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction.
-
-```{r}
-df_flux_protein <- left_join(df_fba, df_flux_protein, by = c("genes" = "locus_tag")) %>%
-  
-  # distribute protein abundance to different reactions per enzyme
-  group_by(genes) %>%
-  mutate(conc_mmol_gDCW = conc_mmol_gDCW/length(unique(reaction_id))) %>%
-  
-  # sum up protein allocation per reaction
-  group_by(reaction_id, flux_mmol_gDCW_h) %>%
-  summarize(conc_mmol_gDCW = sum(conc_mmol_gDCW, na.rm = TRUE)) %>%
-  
-  # estimate k_app by dividing flux v by allocated protein concentration
-  filter(flux_mmol_gDCW_h != 0, conc_mmol_gDCW != 0) %>%
-  mutate(
-    k_app_h = flux_mmol_gDCW_h/sum(conc_mmol_gDCW, na.rm = TRUE),
-    k_app_s = k_app_h / 3600)
+# export to csv
+write_csv(df_flux_protein, "../data/protein_concentration.csv")
 ```
 
 ----------
 
-Analyze the distribution of estimated k<sub>app</sub> values. We expect a distribution similar to the one in Bulovic et al., with the majority of values within 10<sup>-1</sup> and 10<sup>3</sup>. Some reactions were outliers with values lower than 10<sup>-10</sup> s<sup>-1</sup>. These reactions carry very little flux in the model, but still have high enzyme abundance, and were therefore removed from the list to not distort k_app disitrubtion. Examples were e.g. reactions MICTS, DBTS, PHAS, ACALD, SUCDi, MALS. Some of these enzymes like MALS (malate synthase, glyoxylate shunt) or SUCDi (succinate dehydrogenase) are indeed important in metabolism but were either not used under the chosen condition, or are isoenzymes/isoreactions of others that carry the majority of the flux instead (SUCD1 instead of SUCDi).
+**Determine reaction fluxes for same condition.** Several approaches were tested to obtain minimal and maximal fluxes per enzyme. The best approach turned out to be flux sampling with the additional constraint of reaching at least 95% of the maximum growth rate found by FBA. Flux sampling was performed using COBRApy, 100 simulations with standard settings.
 
-```{r, fig.width = 7, fig.height = 3}
-arrange(df_flux_protein, k_app_s) %>%
+```{r, message = FALSE, fig.width = 7, fig.height = 5}
+# import flux sampling results for the highest tested substrate uptake rate,
+# qS_fructose = 3.03 mmol/gDCW*h (unlimited NH4+). Flux sampling confined to >= 95% 
+# of maximum possible growth rate
+df_sampling <- read_csv("../data/FVA_fru_3.03_nh4_10.0.csv") %>%
+  select(-1) %>% gather %>% rename(reaction_id = key) %>%
   
-  xyplot(1:length(k_app_s) ~ k_app_s,.,
-    pch = 19, cex = 0.6,
-    labels = .[["reaction_id"]],
-    xlab = expression("k"[app]*" s"^-1), ylab = "",
-    par.settings = custom.lattice,
-    scales = list(x = list(log = 10)),
+  group_by(reaction_id) %>% summarize(
+    flux_mmol_gDCW_h = median(value), 
+    sd_flux = sd(value), 
+    min_flux = min(value), 
+    max_flux = max(value),
+    CV = abs(sd_flux/flux_mmol_gDCW_h)) %>%
+  filter(!grepl("EX_", reaction_id)) %>%
+  arrange(desc(sd_flux))
+
+
+# plot results; we can see that there is a threshold of standard deviation ~ 1
+# above which variation gets very high for spurious reactions. These are artificial cycles.
+plot_sampling <- lapply(list(A = c(-10, 250), B = c(-0.5, 2)), function(ylim) {
+  xyplot(sd_flux ~ seq_along(sd_flux),
+    filter(df_sampling, sd_flux != 0), xlab = NULL,
+    par.settings = custom.lattice, ylim = ylim,
+    labels = filter(df_sampling, sd_flux != 0) %>% pull(reaction_id),
     panel = function(x, y, subscripts, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.abline(h = 1, lty = 2, col = grey(0.5))
       panel.xyplot(x, y, ...)
-      panel.directlabel(x, y, subscripts = subscripts,
-        draw_box = TRUE, box_line = TRUE, x_boundary = c(-3,-1.5), ...)
-      panel.directlabel(x, y, subscripts = subscripts,
-        draw_box = TRUE, box_line = TRUE, x_boundary = c(2, 4), ...)
+      if (ylim[2] == 2) {
+        panel.directlabel(x, y, subscripts = subscripts, 
+          y_boundary = c(0.2, 1), draw_box = TRUE, 
+          box_line = TRUE, cex = 0.6, ...)
+      }
     }
   )
+})
 
-# basic statistics about k_app distribution
-arrange(df_flux_protein, k_app_s) %>%
-  pull(k_app_s) %>% quantile
-```
-
-In order to simulate different amounts of enzyme saturation, we can also multiply k<sub>app</sub> with a correction factor. Currently, the median of k<sub>app</sub> value distribution is 10-fold lower than the median reported in Bulovic *et al*., 2019. It represents full saturation at each enzyme to yield the flux distribution obtained via FBA. To simulate lower enzyme saturation and relax constraints on the resource allocation, we could e.g. simulate 10 % saturation (multiplication of k<sub>app</sub> with 10). 
-
-```{r}
-df_flux_protein <- df_flux_protein %>%
-  mutate(k_app_h = k_app_h*10, k_app_s = k_app_s*10)
-
-# basic statistics about k_app distribution
-arrange(df_flux_protein, k_app_s) %>%
-  pull(k_app_s) %>% quantile
+print(plot_sampling[[1]], split = c(1,1,1,2), more = TRUE)
+print(plot_sampling[[2]], split = c(1,2,1,2))
 ```
 
 
----------
+```{r, message = FALSE}
+# the following reactions take part in artif. cycles and have to be constrained separately
+cycles <- c("ASPt", "DHFR2p", "DHFR2", "ABUTt", "GLUABUTt7", "PTAr", "URAtr",
+            "ALRTa", "ALRTap", "ALRTg", "ALRTgp", "ALCDgl", "ASPO1", "CYTDt2",
+            "CYTDtr", "GLUDy", "GLUtr", "INSt2", "ISOVC", "NA1t", "ACKr", 
+            "G3PD2", "GCLDH", "GL3PD", "ALCD19", "GLYCTO1p", "NDPK1", "ACOADH3", 
+            "NUDPK10", "3HBCD", "ENCOAH1", "HACD1", "HPYRI", "HPYRRy")
 
-The final step is to export the data frame in a format that is suitable for RBApy input.
+# process flux distribution, e.g. by removing extremely high fluxes
+df_sampling <- df_sampling %>%
+  
+  # manual adjustment of reactions that the model   should use (or not),
+  filter(!reaction_id %in% c("Biomass", "Maintenance", "Protein", "Carbohydrate", 
+    "Phospholipid", "	Cofactors_and_vitamins")) %>%
+  
+  # add an error margin to the sampled min and max fluxes, to help the solver
+  # find a feasible solution  
+  mutate(
+    min_flux = min_flux-(abs(min_flux)*0.1), 
+    max_flux = max_flux+(abs(max_flux)*0.1)
+  ) %>%
+  
+  # replace unrealistic fluxes with a default minimal flux range
+  mutate(
+    min_flux = if_else(sd_flux > 1, -1.5, min_flux),
+    max_flux = if_else(sd_flux > 1,  1.5, max_flux),
+    min_flux = replace(min_flux, reaction_id %in% cycles, -0.01),
+    max_flux = replace(max_flux, reaction_id %in% cycles, 0.01)
+  ) %>%
+  
+  # re-formatting of table
+  arrange(desc(abs(max_flux))) %>%
+  mutate(reaction_id = paste0("R_", reaction_id))
 
-```{r}
-df_export <- df_flux_protein %>% ungroup %>%
-  select(reaction_id, k_app_h) %>%
-  mutate(reaction_id = paste0("R_", reaction_id, "_enzyme")) %>%
-  mutate(k_app_h_2 = k_app_h)
+head(df_sampling)
 
-write_tsv(df_export, "../data/enzyme_efficiency_protflux.tsv", col_names = FALSE)
+# export to csv
+write_csv(df_sampling, "../data/model_flux_sampling.csv")
 ```
 
 
-```{r, include = FALSE, eval = FALSE}
-# also export directly to RBA model folder
-write_tsv(df_export, paste0(RBA_dir, "enzyme_efficiency_protflux.tsv"), col_names = FALSE)
+```{r, include = FALSE}
+# export also to RBA folder directly
+write_csv(df_flux_protein, paste0(RBA_dir, "../calibration/protein_concentration.csv"))
+write_csv(df_sampling, paste0(RBA_dir, "../calibration/model_flux_sampling.csv"))
 ```
+
+
+### Determine k<sub>app</sub> values
+
+The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction. This step was not performed in this R notebook but using the RBA built-in functions from the `RBApy estim` folder.
+
 
 ----------
 
