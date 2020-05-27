@@ -305,7 +305,10 @@ df_flux_protein <- Ralstonia_eutropha %>%
   
   # calculate protein concentration in mmol/gDCW. 
   # MW in kDa must be converted to g/mol, and concentration to mmol
-  mutate(conc_mmol_gDCW = mass_g_per_gDCW * 1000 / (MolWeight * 1000))
+  mutate(conc_mmol_gDCW = mass_g_per_gDCW * 1000 / (MolWeight * 1000)) %>%
+  select(-condition)
+
+head(df_flux_protein)
 
 # export to csv
 write_csv(df_flux_protein, "../data/protein_concentration.csv")
@@ -319,7 +322,7 @@ write_csv(df_flux_protein, "../data/protein_concentration.csv")
 # import flux sampling results for the highest tested substrate uptake rate,
 # qS_fructose = 3.03 mmol/gDCW*h (unlimited NH4+). Flux sampling confined to >= 95% 
 # of maximum possible growth rate
-df_sampling <- read_csv("../data/FVA_fru_3.03_nh4_10.0.csv") %>%
+df_sampling <- read_csv("../data/FSA_fru_3.03_nh4_10.0.csv") %>%
   select(-1) %>% gather %>% rename(reaction_id = key) %>%
   
   group_by(reaction_id) %>% summarize(
@@ -329,12 +332,17 @@ df_sampling <- read_csv("../data/FVA_fru_3.03_nh4_10.0.csv") %>%
     max_flux = max(value),
     CV = abs(sd_flux/flux_mmol_gDCW_h)) %>%
   filter(!grepl("EX_", reaction_id)) %>%
-  arrange(desc(sd_flux))
+  arrange(desc(sd_flux)) %>%
+  
+  # join with single optimal solution from FBA (loopless!)
+  # Can help us to identify free cycles
+  left_join(read_csv("../data/FBA_fru_3.03_nh4_10.0.csv") %>% 
+    rename(flux_mmol_gDCW_h_FBA = flux_mmol_gDCW_h))
 
 
 # plot results; we can see that there is a threshold of standard deviation ~ 1
 # above which variation gets very high for spurious reactions. These are artificial cycles.
-plot_sampling <- lapply(list(A = c(-10, 250), B = c(-0.5, 2)), function(ylim) {
+plot_sampling <- lapply(list(A = c(-10, 160), B = c(-0.05, 0.4)), function(ylim) {
   xyplot(sd_flux ~ seq_along(sd_flux),
     filter(df_sampling, sd_flux != 0), xlab = NULL,
     par.settings = custom.lattice, ylim = ylim,
@@ -343,9 +351,9 @@ plot_sampling <- lapply(list(A = c(-10, 250), B = c(-0.5, 2)), function(ylim) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.abline(h = 1, lty = 2, col = grey(0.5))
       panel.xyplot(x, y, ...)
-      if (ylim[2] == 2) {
+      if (ylim[2] == 0.4) {
         panel.directlabel(x, y, subscripts = subscripts, 
-          y_boundary = c(0.2, 1), draw_box = TRUE, 
+          y_boundary = c(0.11, 0.4), draw_box = TRUE, 
           box_line = TRUE, cex = 0.6, ...)
       }
     }
@@ -358,50 +366,41 @@ print(plot_sampling[[2]], split = c(1,2,1,2))
 
 
 ```{r, message = FALSE}
-# the following reactions take part in artif. cycles and have to be constrained separately
-cycles <- c("ASPt", "DHFR2p", "DHFR2", "ABUTt", "GLUABUTt7", "PTAr", "URAtr",
-            "ALRTa", "ALRTap", "ALRTg", "ALRTgp", "ALCDgl", "ASPO1", "CYTDt2",
-            "CYTDtr", "GLUDy", "GLUtr", "INSt2", "ISOVC", "NA1t", "ACKr", 
-            "G3PD2", "GCLDH", "GL3PD", "ALCD19", "GLYCTO1p", "NDPK1", "ACOADH3", 
-            "NUDPK10", "3HBCD", "ENCOAH1", "HACD1", "HPYRI", "HPYRRy")
-
 # process flux distribution, e.g. by removing extremely high fluxes
-df_sampling <- df_sampling %>%
+df_sampling2 <- df_sampling %>%
   
-  # manual adjustment of reactions that the model   should use (or not),
+  # Filter out summary reactions
   filter(!reaction_id %in% c("Biomass", "Maintenance", "Protein", "Carbohydrate", 
     "Phospholipid", "	Cofactors_and_vitamins")) %>%
   
-  # add an error margin to the sampled min and max fluxes, to help the solver
-  # find a feasible solution  
-  mutate(
-    min_flux = min_flux-(abs(min_flux)*0.1), 
-    max_flux = max_flux+(abs(max_flux)*0.1)
+  # replace extreme fluxes with a min and max estimated from loopless FBA
+  mutate(#
+    min_flux = if_else(sd_flux > 1, -abs(flux_mmol_gDCW_h_FBA), min_flux),
+    max_flux = if_else(sd_flux > 1,  abs(flux_mmol_gDCW_h_FBA), max_flux)
   ) %>%
   
-  # replace unrealistic fluxes with a default minimal flux range
+  # add an error margin to the sampled min and max fluxes, to help the solver
+  # find a feasible solution
   mutate(
-    min_flux = if_else(sd_flux > 1, -1.5, min_flux),
-    max_flux = if_else(sd_flux > 1,  1.5, max_flux),
-    min_flux = replace(min_flux, reaction_id %in% cycles, -0.01),
-    max_flux = replace(max_flux, reaction_id %in% cycles, 0.01)
+    min_flux = min_flux-(abs(min_flux)*1), 
+    max_flux = max_flux+(abs(max_flux)*1)
   ) %>%
   
   # re-formatting of table
   arrange(desc(abs(max_flux))) %>%
   mutate(reaction_id = paste0("R_", reaction_id))
 
-head(df_sampling)
+head(df_sampling2)
 
 # export to csv
-write_csv(df_sampling, "../data/model_flux_sampling.csv")
+write_csv(df_sampling2, "../data/model_flux_sampling.csv")
 ```
 
 
 ```{r, include = FALSE}
 # export also to RBA folder directly
 write_csv(df_flux_protein, paste0(RBA_dir, "../calibration/protein_concentration.csv"))
-write_csv(df_sampling, paste0(RBA_dir, "../calibration/model_flux_sampling.csv"))
+write_csv(df_sampling2, paste0(RBA_dir, "../calibration/model_flux_sampling.csv"))
 ```
 
 
