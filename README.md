@@ -45,13 +45,14 @@ rmarkdown::render("pipeline.Rmd")
 
 ### Contents
 
-#### Ralstonia resource allocation
+#### Ralstonia resource allocation (in preparation)
 
 - [_Ralstonia eutropha_ COG re-annotation](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_genome_re_annotation.nb.html)
 - [_Ralstonia eutropha_ gene essentiality analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_essentiality_analysis.nb.html)
 - [_Ralstonia eutropha_ model constraints](https://m-jahn.github.io/R-notebooks/Ralstonia_model_constraints.nb.html)
+- [_Ralstonia eutropha_ protein utilization](https://m-jahn.github.io/R-notebooks/Ralstonia_variability_analysis.nb.html)
 
-#### CRISPRi library in _Synechocystis_ sp. PCC6803 (submitted paper)
+#### CRISPRi library in _Synechocystis_ sp. PCC6803 (published in Yao *et al*., Nature Communications, 2020)
 
 - [_Synechocystis_ CRISPRi library data processing](https://m-jahn.github.io/R-notebooks/CRISPRi_library_data_processing.nb.html)
 - [_Synechocystis_ CRISPRi library enrichment analysis](https://m-jahn.github.io/R-notebooks/CRISPRi_library_enrichment_analysis.nb.html)
