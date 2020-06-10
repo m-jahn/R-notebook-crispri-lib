@@ -152,7 +152,7 @@ plot_prot_comp <- df_prot_comp %>%
     main = "predicted vs measured protein allocation (summarized per enzyme)",
     xlab = expression("log"[10]*" measured mol fraction"), 
     ylab = expression("log"[10]*" predicted mol fraction"),
-    as.table = TRUE, between = list(x = 0.5, y = 0.5),
+    as.table = TRUE, between = list(x = 1, y = 1),
     scales = list(alternating = FALSE),
     pch = 19, alpha = 0.6, cex = 0.7,
     ylim = c(-7, 0), xlim = c(-7, 0),
@@ -254,6 +254,44 @@ plot_randsamp_iter <- df_random_flux %>%
 print(plot_randsamp_iter)
 ```
 
+----------
+
+We can also investigate how many reactions are maximally used under which condition, or taken together.
+We can also investigate which reactions are always used and which are used condition specific (core versus non-core proteome).
+
+```{r, message = FALSE}
+# all reactions
+df_random_flux %>% ungroup %>% pull(reaction_id) %>%
+  unique %>% length
+
+# used reactions per condition
+df_random_flux %>%
+  group_by(substrate) %>%
+  summarize(
+    total_used_reactions = length(unique(reaction_id)),
+    used_always = sum(table(reaction_id) >= 200),
+    used_100x_or_more = sum(table(reaction_id) >= 100),
+    used_50x_or_more = sum(table(reaction_id) >= 50)
+  )
+
+# which reactions make up the core and the substrate specific proteome?
+df_random_flux %>%
+  
+  # filter spurious reactions with less than 100 appearances
+  group_by(reaction_id, substrate) %>%
+  summarize(n_simulations = length(iteration)) %>%
+  filter(n_simulations >= 200) %>%
+  
+  summarize(
+    n_substrates = length(unique(substrate)),
+    substrates = sort(unique(substrate)) %>% paste(collapse = ", ")
+  ) %>%
+  
+  # now summarize the reactions per appearance and plot
+  group_by(substrates) %>%
+  summarize(length(reaction_id))
+```
+
 
 ### Quantifying flux variabilty
 
@@ -273,7 +311,6 @@ plot_randsamp_prot <- df_random_flux %>%
   filter(!(is.na(sd_flux) | is.na(median_flux))) %>%
   mutate(sd_flux = log10(sd_flux), median_flux = log10(median_flux)) %>%
   
-  
   xyplot(sd_flux ~ median_flux, .,
     groups = substrate, alpha = 0.7,
     par.settings = custom.colorblind(), pch = 19, cex = 0.7,
@@ -288,7 +325,7 @@ plot_randsamp_prot <- df_random_flux %>%
 print(plot_randsamp_prot)
 ```
 
-## Overview on summarized protein utilization
+## Overview on protein utilization
 
 The utilization of proteins is a **binary choice for every protein**: it is either covered in any type of model simulation, or not. The situation gets a bit more complicated because the model solver would always choose the first of two annotated iso-enzymes per reaction (in case of an `OR` rule). In reality, several isoenzymes might catalyze the same reaction and both be expressed.
 
@@ -319,7 +356,10 @@ df_utilization <- Ralstonia_eutropha %>%
     )
   )
 
-head(df_utilization)
+# get summary of proteins per group (same for all conditions)
+df_utilization %>% group_by(utilization) %>%
+  filter(condition == "fructose") %>%
+  summarize(n_proteins = length(locus_tag))
 ```
 
 Now that proteins were mapped to reactions and utilization was flagged for each detected protein, we can summarize the actual mol fraction occupied for each level of utilization.
@@ -335,16 +375,16 @@ plot_utilization_bar <- df_utilization %>%
   
   xyplot(mol_fraction ~ factor(condition), .,
     groups = utilization, 
-    stack = TRUE, cex = 0.7,
+    stack = TRUE, cex = 0.65,
     par.settings = custom.colorblind(),
-    xlab = "", ylab = "mol fraction", ylim = c(0, 1.4),
+    xlab = "", ylab = "mol fraction", ylim = c(0, 1.5),
     scales = list(alternating = FALSE), 
     col = grey(c(0.4, 0.5, 0.65, 0.8)),
-    panel = function(x, y, subscripts, ...) {
+    panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.barchart(x, y, horizontal = FALSE, subscripts = subscripts, ...)
+      panel.barchart(x, y, box.ratio = 0.9, horizontal = FALSE, ...)
       panel.key(..., corner = c(0.02, 0.98), points = FALSE)
-      panel.text(x = as.numeric(x), rep(c(0.3, 0.55, 0.8, 1.04), 4), labels = round(y, 2), cex = 0.7)
+      panel.text(x = as.numeric(x)+0.45, rep(c(0.2, 0.94, 0.7, 0.45), 5), labels = round(y, 2), cex = 0.65)
     }
   )
 
@@ -412,12 +452,14 @@ print(plot_top_unmodeled)
 ## Export figures and data
 
 ```{r}
-png("../figures/figure_protein_utilization.png", width = 1600, height = 2200, res = 200)
+png("../figures/figure_protein_utilization.png", width = 1500, height = 2200, res = 200)
 print(plot_prot_comp, position = c(0, 0.5, 1, 1), more = TRUE)
 print(plot_randsamp_iter, position = c(0, 0.29, 0.5, 0.53), more = TRUE)
 print(plot_utilization_bar, position = c(0.5, 0.3, 1, 0.53), more = TRUE)
 print(plot_top_unutilized, position = c(0, -0.015, 0.5, 0.3), more = TRUE)
 print(plot_top_unmodeled, position = c(0.5, 0, 1, 0.3))
+grid::grid.text(label = c("A", "B", "C", "D", "E"), 
+  x = c(0.02, 0.02, 0.5, 0.02, 0.5), y = c(0.98, 0.5, 0.5, 0.3, 0.3), gp = grid::gpar(cex = 1.2))
 dev.off()
 ```
 
