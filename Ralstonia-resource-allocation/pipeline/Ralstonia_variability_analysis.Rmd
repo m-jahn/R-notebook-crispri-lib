@@ -88,7 +88,7 @@ df_prot <- df_prot %>%
   mutate(condition = case_when(
     carbon_source == "succ" ~ "succinate",
     carbon_source == "for" ~ "formate",
-    carbon_source == "fru" & nitrogen_conc == 1 ~ "fructose",
+    carbon_source == "fru" & nitrogen_conc == 10 ~ "fructose",
     nitrogen_conc < 1 ~ "ammonium",
   ))
 ```
@@ -257,7 +257,7 @@ print(plot_randsamp_iter)
 ----------
 
 We can also investigate how many reactions are maximally used under which condition, or taken together.
-We can also investigate which reactions are always used and which are used condition specific (core versus non-core proteome).
+And also, which reactions are always used and which are used condition specific (core versus non-core proteome). The latter does not make much sense, most reactions that are always used are used under all the tested conditions (similar core proteome).
 
 ```{r, message = FALSE}
 # all reactions
