@@ -1,0 +1,350 @@
+---
+title: "Enzyme utilization and saturation for *R. eutropha*"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook: 
+    theme: spacelab
+    toc: yes
+---
+
+
+## Description
+
+This R notebook is a bioinformatics pipeline to **analyze protein saturation/under-utilization with a resource allocation model** for the chemolithoautotroph *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*).
+
+
+## Libraries
+
+```{r, message = FALSE}
+# loading libraries
+library(lattice)
+library(latticeExtra)
+library(latticetools)
+library(tidyverse)
+library(stringi)
+```
+
+## Data import
+
+Define the data source directories. Some of them are external in the sense of not included in the accompanying data folder of this R notebook. These are located in the accompanying github repository for the resource allocation model that was used here. The resource allocation model can be found at my fork of [Bacterial-RBA-models](https://github.com/m-jahn/Bacterial-RBA-models).
+
+```{r, message = FALSE}
+Reutropha_proteomics <- "~/Documents/SciLifeLab/Resources/R_projects/ShinyProt/data/Ralstonia_eutropha.Rdata"
+model_reactions <- "~/Documents/SciLifeLab/Resources/Models/genome-scale-models/Ralstonia_eutropha/simulations/essentiality/model_reactions.csv"
+simulation_dir <- "~/Documents/SciLifeLab/Resources/Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/simulation/substrate_limitation/"
+source("read_rba_result.R")
+```
+
+
+Read simulation data.
+
+```{r}
+# read simulation results
+df_flux <- read_rba_result(list.files(simulation_dir, pattern = "fluxes_.*.tsv$", full.names = TRUE))
+df_prot <- read_rba_result(list.files(simulation_dir, pattern = "proteins_.*.tsv", full.names = TRUE))
+df_macr <- read_rba_result(list.files(simulation_dir, pattern = "macroprocesses_.*.tsv", full.names = TRUE))
+```
+
+
+## Overview on substrate uptake, growth, and yield
+
+After running a set of simulations in RBApy that simulate increasing substrate limitation, we can plot the substrate uptake rate `q`, yield `Y` in gram biomass per gram substrate, and growth rate `µ`. Unlike genome scale models, growth becomes limited by the maximum amount of proteins that a cell can synthesize. If cells would not be protein-limited, *or* proteins would catalyze reactions infinitely fast, no such limitation would take place and growth rate would scale linearly with substrate concentration. This is the situation in FBA simulation.
+
+```{r, fig.width = 7, fig.height = 7}
+# plot substrate uptake rate
+plot_function <- function(data, xvar, yvar, groups, title, 
+  xlab, ylab, xlog = FALSE, ylog = FALSE) {
+  xyplot(get(yvar) ~ get(xvar), data,
+    groups = get(groups), pch = 19,
+    par.settings = custom.colorblind(),
+    main = title, xlab = xlab, ylab = ylab,
+    scales = list(x = list(log = xlog), y = list(log = ylog)),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, cex = 0.9, ...)
+      panel.key(..., points = FALSE)
+    }
+  )
+}
+
+plot_qS <- plot_function(
+  data = filter(df_flux, key %in% c("FRUabc", "SUCCt2r", "FORt")),
+  xvar = "carbon_conc", yvar = "value",
+  groups = "carbon_source",
+  title = "substrate uptake rate",
+  xlab = expression("c"[S]*" [mmol]"),
+  ylab = expression("q"[S]*" [mmol h"^-1*" gDCW"^-1*"]")
+)
+
+plot_mu <- plot_function(
+  data = filter(df_macr, key == "mu"),
+  xvar = "carbon_conc", yvar = "value", 
+  groups = "carbon_source",
+  title = "specific growth rate",
+  xlab = expression("q"[S]*" [mmol h"^-1*" gDCW"^-1*"]"),
+  ylab = expression("µ [h"^"-1"*"]")
+)
+
+plot_yield <- plot_function(
+  data = filter(df_macr, key == "yield"),
+  xvar = "carbon_conc", yvar = "value", 
+  groups = "carbon_source",
+  title = "yield on substrate",
+  xlab = expression("q"[S]*" [mmol h"^-1*" gDCW"^-1*"]"),
+  ylab = expression("Y [gDCW/gS]")
+)
+
+# plot in combined figure
+print(plot_qS, split = c(1,1,2,2), more = TRUE)
+print(plot_mu, split = c(2,1,2,2), more = TRUE)
+print(plot_yield, split = c(1,2,2,2))
+```
+
+```{r, include = FALSE}
+# export figure
+png("../figures/figure_substrate_limitation.png", width = 800, height = 800, res = 120)
+print(plot_qS, split = c(1,1,2,2), more = TRUE)
+print(plot_mu, split = c(2,1,2,2), more = TRUE)
+print(plot_yield, split = c(1,2,2,2), more = TRUE)
+dev.off()
+```
+
+
+## Resource allocation in terms of protein mass
+
+To determine the true allocation of protein resources per compartment, but also the true cost of protein per process, we need to **convert the predicted concentration of proteins in mmol per gDCW to g per gDCW**, simply by multiplying protein concentration with the molecular weight of a protein (g/mol, converted to g/mmol). We can then also easily transform g/gDCW to mass fraction by dividing individual protein concentrations by the sum of all protein concentrations. The protein mass fraction is dimensionless. The only parameter required for this transformation is the molecular weight per protein which is available from uniprot. We can for example take the protein annotation table that is automatically downloaded during `RBApy` model generation.
+
+```{r, message = FALSE}
+# import downloaded Ralstonia protein annotation from uniprot
+df_uniprot <- read_tsv(paste0(simulation_dir, "../../data/uniprot.csv"), col_types = cols()) %>%
+  mutate(locus_tag = stri_extract_first(`Gene names`, regex = "H16_[AB][0-9]{4}|PHG[0-9]{3}"))
+
+# merge predicted protein allocation with molecular weight info from uniprot
+df_prot <- left_join(df_prot, select(df_uniprot, locus_tag, Length, Mass),
+  by = c("key" = "locus_tag")) %>%
+  
+  # calculate predicted protein mass in g/gDCW using MW in g/mmol, and mass fraction
+  group_by(simulation) %>% mutate(
+    predicted_mass_g_gDCW = value * Mass / 1000)
+
+# test if mass fractions sum to reasonable value
+df_prot %>% summarize(
+  sum_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
+```
+
+----------
+
+The simulated protein mass per gDCW changes with growth rate, and it is considerably lower then the estimated ~0.65 g total protein/gDCW that was previously stated for bacteria (see e.g. Park et al., biomass composition for *Ralstonia eutropha* model, or Touloupakis et al., biomass composition for cyanobacteria). One reason is that above numbers only include enzymatic proteins (the ones represented by the GSM). For machinery such as ribosomal proteins, a separate calculation needs to be performed. The model returns estimated concentration of machineries for replication, transcription, translation, and protein folding. The associated proteins can be imported from the model folder and the total mass estimated using molecular weight and subunit stoichiometry as done before for enzymatic proteins.
+
+```{r, message = FALSE}
+machinery_names <- c("replication", "transcription", "ribosome", "chaperones")
+machinery_tables <- paste0(simulation_dir, "../../data/", machinery_names, ".tsv")
+
+df_macr <- df_macr %>% group_by(simulation) %>%
+  mutate(
+    key = recode(key, !!!setNames(machinery_names, c("P_REP", "P_TSC" , "P_TA", "P_CHP"))),
+    substrate_uptake_rate = value[key == "qS"],
+    predicted_growth_rate = value[key == "mu"],
+  )
+
+df_machinery <- lapply(machinery_tables, read_tsv) %>% bind_rows(.id = "machine") %>%
+  mutate(machine = recode(machine, !!!setNames(machinery_names, 1:4))) %>%
+  select(-`Entry name`, -Sequence, -Cofactor, -`EC number`, -`Organism ID`, `Organism`,
+    -`Catalytic activity`, -Status) %>%
+  
+  # join with prediction of molecular machine concentration (mmol/gDCW)
+  left_join(df_macr, by = c("machine" = "key")) %>%
+  
+  # calculate predicted protein mass in g/gDCW using MW in g/mmol, and mass fraction
+  group_by(simulation) %>% mutate(
+    predicted_mass_g_gDCW = value * Stoichiometry * Mass / 1000
+  )
+
+# test if mass fractions sum to reasonable value
+df_machinery %>% summarize(
+  sum_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
+```
+
+If the utilized protein for enzymes and machinery is summed up, it does not exceed ~0.25 g/gDCW. The reason for this is that around 55% of the protein mass is not modeled (NE proteome, see R notebook `Ralstonia-model-constraints`), and only around 65% of the total cell mass is protein. If we consider this, than total protein mass can be estimated as m = 0.25/(1-0.55) = `r round(0.25/(1-0.55), 3)` g/gDCW. This is much closer to the estimated 0.65 g protein/gDCW. The difference can be attributed to default values of amino acid concentration in `RBApy` that determine the size of the 'protein pool'. Also, the sum of utilized proteins is not a constant but a linear function of growth rate. However, the total proteome pool *including non-enzymatic proteins* is constant.
+
+
+## Correlation between predicted and experimentally determined proteome
+
+To compare the predicted and experimental proteome composition, we load the required proteomcis data. Proteomics data are mass spectrometry measurements with label-free quantification of peptides. Protein quantification was performed by summing up all peptide intensities per annotated protein. The proteomic measurement unit, mass fraction, can be easily transformed to g/gDCW by multiplying mass fraction with the total protein mass (g/gDCW) from the RBApy simulation. Or *vice versa* by converting RBApy protein concentration to mass fraction.
+
+To allow a fair comparison between measured and predicted data, it is necessary to aggregate (e.g. sum up) all protein abundances allocated of one reaction. The reason is that the model will only predict **protein abundance of the first of a range of iso-enzymes** for a particular reaction, while in reality another iso-enzyme might be more abundant (carry the majority of flux). This would lead to lower correlation between measured and predicted protein concentrations. This is not necessary for machinery proteins.
+
+
+### Combine simulations and experimental data
+
+The proteomics data has to be merged with `RBApy` simulation results using matching conditions. First, proteomics data has to be loaded and prepared for merging.
+
+
+**Step 1: load proteomics data**
+
+```{r}
+load(Reutropha_proteomics)
+
+# pick a condition matching simulations
+Ralstonia_eutropha <- Ralstonia_eutropha %>%
+  
+  # select only required columns
+  select(condition, uniprot, locus_tag, protein, mol_fraction, mean_mass_fraction, 
+    mass_g_per_gDCW, COG_Process) %>%
+  
+  # rename conditions
+  separate(condition, into = c("substrate", "growth_rate"), sep = " ") %>%
+  mutate(growth_rate = as.numeric(growth_rate)) %>%
+  mutate(substrate = recode(substrate,
+    `FA` = "formate", `FRC` = "fructose", `SUC` = "succinate", `NLIM` = "ammonium")) %>%
+  
+  # add substrate uptake rate by which simulated data will be merged
+  mutate(substrate_uptake_rate = case_when(
+    substrate == "fructose" & growth_rate == 0.05 ~ 0.53,
+    substrate == "fructose" & growth_rate == 0.10 ~ 1.16,
+    substrate == "fructose" & growth_rate == 0.15 ~ 1.78,
+    substrate == "fructose" & growth_rate == 0.20 ~ 2.40,
+    substrate == "fructose" & growth_rate == 0.25 ~ 3.03,
+    substrate == "formate" & growth_rate == 0.05 ~ 15.5,
+    substrate == "formate" & growth_rate == 0.10 ~ 26.41,
+    substrate == "formate" & growth_rate == 0.15 ~ 37.32,
+    substrate == "formate" & growth_rate == 0.20 ~ 48.23,
+    substrate == "formate" & growth_rate == 0.25 ~ 59.15,
+    substrate == "succinate" & growth_rate == 0.05 ~ 0.98,
+    substrate == "succinate" & growth_rate == 0.10 ~ 1.93,
+    substrate == "succinate" & growth_rate == 0.15 ~ 2.88,
+    substrate == "succinate" & growth_rate == 0.20 ~ 3.83,
+    substrate == "succinate" & growth_rate == 0.25 ~ 4.78,
+    substrate == "ammonium" & growth_rate ==  0.05 ~ 0.06,
+    substrate == "ammonium" & growth_rate == 0.10 ~ 0.39,
+    substrate == "ammonium" & growth_rate ==  0.15 ~ 0.71,
+    substrate == "ammonium" & growth_rate == 0.20 ~ 1.03,
+    substrate == "ammonium" & growth_rate == 0.25 ~ 1.36
+  ))
+```
+
+
+**Step 2: Load gene reaction associations obtained from genome scale model**
+
+```{r, warning = FALSE}
+df_model_reactions <- read_csv(model_reactions, col_types = cols()) %>%
+  
+  # filter for reactions with gene associations
+  select(reaction_id, reaction_name, genes) %>% separate_rows(genes, sep = ", ") %>%
+  filter(!is.na(genes))
+```
+
+
+**Step 3: Select and rename conditions from RBA simulation**
+
+```{r}
+rename_cond <- function(df) {
+  df %>% mutate(substrate = case_when(
+    carbon_source == "succ" ~ "succinate",
+    carbon_source == "for" ~ "formate",
+    carbon_source == "fru" & nitrogen_conc == 1 ~ "fructose",
+    TRUE ~ "ammonium",
+  ))
+}
+
+df_machinery <- rename_cond(df_machinery)
+df_prot <- rename_cond(df_prot)
+```
+
+
+**Step 4: Merge protein measurements and predictions into master table**
+
+The first step is to merge the tables for machinery proteins, that means proteins related to replication, transcription, translation, and protein folding. These don't require allocation of protein mass to reactions, and merging becomes simply an operation on enzyme IDs and conditions.
+
+```{r}
+# join with proteomics data
+df_machinery <- left_join(
+  df_machinery, Ralstonia_eutropha,
+  by = c("Entry" = "uniprot", "substrate", "substrate_uptake_rate"))
+```
+
+The second table for all enzymatic proteins requires the allocation of estimated protein mass to enzymes.
+One option for the future is to retrieve these values directly from RBApy.
+
+```{r, message = FALSE}
+df_prot_comp <- df_model_reactions %>%
+  
+  # join with proteomics data
+  left_join(Ralstonia_eutropha, by = c("genes" = "locus_tag")) %>%
+  
+  # join with simulation data
+  left_join(df_prot, by = c("genes" = "key", "condition")) %>%
+  
+  # determine number of reactions per protein
+  group_by(condition, genes) %>% mutate(n_reactions = length(length(reaction_id))) %>%
+  
+  # calculate mol fractions
+  group_by(condition) %>% mutate(
+    predicted_mol_fraction = value/(sum(value, na.rm = TRUE) * n_reactions),
+    measured_mol_fraction = mol_fraction/(sum(mol_fraction, na.rm = TRUE) * n_reactions),
+    COG_Process = if_else(is.na(COG_Process), "Other", COG_Process)
+  ) %>%
+  
+  # summarize by summing up protein abundance per reaction (NA treated as zero)
+  group_by(condition, reaction_id, reaction_name) %>% 
+  summarize(
+    predicted_mol_fraction = sum(predicted_mol_fraction, na.rm = TRUE),
+    measured_mol_fraction = sum(measured_mol_fraction, na.rm = TRUE),
+    ratio_mol_fraction = predicted_mol_fraction/measured_mol_fraction,
+    COG_Process =  COG_Process %>% table %>% sort %>% {.[1]} %>% names
+  ) %>%
+  
+  # trim COG Processes to most important ones
+  mutate(COG_Process = replace(COG_Process, 
+      !grepl("Amino|Nucleot|Coenz|Energy|Transla", COG_Process), "Other"
+    )
+  )
+```
+
+Now we perform a test. We check if all mol fractions per condition sum to unity as we would expect.
+And they do.
+
+```{r, message = FALSE}
+df_prot_comp %>% group_by(condition) %>% 
+  summarize(sum(measured_mol_fraction), sum(predicted_mol_fraction))
+```
+
+
+### Change of machinery proteins over growth rate
+
+```{r, message = FALSE, fig.width = 7, fig.height = 2.6}
+# the following code section brings gathers growth rate/mass measurements and predictions
+# in a single column each: better for latter summarizing and plotting
+df_machinery %>% 
+  gather("type", "measurement", 
+    predicted_mass_g_gDCW, mass_g_per_gDCW, predicted_growth_rate, growth_rate) %>%
+  mutate(
+    prediction = if_else(grepl("predicted", type), "prediction", "measurement"),
+    type = if_else(grepl("mass", type), "mass_g_gDCW", "growth_rate")) %>%
+  spread(type, measurement) %>%
+
+  # summing up protein mass over all conditions
+  group_by(machine, prediction, growth_rate) %>%
+  summarize(mass_g_gDCW = sum(mass_g_gDCW),
+  ) %>%
+  
+xyplot(mass_g_gDCW ~ growth_rate | machine, .,
+  groups = prediction,
+  par.settings = custom.colorblind(),
+  scales = list(alternating = FALSE), 
+  as.table = TRUE, layout = c(4, 1),
+  between = list(x = 0.5, y = 0.5), pch = 19,
+  xlab = expression("q"[S]*" [mmol h"^-1*" gDCW"^-1*"]"),
+  ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.xyplot(x, y, ...)
+    panel.key(...)
+  }
+)
+```
+
+
+
+<!-- ## Export figures and data -->
+
