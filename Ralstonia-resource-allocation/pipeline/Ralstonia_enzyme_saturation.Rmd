@@ -50,25 +50,6 @@ df_macr <- read_rba_result(list.files(simulation_dir, pattern = "macroprocesses_
 
 After running a set of simulations in RBApy that simulate increasing substrate limitation, we can plot the substrate uptake rate `q`, yield `Y` in gram biomass per gram substrate, and growth rate `µ`. Unlike genome scale models, growth becomes limited by the maximum amount of proteins that a cell can synthesize. If cells would not be protein-limited, *or* proteins would catalyze reactions infinitely fast, no such limitation would take place and growth rate would scale linearly with substrate concentration. This is the situation in FBA simulation.
 
-```{r, include = FALSE}
-# generalized plotting function
-plot_function <- function(data, xvar, yvar, groups, title, 
-  xlab, ylab, xlog = FALSE, ylog = FALSE) {
-  xyplot(get(yvar) ~ get(xvar), data,
-    groups = get(groups), pch = 19,
-    par.settings = custom.colorblind(),
-    main = title, xlab = xlab, ylab = ylab,
-    scales = list(x = list(log = xlog), y = list(log = ylog)),
-    panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.xyplot(x, y, cex = 0.9, ...)
-      panel.key(..., points = FALSE)
-    }
-  )
-}
-```
-
-
 ```{r, fig.width = 6.7, fig.height = 6.7, message = FALSE, warning = FALSE}
 # add g per gDCW uptake rate
 df_macr <- df_macr %>% mutate(
@@ -167,12 +148,12 @@ df_prot <- left_join(df_prot, select(df_uniprot, locus_tag, Length, Mass),
 
 # test if mass fractions sum to reasonable value
 df_prot %>% summarize(
-  sum_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
+  predicted_mass_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
 ```
 
 ----------
 
-The simulated protein mass per gDCW changes with growth rate, and it is considerably lower then the estimated ~0.65 g total protein/gDCW that was previously stated for bacteria (see e.g. Park et al., biomass composition for *Ralstonia eutropha* model, or Touloupakis et al., biomass composition for cyanobacteria). One reason is that above numbers only include enzymatic proteins (the ones represented by the GSM). For machinery such as ribosomal proteins, a separate calculation needs to be performed. The model returns estimated concentration of machineries for replication, transcription, translation, and protein folding. The associated proteins can be imported from the model folder and the total mass estimated using molecular weight and subunit stoichiometry as done before for enzymatic proteins.
+The simulated protein mass per gDCW changes with growth rate, and it is considerably lower then the estimated ~0.65 g total protein/gDCW that was previously estimated for bacteria (see e.g. Park et al., biomass composition for *Ralstonia eutropha* model, or Touloupakis et al., biomass composition for cyanobacteria). One reason is that above numbers only include enzymatic proteins (the ones represented by the GSM). For machinery such as ribosomal proteins, a separate calculation needs to be performed. The model returns estimated concentration of machineries for replication, transcription, translation, and protein folding. The associated proteins can be imported from the model folder and the total mass estimated using molecular weight and subunit stoichiometry as done before for enzymatic proteins.
 
 ```{r, message = FALSE}
 machinery_names <- c("replication", "transcription", "ribosome", "chaperones")
@@ -203,12 +184,12 @@ df_machinery %>% summarize(
   sum_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
 ```
 
-If the utilized protein for enzymes and machinery is summed up, it does not exceed ~0.25 g/gDCW. The reason for this is that up to 60% of the protein mass is not modeled (NE proteome, 57.7% at µ = 0, see R notebook `Ralstonia-model-constraints`), and only around 65% of the total cell mass is protein. If we consider this, than total protein mass can be estimated as m = 0.25/(1-0.6) = `r round(0.25/(1-0.6), 3)` g/gDCW. This is much closer to the estimated 0.65 g protein/gDCW. The difference can be attributed to default values of amino acid concentration in `RBApy` that determine the size of the 'protein pool'. It is important to note that the sum of utilized proteins is not a constant value but a linear function of growth rate. The total proteome pool *including non-enzymatic proteins* is, however, constant.
+If the utilized protein for enzymes and machinery is summed up, it does not exceed ~0.25 g/gDCW. The reason for this is that up to 60% of the protein mass is not modeled (non enzymatic, NE proteome, 57.7% at µ = 0, see R notebook `Ralstonia-model-constraints`), and only around 65% of the total cell mass is protein. If we consider this, than total protein mass can be estimated as m = 0.25/(1-0.6) = `r round(0.25/(1-0.6), 3)` g/gDCW. This is much closer to the estimated 0.65 g protein/gDCW. The difference can be attributed to default values of amino acid concentration in `RBApy` that determine the size of the 'protein pool'. It is important to note that the sum of utilizable proteins is not a constant value but a linear function of growth rate. The total proteome pool *including non-enzymatic proteins* is, however, constant.
 
 
 ## Correlation between predicted and experimentally determined proteome
 
-To compare the predicted and experimental proteome composition, we load the required proteomcis data. Proteomics data are mass spectrometry measurements with label-free quantification of peptides. Protein quantification was performed by summing up all peptide intensities per annotated protein. The proteomic measurement unit, mass fraction, can be easily transformed to g/gDCW by multiplying mass fraction with the total protein mass (g/gDCW) from the RBApy simulation. Or *vice versa* by converting RBApy protein concentration to mass fraction.
+To compare the predicted and experimental proteome composition, we load the required proteomics data. Proteomics data are mass spectrometry measurements with label-free quantification of peptides. Protein quantification was performed by summing up all peptide intensities per annotated protein. The proteomic measurement unit, mass fraction, can be easily transformed to g/gDCW by multiplying mass fraction with the total protein mass (g/gDCW) from the RBApy simulation. Or *vice versa* by converting RBApy protein concentration to mass fraction.
 
 To allow a fair comparison between measured and predicted data, it is necessary to aggregate (e.g. sum up) all protein abundances allocated of one reaction. The reason is that the model will only predict **protein abundance of the first of a range of iso-enzymes** for a particular reaction, while in reality another iso-enzyme might be more abundant (carry the majority of flux). This would lead to lower correlation between measured and predicted protein concentrations. This is not necessary for machinery proteins.
 
@@ -229,7 +210,10 @@ Ralstonia_eutropha <- Ralstonia_eutropha %>%
   # select only required columns
   rename(growth_rate = growthrate) %>%
   select(uniprot, locus_tag, protein, condition, substrate, substrate_uptake_rate,
-    growth_rate, mol_fraction, mean_mass_fraction, mass_g_per_gDCW, COG_Process)
+    growth_rate, mol_fraction, mean_mass_fraction, sd_massfraction, mass_g_per_gDCW, COG_Process) %>%
+  
+  # transform SD mass fraction into SD g/gDCW same way as was done for mass
+  mutate(sd_g_per_gDCW = sd_massfraction * 0.65)
 ```
 
 
@@ -298,133 +282,213 @@ df_prot_comp <- df_model_reactions %>%
   # calculate mass fractions
   group_by(condition) %>% mutate(
     predicted_mass_g_gDCW = predicted_mass_g_gDCW/n_reactions,
-    measured_mass_g_gDCW = mass_g_per_gDCW/n_reactions,
-    COG_Process = if_else(is.na(COG_Process), "Other", COG_Process)
+    mass_g_gDCW = mass_g_per_gDCW/n_reactions,
+    sd_mass_g_gDCW = sd_massfraction/n_reactions
   ) %>%
   
   # summarize by summing up protein abundance per reaction (NA treated as zero)
   group_by(condition, reaction_id, reaction_name, substrate, substrate_uptake_rate,
-    growth_rate, ) %>% 
+    growth_rate) %>% 
   summarize(
     predicted_mass_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE),
-    measured_mass_g_gDCW = sum(measured_mass_g_gDCW, na.rm = TRUE),
-    ratio_mass_fraction = predicted_mass_g_gDCW/measured_mass_g_gDCW,
-    COG_Process =  COG_Process %>% table %>% sort %>% {.[1]} %>% names
+    mass_g_gDCW = sum(mass_g_gDCW, na.rm = TRUE),
+    sd_mass_g_gDCW = sum(sd_mass_g_gDCW, na.rm = TRUE)
   ) %>%
   
   # add predicted growth rate to experimental
   left_join(
-    df_machinery %>% ungroup %>% 
+    df_machinery %>% ungroup %>%
       select(substrate, substrate_uptake_rate, predicted_growth_rate) %>%
-      filter(!duplicated(substrate_uptake_rate))) %>%
-  
-  # trim COG Processes to most important ones
-  mutate(COG_Process = replace(COG_Process, 
-      !grepl("Amino|Nucleot|Coenz|Energy|Transla", COG_Process), "Other"
-    )
-  )
+      filter(!duplicated(substrate_uptake_rate)))
 ```
 
-Now we perform a test. We check if all protein abundances allocated to reactions sum to a reasonable value as we would expect. This value would be the total *enzymatic* protein mass in g/gDCW, per condition, and should lie around 0.2 for the simulations, and higher for the actual data (includes additional protein quantified in experiment, but supposedly not carrying flux in model simulations).
+Now we perform a test. We check if all protein abundances allocated to reactions sum to a reasonable value as we would expect. This value would be the total *enzymatic* protein mass in g/gDCW, per condition, and could reach up to 0.2 g/gDCW for the simulations, and higher for the actual data (includes additional protein quantified in experiment, but not carrying flux in model simulations).
 
 ```{r, message = FALSE}
 df_prot_comp %>% group_by(condition) %>% 
-  summarize(sum(measured_mass_g_gDCW), sum(predicted_mass_g_gDCW))
+  filter(predicted_mass_g_gDCW != 0) %>%
+  summarize(sum(mass_g_gDCW), sum(predicted_mass_g_gDCW))
 ```
 
+----------
+
+The total predicted protein mass is lower than the measured protein mass. Therefore the following section quantifies discrepancies between model predicted and actually measured abundances. First we can inspect the top N reactions with highest **average predicted protein abundance**. The ratio of predicted divided by measured mass indicates that a handful of proteins are predicted to be more than 10 fold abundant compared to the measured abundance. This points towards fluxes being erroneously predicted too high for particular reactions, or *k_app* values being estimated too low for the estimated flux. 
+
+However, the largest discrepancies arise from **under-estimation of proteins**, the main cause being that the model predicts the **optimal abundance for each enzyme to carry a certain flux** (see following figure, comparison of simulation and experiment). If fluxes are drastically reduced due to strong substrate limitation, the minimal required protein abundance to optimize growth will be much lower than the measured abundance. The cell on the other hand does not reduce it's proteome but instead 'suspends' enzymes.
+
+
+```{r, message = FALSE, fig.height = 8, fig.width = 8}
+# Proteins 'over-predicted' by more than 10x
+df_prot_comp %>% group_by(reaction_id, substrate) %>%
+  summarize(
+    average_predicted_mass = mean(predicted_mass_g_gDCW),
+    average_measured_mass = mean(mass_g_gDCW),
+    overprediction_fold = round(average_predicted_mass/average_measured_mass)) %>%
+  arrange(desc(overprediction_fold)) %>% filter(overprediction_fold > 10)
+
+# comparison of simulation and experiment
+xyplot(log10(predicted_mass_g_gDCW) ~ log10(mass_g_gDCW) | factor(growth_rate) * substrate, 
+  df_prot_comp, labels = df_prot_comp$reaction_id, 
+  groups = substrate,
+  par.settings = custom.colorblind(), cex = 0.7,
+  scales = list(alternating = FALSE), as.table = TRUE,
+  between = list(x = 0.5, y = 0.5), 
+  pch = 1, xlim = c(-8.5, -0.5), ylim = c(-8.5, -0.5),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.abline(a = 0, b = 1, col = grey(0.5), lty = 2, lwd = 2)
+    panel.xyplot(x, y, ...)
+    #panel.directlabel(x, y, subscripts = subscripts, y_boundary = c(-2.2, 0), ...)
+  }
+)
+```
 
 ### Change of machinery proteins over growth rate
 
-The simulation and measurement data was prepared and merged by condition in the previous sections. Now it can be plotted to e.g. compare protein allocation over growth rate. Interestingly, we see that model predictions are quite accurately reflecting the range of protein allocation for the four different machineries. This is a good confirmation of the model's predictive power, given that the rates of these machineries were not fitted from our data but taken purely from literature. 
-There are however some deviations from the predicted 'optimal' proteome:
+The simulation and measurement data was prepared and merged by condition in the previous sections. Now it can be plotted to e.g. compare protein allocation over growth rate. Interestingly, we see that model predictions are quite accurately reflecting the range of protein allocation for the four different machineries, see following paragraphs. This is a good confirmation of the model's predictive power, given that the rates of these machineries were not fitted from data but taken purely from literature.  There are however some deviations from the predicted 'optimal' proteome:
 
 - the most important machine is the ribosome. Prediction and experiment show a very similar increase of ribosome abundance with growth rate, but the intersection (amount of unused ribosomes) is much higher in experiment
 - chaperones show an inverse proportional relationship with growth rate contrary to model prediction. Do (some of?) these proteins have another role than just folding, like stress response?
 - transcription sector is quite stable, however, requires more enzymes than expected. Abundance is underestimated by 1 order of magnitude (5x10^-3 vs 5x10^-4 g/gDCW)
 - replication sector is heavily underestimated by 3 orders of magnitude (10^-3 vs 10^-6 g/gDCW)
 
-```{r, message = FALSE, fig.width = 7, fig.height = 7}
-# the following code section gathers growth rate/mass measurements and predictions
-# in a single column each: better for later summarizing and plotting
+```{r, echo = FALSE}
+# A generalized plotting function with error bars
+xyplot_errbars <- function(data, variables, groups = NULL,
+  error_col = NULL, regline = FALSE, key = TRUE, 
+  xlab = NA, ylab = NA, xlim = NULL, ylim = NULL, ...) {
+  
+  # custom scale options
+  scaleoptions = list(alternating = FALSE)
+  if (!is.null(xlim)) scaleoptions$x <- list(limits = xlim)
+  if (!is.null(ylim)) scaleoptions$y <- list(limits = ylim)
+  
+  # plotting symbol and error columns custom for each variable
+  plot_symbols <- rep(c(19, 1, 20, 2, 21, 3), length.out = length(variables))
+  error_col <- rep(error_col, length.out = length(variables))
+  
+  # if groups is NULL, add a single pseudo group
+  if (is.null(groups)) {
+    data$nogroups <- rep("no groups", nrow(data))
+    groups = "nogroups"; key = FALSE
+  }
+  
+  # plot each layer individually
+  plots <- lapply(variables, function(vars) {
+    
+    layer <- which(variables %in% vars)
+    xyplot(as.formula(vars), data, 
+      groups = get(groups),
+      par.settings = custom.colorblind(),
+      error_margin = {if (!is.na(error_col[layer])) data[[error_col[layer]]] else NULL},
+      scales = scaleoptions, as.table = TRUE,
+      between = list(x = 0.5, y = 0.5), 
+      pch = plot_symbols[layer],
+      xlab = xlab, ylab = ylab,
+      col = custom.colorblind()$superpose.line$col,
+      panel = function(x, y, subscripts, error_margin, ...) {
+        if (layer == 1) {
+          panel.grid(h = -1, v = -1, col = grey(0.9))
+          if (key) {panel.key(..., cex = 0.7)}}
+        panel.superpose(x, y, subscripts, error_margin, ...)},
+      panel.groups = function(x, y, subscripts, error_margin, ...) {
+        panel.xyplot(x, y, ...)
+        if (!is.null(error_margin)) {
+          stdev = error_margin[subscripts]
+          panel.segments(x0 = x, y0 = y, x1 = x, y1 = y + stdev, ...)
+          panel.segments(x0 = x, y0 = y, x1 = x, y1 = y - stdev, ...)}
+        if (regline) {panel.lmline(x, y, ...)}
+      }
+    )
+  })
+  
+  # add alyers
+  final_plot <- plots[[1]]
+  if (length(plots) > 1) {
+    for (i in 2:length(plots)) {
+      final_plot <- final_plot + as.layer(plots[[i]])
+    }
+  }
+  
+  # return final result
+  final_plot
+  
+}
+```
+
+The following code section gathers growth rate/mass measurements and predictions in a single column each. This is better for summarizing and plotting.
+
+```{r, message = FALSE, fig.width = 6, fig.height = 7}
 df_machinery %>%
-  gather("type", "measurement", 
-    predicted_mass_g_gDCW, mass_g_per_gDCW, predicted_growth_rate, growth_rate) %>%
-  mutate(
-    prediction = if_else(grepl("predicted", type), "simulation", "measurement"),
-    type = if_else(grepl("mass", type), "mass_g_gDCW", "growth_rate")) %>%
-  spread(type, measurement) %>%
 
   # summing up protein mass over all conditions
-  group_by(machine, prediction, substrate, growth_rate) %>%
-  summarize(mass_g_gDCW = sum(mass_g_gDCW, na.rm = TRUE),
+  group_by(machine, substrate, growth_rate) %>%
+  summarize(
+    mass_g_gDCW = sum(mass_g_per_gDCW, na.rm = TRUE),
+    sd_g_gDCW = sum(sd_g_per_gDCW, na.rm = TRUE),
+    predicted_mass_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE)
   ) %>%
   
-  xyplot(mass_g_gDCW ~ growth_rate | machine * substrate, .,
-    groups = prediction, #ylim = c(0, 0.01),
-    par.settings = custom.colorblind(),
-    scales = list(alternating = FALSE), 
-    as.table = TRUE, layout = c(4, 4),
-    between = list(x = 0.5, y = 0.5), pch = 19,
-    fontfamily = "FreeSans", col.text = grey(0.5),
+  # reorder factors
+  mutate(machine = factor(machine, unique(machine)[c(2,4,3,1)])) %>%
+  
+  xyplot_errbars(
+    variables = c("mass_g_gDCW ~ growth_rate | machine * substrate",
+      "predicted_mass_g_gDCW ~ growth_rate | machine * substrate"),
+    groups = "substrate", error_col = c("sd_g_gDCW", NA), 
+    regline = TRUE, ylim = c(-0.01, 0.11), key = FALSE,
     xlab = expression("µ [h"^-1*"]"),
-    ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
-    panel = function(x, y, ...) {
-      panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.key(...)
-      panel.superpose(x, y, ...)},
-    panel.groups = function(x, y, ...) {
-      panel.xyplot(x, y, ...)
-      panel.lmlineq(x, y, ...)
-    }
-  )
+    ylab = expression("m"[protein]*" [g gDCW"^-1*"]")
+    )
 ```
+The increase of chaperone proteins with decreasing growth rate is counter-intuitive, and the underlying cause might be the inclusion or exclusion of particular proteins in this group. We want to include mostly chaperones related to the primary ribosome-supporting task of polypeptide chain folding after translation. Chaperones that are mostly related to stress-resistance or environmental resilience should be excluded (upregulated under substrate limitation?). The next paragraph investigates trends in single proteins within machineries.
+
+```{r, fig.width = 8, fig.height = 4, fig.align = "center"}
+xyplot_errbars(df_machinery %>% filter(machine == "chaperones"),
+  variables = "mass_g_per_gDCW ~ growth_rate | substrate",
+  groups = "protein", ylim = c(-0.002, 0.032), regline = TRUE,
+  simulation_col = NULL, error_col = "sd_massfraction")
+```
+
 
 ### Change of enzymatic proteins over growth rate
 
+Similar to machinery proteins we can also follow the simulation and actual protein abundance of all (detected) enzymes. The first step is to construct different **groups of interesting reactions** that can be inspected closer.
 
-```{r, message = FALSE, fig.width = 7, fig.height = 6}
+
+```{r}
 # construct groups of central metabolism genes
 glycolysis = c("HEXf", "PGI", "G6PDH2r", "PGL", "EDD", "EDA", "FBA", 
   "GAPD", "PGK", "PGM", "ENO")
 pyruvate = c("PPS", "PYK", "PDH1", "PDH2", "PDH3", "PC", "PPC", "PPCK")
 tca = c("CS", "ACONT1", "ICDHx", "AKGDH", "SUCOAS", "SUCDi", "FUM", "MDH")
+calvin = c("FDH", "RBPC", "PGK", "GAPD", "TPI", "FBA", "FBP", "TKT2", "TKT1", "TAh", "RPE", "RPI")
+```
 
-# plot comparison of enz abundance between simulation and data
-#group_by(condition, substrate, growth_rate, predicted_growth_rate) %>%
-  #summarize(
-  #  measured_mass_g_gDCW = sum(measured_mass_g_gDCW),
-  #  predicted_mass_g_gDCW = sum(predicted_mass_g_gDCW)) %>%
+The next step is to have a generalized plotting function that can plot simulated and measured protein abundance including error bars. We can see that some protein abundances nicely follow a growth-rate dependent manner, in line with predictions of higher flux. One such example are Calvin cycle enzymes for fromatotrophic growth. However, for the same enzymes we see that no abundance is predicted under heterotrophic conditions because of missing flux through the pathway, but in fact the proteins are expressed in high abundance, often in a growth-rate dependent manner. What is also puzzling is abundances for most enzymes are actually under-predicted. Since the total amount of enzymatic protein is comparable (but not identical) for simulations and measurements, we also have to investigate over-predicted protein abundances.
 
-xyplot(measured_mass_g_gDCW ~ growth_rate | reaction_id,
-  df_prot_comp %>% filter(reaction_id %in% glycolysis),
-  groups = substrate, #ylim = c(0, 0.01),
-  par.settings = custom.colorblind(),
-  scales = list(alternating = FALSE), 
-  as.table = TRUE, auto.key = list(columns = 4),
-  between = list(x = 0.5, y = 0.5), pch = 19,
-  fontfamily = "FreeSans", col.text = grey(0.5),
-  xlab = expression("µ [h"^-1*"]"),
-  ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
-  panel = function(x, y, ...) {
-    panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.superpose(x, y, ...)},
-  panel.groups = function(x, y, ...) {
-    panel.xyplot(x, y, ...)
-    # add linear regression if R2 exceeds a certain threshold
-    #if (all(x > 0) & summary(lm(y ~ x))$r.squared > 0.5)
-    #  panel.lmline(x, y, ...)
-  }
-) + as.layer(
-  xyplot(predicted_mass_g_gDCW*5 ~ growth_rate | reaction_id,
-    df_prot_comp %>% filter(reaction_id %in% glycolysis),
-    type = "l", groups = substrate,
-  )
-)
+```{r, message = FALSE, fig.width = 9, fig.height = 5.5}
+# Plot Calvin cycle reactions
+xyplot_errbars(df_prot_comp %>% filter(reaction_id %in% calvin),
+  variables = c("mass_g_gDCW ~ growth_rate | reaction_id * substrate",
+    "predicted_mass_g_gDCW ~ growth_rate | reaction_id * substrate"),
+  groups = "substrate", error_col = c("sd_mass_g_gDCW", NA), 
+  key = FALSE, ylim = c(-0.002, 0.032))
+
+# Plot TCA cycle reactions
+xyplot_errbars(df_prot_comp %>% filter(reaction_id %in% tca),
+  variables = c("mass_g_gDCW ~ growth_rate | reaction_id * substrate",
+    "predicted_mass_g_gDCW ~ growth_rate | reaction_id * substrate"),
+  groups = "substrate", error_col = c("sd_mass_g_gDCW", NA), 
+  key = FALSE, ylim = c(-5*10^-4, 6*10^-3))
 ```
 
 ----------
 
 ## Determining flux per unit of enzyme (utilization)
 
-<!-- ## Export figures and data -->
+It is clear from the previous analysis that the cells maintain proteins even if they are not, or only marginally utilized. The actually utilized proteome is minimal under strong substrate limitation. The next section will try to quantify the **under-utilization of enzymes** by determining e.g. the flux per enzyme and compare minimal protein requirement (simulation) versus measured protein abundance.
+
+A second option is to simply compare **trends in enzyme saturation** and derive conclusions about the underlying regulation of enzyme abundance. We can think of the following scenarios:
+
 
