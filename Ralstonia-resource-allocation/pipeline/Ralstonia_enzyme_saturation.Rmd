@@ -470,9 +470,9 @@ It is clear from the previous analysis that the cells maintain proteins even if 
 
 A second option is to simply compare **trends in enzyme saturation** and derive conclusions about the underlying regulation of enzyme abundance. We can think of the following scenarios:
 
-- enzyme abundance shrinks or expands with growth rate/flux. Utilization is constant, protein allocation is optimized towards flux and may exert some control over a pathway
-- enzyme abundance is constant, regardless of flux. Utilization increases with growth rate. 'Housekeeping' protein with non-limiting concentration, less probability for reaction control.
-- mixed variants of the above. For example enzyme abundance is constant, utilization increases with growth rate, but only until a certain growth rate where abundance changes suddenly (on/off behavior)
+- enzyme abundance expands with growth rate/flux in experiment and simulation. Utilization is constant, protein allocation is optimized towards flux and may exert some control over a pathway
+- enzyme abundance is constant in experiment, regardless of flux in simulation. Utilization increases with growth rate. 'housekeeping' protein with non-limiting concentration, less probability for control over pathway
+- enzyme abundance is inversely correlated with growth rate, while simulation is constant or positively correlated with growth rate. Enzyme involved in environmental response, readiness.
 
 Note that this analysis only includes enzymes that are **actually utilized by the model** under some condition, not all proteins included in the model or all experimentally quantified proteins. This is covered in the R notebook **Ralstonia_variability_analysis**.
 
@@ -556,11 +556,59 @@ df_prot_comp %>% group_by(reaction_id) %>%
 ### Trends in protein utilization hint towards flux control
 
 The first task is to make a simple assessment of trends in protein abundance for simulation and experimental results.
-One completely supervised strategy could for example entail the summarization of each protein's abundance over growth rate by fitting a linear regression model. One could then coarsely cluster (or hand pick) groups of proteins that will
+One completely supervised strategy could for example entail the summary of each reactions's protein abundance over growth rate by fitting a linear regression model. One could then coarsely cluster (or hand pick) groups of proteins that will
 
 - increase in simulation, increase in experiment
 - increase in simulation, decrease/are constant in experiment
+- remain constant in simulation, decrease in experiment
 - ...
+
+One additional layer of complexity is that this analysis can be performed for all four available substrate limitations. The individual trends for one or the other limitation might be different for the same protein. We can group the data by reaction and substrate limitation and fit a model over five growth rate and four replicates (20 data points). The slope, intercept and ANOVA p-value can be extracted for experimental protein abundance. For model simulations, the slope is sufficient as intercept is likely zero, and p-value extremely low due to the inherent linearity of predictions with growth rate.
+
+```{r, fig.width = 5, fig.height = 5, message = FALSE}
+df_clusters <- df_prot_comp %>%
+  
+  ungroup %>%
+  filter(!(is.na(mass_g_gDCW) | is.na(substrate))) %>%
+  
+  group_by(reaction_id, substrate) %>%
+  summarize(
+    average_mass_g_gDCW = mean(mass_g_gDCW, na.rm = TRUE),
+    lin_reg_slope = summary(lm(mass_g_gDCW ~ growth_rate))$coef[2],
+    lin_reg_pvalue = summary(lm(mass_g_gDCW ~ growth_rate))$coef[8],
+    model_slope = summary(lm(predicted_mass_g_gDCW ~ growth_rate))$coef[2]
+  ) %>%
+  
+  # manual 'clustering' based on protein vs growth rate slope
+  mutate(cluster = case_when(
+    lin_reg_slope >  0 & model_slope >  0 ~ "A",
+    lin_reg_slope <= 0 & model_slope >  0 ~ "B",
+    lin_reg_slope <= 0 & model_slope <= 0 ~ "C",
+    lin_reg_slope >  0 & model_slope <= 0 ~ "D"
+  ))
+
+# number of reactions and total protein mass per 'cluster'
+df_clusters %>% ungroup %>%
+  arrange(desc(average_mass_g_gDCW)) %>%
+  
+  xyplot(average_mass_g_gDCW ~ factor(cluster) | substrate, .,
+    par.settings = custom.colorblind(),
+    groups = factor(reaction_id, unique(reaction_id)), col = grey(0.6),
+    xlab = "group", ylab = bquote("average mass g gDCW"^-1),
+    ylim = c(0, 0.2), border = grey(0.85),
+    scales = list(alternating = FALSE), as.table = TRUE,
+    between = list(x = 0.5, y = 0.5), 
+    ewidth = 0.15, beside = TRUE, lwd = 0.5,
+    panel = function(x, y, subscripts, groups, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barchart(x, y, horizontal = FALSE, stack = TRUE,
+        groups = groups, subscripts = subscripts, ...)
+      panel.text(x = seq_along(unique(x)), y = 0.015 + tapply(y, x, sum), 
+        labels = table(x), cex = 0.7)
+    }
+  )
+```
+
 
 
 
