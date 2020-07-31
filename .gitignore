@@ -2,6 +2,7 @@
 .Rdata
 Ralstonia-gene-essentiality/data/barseq_gene_essentiality_all.tab
 Ralstonia-gene-essentiality/data/rebar.sign_heatmap.pdf
+Ralstonia-gene-essentiality/data/rebar.fitness.tab
 sgRNA_library/raw_data/gene_protein_table.txt
 sgRNA_library/raw_data/20181019_LunLib_all_CDS_RPKM_no_filter.corrected_labels.tab
 sgRNA_library/raw_data/190702_library_predepletion_deseq.tab

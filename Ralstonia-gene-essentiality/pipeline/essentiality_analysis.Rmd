@@ -24,8 +24,8 @@ In this notebook I only include data from a non-selective medium (LB medium) tha
 # loading libraries
 library(lattice)
 library(latticeExtra)
+library(latticetools)
 library(tidyverse)
-library(Rtools)
 library(stringi)
 ```
 
@@ -40,6 +40,9 @@ df_model <- read_csv("../data/model_gene_essentiality.csv") %>% select(-X1)
 
 # load BarSeq data with gene essentiality for the initial Tn-library (in LB medium)
 df_barseq_LB <- read_tsv("../data/barseq_gene_essentiality_LB.tab")
+
+# load raw barseq data with single barcode copy numbers
+df_barseq_raw <- read_tsv("../data/rebar.fitness.tab")
 ```
 
 -----
@@ -79,7 +82,7 @@ To get the full picture, we need to summarize genes by the following categories.
 To obtain a summary of these categories, we simply fill up model genes with no counterpart in the LB BarSeq table with a `non-essential` label. This is a fair assumption because the BarSeq data covers virtually all genes. Genes without or very few transposon mutants (even for statistical reasons like short gene lenght) are covered in the LB BarSeq table, and all others have mutants and are therefore `non-essential` in LB.
 
 
-```{r}
+```{r, message = FALSE}
 df_lb <- df_lb %>%
   
   # add 'non-essential' label and replace unhit with essential
@@ -274,7 +277,7 @@ knitr::include_graphics("../figures/escher_map_essential_genes.png")
 
 Some of the reactions that have several essential genes associated (BarSeq) turned out to be non-essential according to the model. At first impression it is surprising that some of the annotated genes turn out as essential in BarSeq, when they are actually *iso-enzymes*, not *subunits* (`OR` instead of `AND` concatenation).
 
-The following section sheds some light on selected reactions that have several essential **isoenzymes**. This is a contradiction as isoenzymes should be able to compensate for each others.
+The following section sheds some light on selected reactions that have several essential **isoenzymes**. This is a contradiction as isoenzymes should be able to compensate for each other.
 
 ```{r, fig.width = 7, fig.height = 4}
 df_selected_reactions <- df_lb %>%
@@ -325,8 +328,68 @@ dev.off()
 - The biggest error of model predictions are false negatives (161 genes falsely predicted to be non-essential)
 - Reasons for this are first and foremost: model counts only zero growth phenotype as essential (fatal mutant)
 - This could be adressed by simulating if KOs are **beneficial but not essential for growth**
-- Second most important reason could be that isoenzymes are falsely annotated (model uses alternative gene/isoenzyme that doesn't work in reality, or not at the same rate)
+- Second most important reason could be that isoenzymes are falsely annotated (model uses an alternative gene/isoenzyme that doesn't work in reality, or not at the same rate)
 - Several of the BarSeq predictions were used to correct obvious errors in enzyme stoichiometry in the GEM (`AND` rule instead of `OR` rule)
+
+
+## Depletion /  enrichment of *cbb* operon located genes
+
+Another type of information that can be obtained from BarSeq experiments is the depletion of cbb related Tn knockout mutants. In order to check depletion or enrichment for specific Tn-mutants, we have to inspect the complete BarSeq data and filter for the conditions we are interested in. The first check is if gene fitness scores are normally or bimodally distributed. Except for formate, they are mostly normally distributed meaning most gene knock-outs have a neutral effect on growth. Th exception is formate that has a many more mutants with effect on growth rate. We can therefore use the median as a benchmark to see how far away certain fitness scores are from a neutral score. This is necessary because the median fitness score lies between -1 and -2 instead of 0. Assuming these are log2 transformed barcode abundances, this would translate to 0.25 to 0.5 fold original abundance (instead of 1).
+
+```{r, fig.width = 7, fig.height = 6}
+df_barseq_raw %>% filter(!duplicated(Gene_fitness)) %>%
+  
+  # plot gene fitness
+  densityplot( ~ Gene_fitness | Condition, .,
+    par.settings = custom.colorblind(),
+    as.table = TRUE, between = list(x = 0.5, y = 0.5),
+    xlim = c(-8, 2), lwd = 2,
+    scales = list(alternating = FALSE), 
+    panel = function(x, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.densityplot(x, plot.points = FALSE, ...)
+      panel.abline(v = median(x, na.rm = TRUE), lty = 2, lwd = 2, col = grey(0.5))
+    }
+  )
+```
+
+The median fitness score is now plotted in the following figure as black line. This figure is a subset of barcoded Tn mutants containing only those belonging to chromosomal or megaplasmid cbb genes. For the megaplasmid, it's actually only Rubisco large subunit and PRUK. Rubisco small subunit is essential (?), at least we have no mutants available. In this figure we can see that KO of megaplasmid Rubisco or PRUK is generally neutral to slightly beneficial for growth while chromosome 2 encoded cbb gene mutants have much lower fitness. Formate again sticks out where all cbb knockouts have drastically reduced fitness. There's some evidence that a Rubisco KO would have a slight growth advantage, but this data is not conclusive enough. A clearer picture might emerge with longer selection under more controlled growth conditions. However one explanation for marginal effect of Rubisco KO on growth is that even if the Tn inserts into a gene, that doesn't repress expression of that gene but only produces a nonsense polypeptide. It could therefore be that we still see a protein burden from Rubisco even in KO mutants. 
+
+
+```{r, fig.width = 7, fig.height = 6, message = FALSE}
+plot_cbb_genes <- df_barseq_raw %>%
+  
+  # filter for cbb related genes on plasmid and chromosome
+  filter(grepl("H16_RS256[2-8][05]|PHG42[167]", locusId)) %>%
+  #group_by(Condition, locusId) %>% summarize(Gene_fitness = mean(Gene_fitness)) %>%
+  
+  # plot gene fitness
+  xyplot(Strain_fitness ~ factor(Condition), .,
+    groups = grepl("PHG4", locusId) %>% if_else(condition = ., "cbb megaplasmid", "cbb chromosome 2"),
+    par.settings = custom.colorblind(),
+    scales = list(x = list(rot = 25)), 
+    pch = 19,
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(as.numeric(x)-0.3, y, alpha = 0.2, ...)
+      panel.errbars(x, y, lwd = 2, ewidth = 0, ...)
+      panel.key(corner = c(0.95, 0.05), ...)
+    }
+  )
+
+# add median gene fitness score as a comparison, assuming that most genes are
+# neutral in their effect on growth. The median gene fitness would in this case
+plot_barseq_median <- df_barseq_raw %>% 
+  
+  # determine global median
+  group_by(Condition) %>% summarize(fit_median = median(Gene_fitness)) %>%
+  
+  #plot it on top
+  xyplot(fit_median ~ factor(Condition), ., pch = "_", cex = 4, col = 1)
+
+# plot combined
+plot_cbb_genes + as.layer(plot_barseq_median)
+```
 
 
 
