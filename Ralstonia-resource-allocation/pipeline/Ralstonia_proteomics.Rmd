@@ -266,23 +266,26 @@ NMDS <- dist_mat %>% dist %>% metaMDS
 # and plot result
 df_nmds <- NMDS$points %>% as_tibble(rownames = "condition") %>%
   separate(condition, into = c("condition", "growth_rate", "replicate"), sep = "[ _]") %>%
+  mutate(condition = recode(condition, FA = "formate",
+    NLIM = "ammonium", FRC = "fructose", SUC = "succinate")) %>%
   mutate(across(matches("MDS[12]"), function(x) x/10^11)) %>%
-  mutate(growth_rate = as.numeric(growth_rate)*10)
+  mutate(growth_rate = as.numeric(growth_rate)*7.5)
 
-xyplot(MDS2 ~ MDS1, df_nmds,
+plot_nmds <- xyplot(MDS2 ~ MDS1, df_nmds,
   groups = condition,
   pch = 19, size = df_nmds$growth_rate,
   par.settings = custom.colorblind(),
   panel = function(x, y, size, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.bubbleplot(x, y, z = size+0.5, col = grey(0.9), ...)
     panel.bubbleplot(x, y, z = size, ...)
     panel.key(..., cex = 0.7, corner = c(0.95, 0.05))
     for (p in 1:5) {panel.key(labels = as.character(p/20), col = grey(0.7),
-      pch = 19, cex = 0.7, point.cex = p/2, corner = c(0.95, 0.95-(0.09*p)^1.5))
+      pch = 19, cex = 0.7, point.cex = p/3, corner = c(0.95, 0.95-(0.1*p)^1.5))
     }
   }
 )
+
+print(plot_nmds)
 ```
 
 As an alternative, we can also use principal component analysis, PCA, and see if this is similarly conclusive than NMDS. PCA reduces the dimensionaity of data by using a sort of projection on a 2D plane. In contrast to NMDS it is a determinstic and non-iterative procedure. It computes principal components (PC) that have a certain proportion of explanatory power of the variation between data points.
@@ -303,7 +306,8 @@ summary(PCA_result)$importance[, 1:6]
 # plot PC1, PC2 and PC3
 PCA_result$rotation %>% as_tibble %>%
   mutate(
-    condition = row.names(dist_mat) %>% stri_extract_all_regex("^[A-Z]*") %>% unlist,
+    condition = row.names(dist_mat) %>% stri_extract_all_regex("^[A-Z]*") %>% unlist %>%
+      recode(FA = "formate", NLIM = "ammonium", FRC = "fructose", SUC = "succinate"),
     growth_rate = row.names(dist_mat) %>% stri_extract_all_regex("0.[0-9]*") %>% unlist
   ) %>%
   
@@ -320,4 +324,61 @@ PCA_result$rotation %>% as_tibble %>%
     }
   )
 ```
+## Visualizing protein abundance using circular maps
+
+```{r, fig.width = 8, fig.height = 3.2}
+plot_prot_per_chrom <- Ralstonia_eutropha %>% ungroup %>%
+  
+  # filter for one growth rate and one chromosome only
+  filter(growthrate == 0.25) %>%
+  
+  # add a rolling mean for every condition
+  group_by(substrate) %>% mutate(
+    roll_massfraction =  zoo::rollapply(
+      mean_mass_fraction, 5, function(x) mean(x, na.rm = TRUE), 
+      partial = TRUE)) %>%
+  
+  # sort by start position of gene
+  arrange(start) %>%
+  
+  xyplot(roll_massfraction*100 ~ start/1000 | 
+      factor(seq_type, c("chromosome 1", "chromosome 2", "plasmid")), .,
+    par.settings = custom.colorblind(), strip = FALSE,
+    layout = c(1, 3), between = list(x = 0.5, y = 0.5),
+    groups = substrate, type = "l", as.table = TRUE, 
+    alpha = 0.8, xlab = "", ylab = "protein mass fraction",
+    xlim = c(0, 4.05e3), ylim = c(-0.05, 0.55),
+    scales = list(alternating = FALSE),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, ...)
+      panel.key(..., cex = 0.7, points = FALSE,
+        corner = c(0.99, 0.9), which.panel = 3)
+      panel.text(x = 2000, y = 0.45, col = grey(0.3), cex = 0.7,
+        labels = paste0("average protein mass encoded = ", round(sum(y)/4, 1), "%")
+      )
+    }
+  )
+
+print(plot_prot_per_chrom)
+```
+
+### Overview about most n abundant proteins per COG term
+
+```{r}
+
+```
+
+
+## Draft composite figure for proteomics
+
+```{r, fig.width = 9, fig.height = 6}
+# plot subfigures on one canvas
+print(plot_quant_prot1, position = c(0, 0.5, 0.36, 1), more = TRUE)
+print(plot_quant_pep_2, position = c(0.33, 0.5, 0.69, 1), more = TRUE)
+print(plot_nmds, position = c(0.66, 0.5, 1, 1), more = TRUE)
+print(plot_prot_per_chrom, position = c(0, 0, 1, 0.57))
+```
+
+
 
