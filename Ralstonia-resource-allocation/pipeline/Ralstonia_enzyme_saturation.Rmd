@@ -709,7 +709,7 @@ dev.off()
 
 ## Yield-growth rate tradeoff under mixotrophic growth?
 
-It was experimentally observed before that *R. eutropha* expresses Rubisco and other *cbb*-operon located genes even on growth on fructose or other heterotrophic substrates. Bowien et al., 1990, show that Rubisco activity can be found under growth on fructose, but on pyruvate. Dangle & Tabita, 2015, review the regulation by CbbR type regulators among others also in *R. eutropha* and mention that citrate also leads to activation of *cbb* expression. They hypothesize that ribulose bisphosphate (RuBP) is an activating effector while other central metabolism intermediates such as phosphoenol pyruvate (PEP) are repressing effector molecules. It was speculated in Bowien et al. that regulation by cbbR might actually be a repression-derepression rather than activation, which means that the default state would be a bound cbbR repressing the *cbb* operon. However it became clear that this is not the case. Shimizu et al., 2015, knocked the cbbR gene out and the result was reduced expression of *cbb* genes by 100 fold. This proves that cbbR is a required activator and not a repressor of cbb, otherwise cbbR deletion would lead to consitutive actiavtion of cbb expression.
+It was experimentally observed before that *R. eutropha* expresses Rubisco and other *cbb*-operon located genes even on growth on fructose or other heterotrophic substrates. Bowien et al., 1990, show that Rubisco activity can be found under growth on fructose, but on pyruvate. Dangle & Tabita, 2015, review the regulation by CbbR type regulators among others also in *R. eutropha* and mention that citrate also leads to activation of *cbb* expression. They hypothesize that ribulose bisphosphate (RuBP) is an activating effector while other central metabolism intermediates such as phosphoenol pyruvate (PEP) are repressing effector molecules. It was speculated in Bowien et al. that regulation by cbbR might actually be a repression-derepression rather than activation, which means that the default state would be a bound cbbR repressing the *cbb* operon. However it became clear that this is not the case. Shimizu et al., 2015, knocked the cbbR gene out and the result was reduced expression of *cbb* genes by 100 fold. This proves that cbbR is a required activator and not a repressor of cbb, otherwise cbbR deletion would lead to constitutive activation of cbb expression.
 
 They same group speculated in their study that the additional Rubisco expression could have a benefit for carbon yield, specifically for product yield of PHB. They show that PHB from the WT contains slightly more 13C labeled mass (and total mass) than the cbbR and cbbS/L knockouts. This means that the cell would have a (product or biomass) yield advantage by Rubisco expression on fructose, so called mixotrophic growth.
 
@@ -724,7 +724,7 @@ df_mixflux <- read_rba_result(list.files(mixotroph_dir, pattern = "fluxes_.*.tsv
 df_mixmacr <- read_rba_result(list.files(mixotroph_dir, pattern = "macroprocesses_.*.tsv", full.names = TRUE))
 ```
 
-The next part is to compare yield, growth rate, CO2 emission and other fluxes for a range of simulation where Rubisco was forced to re-fix emitted CO2 from growth on fructose.
+The next part is to compare yield, growth rate, CO2 emission and other fluxes for a range of simulations where Rubisco was forced to re-fix emitted CO2 from growth on fructose. Simulations were performed for increasing flux through Rubisco from 0 to 5 mmol gDCW-1 h-1.
 
 ```{r, fig.width = 5, fig.height = 3}
 # rename column
@@ -736,7 +736,7 @@ xyplot(value ~ as.factor(CO2_refixation) | key,
   between = list(x = 0.5, y = 0.5),
   par.settings = custom.colorblind(), lwd = 2,
   xlab = expression("forced CO2 refixation [mmol h"^-1*"gDCW"^-1*"]"),
-  ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
+  ylab = expression("µ / Y"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, ...)
@@ -745,18 +745,17 @@ xyplot(value ~ as.factor(CO2_refixation) | key,
 ```
 There is no increase in growth rate or yield possible according to the RBA model. The yield is in fact calculated based on the growth rate µ and the substrate uptake rate qS. If qS is kept constant, yield and growth rate depend on each other in the relation Y [gDCW/gS] = µ [h-1] / qS [gS gDCW-1 h-1]. Therefore, the model was also allowed to have variable substrate uptake rate (but fixed initial substrate concentration) but it did not make a difference. The model actually calculates already a high-yield phenotype and if CO2 re-fixation would have had an advantage for growth, it might have been detected earlier depending on the protein costs for the respective pathway. Before a final verdict, we can follow the fate of the fixed CO2 through the metabolism.
 
-```{r, fig.width = 5, fig.height = 4}
+```{r, fig.width = 5, fig.height = 5}
 # rename column
-df_mixflux <- df_mixflux %>% rename(CO2_refixation = sim_run) %>%
-  complete(key, simulation, fill = list(value = 0, CO2_refixation = 5))
+df_mixflux <- df_mixflux %>% rename(CO2_refixation = sim_run)
 
-xyplot(abs(value) ~ as.factor(CO2_refixation) | key,
-  filter(df_mixflux, key %in% c("CO2t", "RBPC", "PRUK", "FruABC", "EDD", "EDA")),
-  scales = list(alternating = FALSE), #ylim = c(0, 0.6),
-  between = list(x = 0.5, y = 0.5),
+xyplot(abs(value) ~ as.factor(CO2_refixation) | factor(key, unique(key)[c(4,8,9,6,7,3,5,1,2)]),
+  filter(df_mixflux, key %in% c("CO2t", "RBPC", "PRUK", "FruABC", "EDD", "EDA", "TKT1", "CS", "AKGDH", "O2t")),
+  scales = list(alternating = FALSE),
+  between = list(x = 0.5, y = 0.5), as.table = TRUE,
   par.settings = custom.colorblind(), lwd = 2,
   xlab = expression("forced CO2 refixation [mmol h"^-1*"gDCW"^-1*"]"),
-  ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
+  ylab = expression("flux [mmol h"^-1*"gDCW"^-1*"]"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, ...)
@@ -764,7 +763,14 @@ xyplot(abs(value) ~ as.factor(CO2_refixation) | key,
 )
 ```
 
+It becomes clear that yield and growth rate decrease, and not increase, with additional CO2 fixation, because:
 
+- energy requirement for CO2 fixation leads to lower flux through ED pathway, but higher flux through TCA
+- this is in order to generate the required NADH/ATP for CO2 fixation
+- respiration and O2 consumption also increases with forced mixotrophic growth
+- there is no net reduction of CO2 emission. In fact cells emit more CO2 even when they fix some of it due to increased energy requirement
+- storing some of the fixed CO2 as PHB would not increase biomass yield as additional energy requirement still persists
+- cells should not be able to make more PHB using this strategy, regardless of biomass yield. If acetyl-CoA is drained for PHB, even less energy is made available through TCA and OXPHOS.
 
 
 

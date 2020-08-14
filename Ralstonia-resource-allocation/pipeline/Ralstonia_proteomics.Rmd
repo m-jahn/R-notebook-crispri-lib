@@ -1,0 +1,323 @@
+---
+title: "MS-based proteomics for *R. eutropha*"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook: 
+    theme: spacelab
+    toc: yes
+---
+
+
+## Description
+
+This R notebook is a bioinformatics pipeline to **process and analyze MS based peptide/protein abundance data** for the chemolithoautotroph *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*).
+
+Proteomics data was obtained using the following work flow (to be added...).
+
+
+## Libraries
+
+```{r, message = FALSE}
+# loading libraries
+library(lattice)
+library(latticeExtra)
+library(latticetools)
+library(tidyverse)
+library(stringi)
+```
+
+## Data import
+
+Define the data source directories. Some of them are external in the sense of not included in the accompanying data folder of this R notebook. The main proteomics data is loaded from the R ShinyProt directory that can also be found on [github](https://github.com/m-jahn/ShinyProt) and interactively browsed and searched in the [ShinyProt web app](https://m-jahn.shinyapps.io/ShinyProt/).
+
+```{r, message = FALSE}
+Reutropha_proteomics <- "~/Documents/SciLifeLab/Resources/R_projects/ShinyProt/data/Ralstonia_eutropha.Rdata"
+load(Reutropha_proteomics)
+```
+
+
+## Overview on detected peptides and proteins
+
+### Total number of quantified proteins and missing proteome
+
+In total, the following number of proteins was quantified, out of theoretical total of 6,614 proteins ([Uniprot reference genome](https://www.uniprot.org/uniprot/?query=organism%3A%22Cupriavidus+necator+%28strain+ATCC+17699+%2F+H16+%2F+DSM+428+%2F+Stanier+337%29+%28Ralstonia+eutropha%29+%5B381666%5D%22+AND+proteome%3Aup000008210&sort=score), July 31 2020). That represents roughly 81 % by number and much more by mass (see below for estimation)
+
+```{r}
+n_quantified_prot <- Ralstonia_eutropha %>% pull(uniprot) %>% unique %>% length
+print(n_quantified_prot)
+print(n_quantified_prot/6614*100)
+```
+
+We can also estimate the coverage in terms of protein mass, by assuming that the 1257 missing proteins are of average mass or lower than average mass than the detected proteins. The following simple calculation simulates missing protein mass with an average abundance of the lower quantile of detected proteins. For this purpose we simply pick a standard condition, such as growth on fructose.
+
+```{r}
+quantified_protein <- Ralstonia_eutropha %>%
+  
+  # pick a certain condition
+  filter(substrate == "fructose", growthrate == 0.25) %>%
+  pull(mean_intensity)
+
+# determine quantiles of raw quantification intensity
+quantified_protein %>% quantile(na.rm = TRUE)
+```
+
+Now we just simulate that the 1257 non-detected proteins have an average mass similar to that of the protein with 25% lowest abundance. The missing protein abundance will then sum up to less 1% of the total estimated proteome, meaning we can detect more than 99% of the proteome by mass.
+
+```{r}
+missing_protein <- 1257 * quantile(na.rm = TRUE, quantified_protein)[2] %>% as.numeric()
+missing_protein_percent <- missing_protein/(missing_protein + sum(quantified_protein, na.rm = TRUE))
+paste("missing protein in % total mass:", round(missing_protein_percent*100, 3))
+```
+
+### Number of quantified peptides per protein
+
+```{r, fig.width = 5, fig.height = 2.5}
+plot_quant_pep <- xyplot(sort(n_peptides, decreasing = TRUE) ~ 
+      1:length(protein),
+    filter(Ralstonia_eutropha, substrate == "fructose", growthrate == 0.25),
+    xlab = "protein", ylab = "n peptides",
+    par.settings = custom.lattice, 
+    ylim = c(0, 80), xlim = c(0, 5500),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barplot(x, y, col = NA, fill = grey(0.8), ewidth = 0.6)
+      xhalf = length(unique(x))/2
+      panel.lines(x = c(0, xhalf, xhalf), y = c(y[xhalf], y[xhalf], 0), col = 1)
+      panel.text(x = 10, y = y[xhalf]*3, pos= 4, cex = 0.8, 
+        labels = paste0(round(xhalf), " proteins with >= ", y[xhalf], " peptides"))
+    }
+  )
+
+print(plot_quant_pep)
+```
+
+### Number of quantified peptides per protein, inverted
+
+```{r, fig.width = 5, fig.height = 2.5}
+plot_quant_pep_2 <-  Ralstonia_eutropha %>%
+  
+  # rearrange n_peptides to have another type of overview
+  filter(substrate == "fructose", growthrate == 0.25) %>%
+  pull(n_peptides) %>% table %>% as_tibble %>%
+      rename(., pep = `.`, prot = n) %>% mutate(pep = as.numeric(pep)) %>%
+  
+  # plot
+  xyplot(prot ~ pep, .,
+    xlab = "n peptides", ylab = "n proteins", ylim = c(-5, 1155),
+    par.settings = custom.lattice, xlim = c(0, 80),
+    panel = function(x, y,...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barchart(x, y, horizontal = FALSE, box.width = 1,
+        border = NA, col = grey(0.8), ...)
+    }
+  )
+
+print(plot_quant_pep_2)
+```
+
+
+### Number of protein quantifications per replicate
+
+```{r, fig.width = 5, fig.height = 2.5, message = FALSE}
+plot_quant_prot1 <- Ralstonia_eutropha %>%
+  
+  # protein quantifications per replicate
+  gather(replicate, raw_intensity, R1:R4) %>%
+  group_by(substrate, growthrate, replicate) %>%
+  summarize(quant_proteins = sum(!is.na(raw_intensity))) %>%
+  
+  # and plot
+  xyplot(quant_proteins ~ 1:length(quant_proteins), .,
+    xlab = "sample", ylab = "quantified proteins",
+    par.settings = custom.lattice, 
+    ylim = c(0, 5500), xlim = c(0, 81),
+      panel = function(x, y,...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barplot(x, y, col = NA, fill = grey(0.8), ewidth = 0.5)
+    }
+  )
+
+print(plot_quant_prot1)
+```
+
+### Number of proteins quantified in every run
+
+
+```{r, fig.width = 5, fig.height = 2.5, message = FALSE}
+plot_quant_prot2 <- Ralstonia_eutropha %>%
+  
+  # protein quantifications per replicate
+  gather(replicate, raw_intensity, R1:R4) %>%
+  group_by(protein) %>%
+  summarize(quant_in_runs = sum(!is.na(raw_intensity))) %>%
+  pull(quant_in_runs) %>% table %>% enframe %>%
+  
+  # and plot
+  xyplot(value ~ factor(name), .,
+    xlab = "in number of runs", 
+    ylab = "quantified proteins",
+    par.settings = custom.lattice, 
+    ylim = c(0, 3000), xlim = c(0, 79),
+      panel = function(x, y,...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barplot(x, y, col = NA, fill = grey(0.8), ewidth = 0.5)
+      panel.abline(v = 70, col = 1)
+      panel.text(x = 25, y = 1500, pos= 4, cex = 0.8, 
+        labels = paste0(sum(y[70:79]), " proteins quantified\nin > 70 out of 80 runs"))
+    }
+  )
+
+print(plot_quant_prot2)
+```
+
+
+## Sample overview and quality control
+
+
+### Raw intensity per sample and replicate
+
+Raw intensity here is the dimensionless MS 'intensity', that means the quantified area under the curve of MS1 spectra for peptides, summed up per protein. One replicate that was missing for condition Fructose, growth rate 0.1, R2, was temporarily replaced by R1 for this plot, because densityplot was otherwise giving an error message (because of missing values).
+
+```{r, message = FALSE}
+densityplot(~ log10(R1) + log10(R2) + log10(R3) + log10(R4) | condition, 
+  Ralstonia_eutropha %>% mutate(R2 = case_when(
+    condition == "FRC 0.1" ~ R1, TRUE ~ R2)), 
+  auto.key = list(columns = 4), layout = c(5, 4), 
+  par.settings = custom.colorblind(), xlab = "log10 intensity",
+  scales = list(alternating = FALSE), as.table = TRUE,
+  panel = function(x, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.superpose(x, ...)
+  },
+  panel.groups = function(x, ...) {
+    panel.densityplot(x, plot.points = FALSE, ...)
+    panel.abline(v = median(x, na.rm = TRUE), lty = 2, col = grey(0.5))
+  }
+)
+```
+
+### Variation per sample and replicate
+
+Log 10 median intensity versus log 10 CV.
+
+```{r, fig.width = 8, fig.height = 6}
+library(hexbin)
+hexbinplot(log10(CV) ~ log10(median_intensity) | condition, 
+  Ralstonia_eutropha,
+  layout = c(5, 4), 
+  par.settings = custom.colorblind(),
+  scales = list(alternating = FALSE), aspect = 0.9,
+  ylim = c(-3, 0.5),
+  colramp = colorRampPalette(custom.lattice()$superpose.polygon$col[3:1])
+)
+```
+
+A densityplot of the coeffcient of variation (CV) for the four replicates per protein, broken down by sample.
+This result shows that the variation is considerably higher than an 'ideal' MS-based proteomics experiment, where average CV can be as low as 10%. Here, variation is high as 50%.
+
+```{r, fig.width = 8, fig.height = 6}
+densityplot(~ CV | condition,
+  Ralstonia_eutropha,
+  as.table = TRUE, lwd = 2, 
+  par.settings = custom.colorblind(), pch = ".",
+  panel = function(x, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.densityplot(x, ...)
+    panel.ablineq(v = median(x, na.rm = TRUE), adj = -0.1,
+      lty = 2, col = grey(0.5), fontfamily = "FreeSans")
+  }
+)
+```
+### Similarity between replicates from identifications
+
+We can determine the overall similarity of samples (replicates and conditions) towards each other. A simple strategy for this is to use **PCA** or **nMDS**, the latter is an iterative and therefore not fully deterministic approach as it depends on the starting coordinates. However it is useful to compare how different samples or replicates 'cluster' together. Two replicates need to be removed from the data before, one corrupt sample that is missing (`FRC_0.1_R2`), and one that is an outlier (`NLIM_0.05_R1`).
+
+The strategy for nMDS is to reshape all measurements per sample into a matrix and compute the 'distance' by a default measure. nMDS then tries to arrange each sample as a dot on a plane, taking optimal the distance to its neighbors into account. This approach might not give a perfect result and may contain contradictions indicated by the `stress` level.
+
+```{r, fig.width = 10, fig.height = 4, message = FALSE}
+# load required libraries
+library(dendextend)
+library(vegan)
+
+# first need to rearrange raw data so that we obtain a 'wide' table/matrix
+dist_mat <- Ralstonia_eutropha %>% select(uniprot, condition, R1:R4) %>%
+  gather(replicate, intensity, R1:R4) %>%
+  unite(condition, condition, replicate) %>%
+  spread(condition, intensity) %>% 
+  
+  # remove missing/outlier samples and coerce to matrix
+  select(-uniprot, -all_of(c("FRC 0.1_R2", "NLIM 0.05_R1"))) %>%
+  as.matrix %>% t
+
+# plot sample similarity as dendrogram
+plot_cols <- custom.colorblind()$superpose.polygon$col[1:4]
+cluster <- hclust(dist(dist_mat), method = "ward.D2")
+plot(color_branches(cluster, col = rep(plot_cols, each = 20)[-c(26, 41)][cluster$order]))
+```
+
+We can see that many replicates cluster nicely together, samples also cluster predominantly by carbon/nitrogen limitation. For example, many samples from formic acid and nitrogen limitation cluster on the left side, and many samples from fructose cluster on the right side.
+
+```{r, fig.height = 4, fig.width = 4, message = FALSE}
+library(tactile)
+
+# run nMDS analysis
+NMDS <- dist_mat %>% dist %>% metaMDS
+
+# and plot result
+df_nmds <- NMDS$points %>% as_tibble(rownames = "condition") %>%
+  separate(condition, into = c("condition", "growth_rate", "replicate"), sep = "[ _]") %>%
+  mutate(across(matches("MDS[12]"), function(x) x/10^11)) %>%
+  mutate(growth_rate = as.numeric(growth_rate)*10)
+
+xyplot(MDS2 ~ MDS1, df_nmds,
+  groups = condition,
+  pch = 19, size = df_nmds$growth_rate,
+  par.settings = custom.colorblind(),
+  panel = function(x, y, size, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.bubbleplot(x, y, z = size+0.5, col = grey(0.9), ...)
+    panel.bubbleplot(x, y, z = size, ...)
+    panel.key(..., cex = 0.7, corner = c(0.95, 0.05))
+    for (p in 1:5) {panel.key(labels = as.character(p/20), col = grey(0.7),
+      pch = 19, cex = 0.7, point.cex = p/2, corner = c(0.95, 0.95-(0.09*p)^1.5))
+    }
+  }
+)
+```
+
+As an alternative, we can also use principal component analysis, PCA, and see if this is similarly conclusive than NMDS. PCA reduces the dimensionaity of data by using a sort of projection on a 2D plane. In contrast to NMDS it is a determinstic and non-iterative procedure. It computes principal components (PC) that have a certain proportion of explanatory power of the variation between data points.
+
+The result shows a clustering that is less compelling as the NMDS but with similar message: Fructose and succinate are somewhat closer related, for the low growth rates also N-limitation. In the NMDS, formic acid is very far apart from the other samples while in the PCA this trend is not that clear. There seems to be trend of low and higher growth rates clustering apart from each other, which is more clear in NMDS.
+
+```{r, fig.height = 4, fig.width = 4, message = FALSE}
+PCA_result <- dist_mat %>% t %>% na.omit %>%
+  
+  # scale and perform PCA analysis. One can also log10-transform expression data to get a 
+  # comparison that is stronger between relative instead of absolute differences
+  # in protein abundance
+  scale %>% prcomp(center = TRUE) 
+  
+# summary of variation
+summary(PCA_result)$importance[, 1:6]
+  
+# plot PC1, PC2 and PC3
+PCA_result$rotation %>% as_tibble %>%
+  mutate(
+    condition = row.names(dist_mat) %>% stri_extract_all_regex("^[A-Z]*") %>% unlist,
+    growth_rate = row.names(dist_mat) %>% stri_extract_all_regex("0.[0-9]*") %>% unlist
+  ) %>%
+  
+  xyplot(PC2 ~ PC1, .,
+    par.settings = custom.colorblind(), groups = condition,
+    pch = 19, size = 10*as.numeric(.[["growth_rate"]]),
+    panel = function(x, y, size, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.bubbleplot(x, y, z = size, ...)
+      panel.key(..., cex = 0.7, corner = c(0.05, 0.05))
+      for (p in 1:5) {panel.key(labels = as.character(p/20), col = grey(0.7),
+        pch = 19, cex = 0.7, point.cex = p/2, corner = c(0.05, 0.95-(0.09*p)^1.5))
+      }
+    }
+  )
+```
+

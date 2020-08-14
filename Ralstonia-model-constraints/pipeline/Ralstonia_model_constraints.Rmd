@@ -323,7 +323,7 @@ for (cond in unique(df_flux_protein$condition)) {
 
 ----------
 
-**Determine reaction fluxes for same condition.** Several approaches were tested to obtain minimal and maximal fluxes per enzyme. The best approach turned out to be flux sampling with the additional constraint of reaching at least 95% of the maximum growth rate found by FBA. Flux sampling with 100 iterations was performed using COBRApy. We can see that there is a threshold of standard deviation ~ 1 above which variation gets very high for spurious reactions. These are artificial cycles. The exception to this is N-limitation that can have higher flux variability due to the surmount carbon supply (fructose not limiting). The N-limitation condition is therefore omited for kapp determination.
+**Determine reaction fluxes for same condition.** Several approaches were tested to obtain minimal and maximal fluxes per enzyme. The best approach turned out to be flux sampling with the additional constraint of reaching at least 95% of the maximum growth rate found by FBA. Flux sampling with 100 iterations was performed using COBRApy. We can see that there is a threshold of standard deviation ~ 1 above which variation gets very high for spurious reactions. These are artificial cycles. The exception to this is N-limitation that can have higher flux variability due to the surmount carbon supply (fructose not limiting). The N-limitation condition is therefore omitted for kapp determination.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 5.5}
 # import flux sampling results for four conditions, max tested growth rate
