@@ -186,6 +186,88 @@ dev.off()
 ```
 
 
+## High throughput imaging of chemostat cultivated cells
+
+The same samples as were used to determine bulk PHB content using nile red fluorescence spectroscopy were also subjected to high throughput imaging.
+A Nikon microscope was used to acquire up to 5-10 images per replicate and condition. Phase contrast images and Texas Red fluorescence were acquired to identify cell outline/shape and Nile red fluorescnce from PHB staining, respectively. A custom Cell Profiler pipeline was used to automatically identfy cells, filter out non-cell objects by shape/size, and quantify fluorescence.
+
+First we load a processed data frame combining data of fructose and ammonium limitation.
+
+```{r, message = FALSE}
+df_imaging <- read_csv("../data/input/20190728_chemostat_imaging.csv")
+```
+
+Now we can plot the length of the cells and the volume calculated from the major axis length, and from the assumption that cells are rod/cylinder shaped objects. More precisely, cell volume using the volume of a cylinder as model was determined using the height h, (longest/major axis of our cell image), and its radius r (half of the minor axis/diameter of our cells). Then, volume is calculated as V = pi x r^2 x h.
+
+```{r, fig.width = 5, fig.height = 5.5}
+# see graph pars "box.rectangle" for the box, "box.umbrella" for whiskers
+cell_length <- xyplot(MajorAxisLength_um ~ factor(Metadata_mu) | limitation, 
+  df_imaging %>% filter(strain == "WT (PHB+)"),
+  par.settings = custom.colorblind(),
+  scales = list(alternating = FALSE),
+  xlab = expression("µ [h"^-1*"]"),
+  ylab = expression("major axis length [µm]"),
+  lwd = 3, ylim = c(-0.5, 6.5),
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.bwplot(x, y, horizontal = FALSE, pch = "|", 
+      notch = FALSE, do.out = FALSE, ...)
+    n_cells = tapply(y, x, length)
+    panel.text(labels = paste("n > ", min(n_cells, na.rm = TRUE)-1), x = 2, y = 5.5)
+  }
+)
+
+cell_volume <- xyplot(cell_volume_um3 ~ factor(Metadata_mu) | limitation, 
+  df_imaging %>% filter(strain == "WT (PHB+)"),
+  par.settings = custom.colorblind(),
+  scales = list(alternating = FALSE),
+  xlab = expression("µ [h"^-1*"]"),
+  ylab = expression("cell volume [µm"^3*"]"),
+  lwd = 3, ylim = c(-3, 33),
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.bwplot(x, y, horizontal = FALSE, pch = "|", 
+      notch = FALSE, do.out = FALSE, ...)
+    n_cells = tapply(y, x, length)
+    panel.text(labels = paste("n > ", min(n_cells, na.rm = TRUE)-1), x = 2, y = 28)
+  }
+)
+
+print(cell_length, split = c(1,1,1,2), more = TRUE)
+print(cell_volume, split = c(1,2,1,2))
+```
+
+
+```{r, include = FALSE}
+# silently export svg figures
+svg("../figures/figure_imaging.svg", width = 5, height = 5.5)
+print(plot_CO2_em, split = c(1,1,1,2), more = TRUE)
+print(plot_O2_up, split = c(1,2,1,2))
+dev.off()
+```
+
+
+```{r, include = FALSE}
+# for now excluded because growth rate 0.05 h^-1 samples were not quantified correctly
+# (problem with sample preparation)
+# here we additionally filter one erroneous replicate out
+xyplot(Intensity_MedianIntensity_TxRed_0_resize ~ factor(Metadata_mu) | strain * limitation, 
+  df_imaging %>% filter(!(Metadata_mu == 0.25 & Metadata_reactor == 1)),
+  par.settings = custom.colorblind(),
+  scales = list(alternating = FALSE),
+  xlab = "", lwd = 3, #ylim = c(-3, 33),
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.bwplot(x, y, horizontal = FALSE, pch = "|", 
+      notch = FALSE, do.out = FALSE, ...)
+    n_cells = tapply(y, x, length)
+    panel.text(labels = paste("n > ", min(n_cells, na.rm = TRUE)-1), x = 2, y = 0.9)
+  }
+)
+```
 
 
 
