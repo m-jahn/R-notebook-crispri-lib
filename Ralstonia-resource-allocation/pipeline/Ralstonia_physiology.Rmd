@@ -1,0 +1,191 @@
+---
+title: "Physiological measurements from *R. eutropha* chemostats"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output:
+  html_notebook: 
+    theme: spacelab
+    toc: yes
+---
+
+## Description
+
+This R notebook contains data and analysis regarding physiological measurements obtained from chemostat cultivations of *Ralstonia eutropha* (a.k.a. *Cupriavidus necator*).
+
+## Libraries
+
+```{r, messages = FALSE}
+library(lattice)
+library(latticeExtra)
+library(latticetools)
+library(tidyverse)
+```
+
+
+## PHB content of cells
+
+The following section analyzes data obtained from chemostat cultivations of the *R. eutropha* wild type (WT, PHB+) and a PHB knockout mutant (PHB-) obtained by random mutagenesis. Both strains were cultivated in chemostats with stepwise increase of dilutiuon rate (equals growth rate). Different parameters of these cultivations were determined among, those poly-hydroxybutyrate (PHB) content. PHB content was determined using Nile red staining (relative, not absolute quantification).
+
+First we import PHB quantification data per growth rate.
+
+```{r, message = FALSE}
+df <- read_csv("../data/input/20190716_chemostat_PHB.csv")
+```
+
+Next we reshape and filter the data a bit.
+
+```{r}
+df <- filter(df, mu <= 0.3) %>%
+  mutate(condition = recode(
+    condition, "C-limitation" = "fructose", "N-limitation" = "ammonium")) %>%
+  
+  mutate(replicate = if_else(channel > 4, channel-4, channel))
+
+head(df)
+```
+
+Then we plot relative PHB content over growth rate. In a second step we *estimate* absolute PHB content by using data from the literature as help. We can set the maximum observed Nile Red fluorescence to the average relative PHB content obtained under N limitation as reported in the literature. For example Steinbuechel & Schlegel, AMB, 1989 reported a PHB content of 0.4 g/g protein under N-limitation. With 0.65 g protein/gDCW, that equals 0.4 x 0.65 = 0.26 g/gDCW PHB. A second reference, Wu *et al*., Kor J Chem Eng, 2009, determined that up to 41.8% biomass is PHB (= 0.41 g/gDCW).
+
+```{r, fig.width = 5, fig.height = 3}
+plot_NR_fluorescence <- xyplot(I_nr/OD720_nr/10^6 ~ factor(mu) | condition,
+  df, groups = strain,
+  par.settings = custom.colorblind(), 
+  pch = 19, lwd = 2,
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  xlab = expression("µ [h"^-1*"]"), 
+  ylab = expression("FI"["nile red"]*" OD"[720]*""^-1),
+  scales = list(alternating = FALSE),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.errbars(x, y, ewidth = 0, ...)
+    panel.key(..., which.panel = 2, corner = c(0.9, 0.9))
+  }
+)
+
+
+df <- df %>% mutate(
+  rel_PHB_g_gDCW = I_nr/OD720_nr/max(I_nr/OD720_nr)*0.41
+)
+
+plot_rel_PH_content <- xyplot(rel_PHB_g_gDCW ~ factor(mu) | condition,
+  df, groups = strain,
+  ylab = expression("PHB [g gDCW"^-1*"]"),
+  panel=function(x, y, ...) {
+    panel.errbars(x, y, ewidth = 0, ...)
+  }
+)
+
+doubleYScale(plot_NR_fluorescence,
+  plot_rel_PH_content, use.style = FALSE, add.ylab2 = TRUE) %>% print
+```
+
+```{r, include = FALSE}
+# silently export svg figures
+svg("../figures/figure_PHB_content.svg", width = 5, height = 3)
+doubleYScale(plot_NR_fluorescence,
+  plot_rel_PH_content, use.style = FALSE, add.ylab2 = TRUE) %>% print
+dev.off()
+```
+
+## O<sub>2</sub> consumption and CO<sub>2</sub> emission
+
+Outlet gas composition was analyzed with specific optical sensors for O<sub>2</sub> and CO<sub>2</sub>.
+The gas uptake rate can then be determined knowing the input concentration, output concentration, flow rate per reactor, and biomass concentration per reactor. First load raw measurement data.
+
+```{r, message = FALSE}
+df_gas <- read_csv("../data/input/20190728_chemostat_gas.csv")
+```
+
+Next we summarize all measurements to one measurement per condition and replicate. Then we use measurements for the replicates to calculate the mean gas uptake and emission rate normalized to biomass concentration.
+
+```{r}
+df_gas <- df_gas %>%
+  
+  # remove mu higher than 0.3
+  filter(mu <= 0.3) %>%
+  
+  # determine average delta air flow per cond and replicate
+  group_by(condition, strain, mu, type, channel, `flow_rate [ml/min]`) %>%
+  summarize(flow_mL_min = mean(`flow [ml/min]`)) %>%
+  
+  # renumber replicates from 1 to n
+  group_by(condition, strain, mu, type) %>%
+  mutate(replicate = seq_along(channel)) %>%
+  arrange(condition, strain, mu, type, replicate) %>%
+  
+  # obtain biomass concentration from first table
+  ungroup %>% left_join(
+    group_by(df, strain, condition, mu) %>%
+    summarize(gDCW_mL = mean(`DCW [g/ml]`, na.rm = TRUE)) %>% 
+    ungroup
+    )
+```
+
+Now that we have the biomass concentration in gDCW/mL, we can determine the CO<sub>2</sub> emission and O<sub>2</sub>. The culture volume is 65 mL and the mass per volume CO<sub>2</sub> is 1.842 mg/mL (air at 1 atm and 20 °C). The mass per volume O<sub>2</sub> is 1.314 mg/mL (air at 1 atm and 20 °C)
+The CO<sub>2</sub> emission rate can then be calculated as:
+
+qCO2 [mL min^-1 gDCW^-1] = flow_CO2 [mL min^-1] / (biomass gDCW mL^-1 * V_culture mL)
+qCO2 [g h^-1 gDCW^-1] = 
+
+
+```{r}
+df_gas <- df_gas %>% 
+  
+  # add volume to mass conversion
+  mutate(m_gas_mg_mL = if_else(type == "CO2", 1.842, 1.314)) %>%
+  
+  mutate(
+  q_mL_min_gDCW = flow_mL_min / (gDCW_mL * 65),
+  q_g_h_gDCW = q_mL_min_gDCW * m_gas_mg_mL * 60 / 1000
+  )
+
+head(df_gas)
+```
+
+
+
+```{r, fig.width = 5, fig.height = 5.5}
+plot_CO2_em <- xyplot(q_g_h_gDCW ~ factor(mu) | condition,
+  filter(df_gas, type == "CO2"), groups = strain,
+  par.settings = custom.colorblind(), 
+  pch = 19, lwd = 2, ylim = c(0, 1.5),
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  xlab = expression("µ [h"^-1*"]"), 
+  ylab = expression("q"[CO2]*" g gDCW"^-1*" h"^-1),
+  scales = list(alternating = FALSE),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.errbars(x, y, ewidth = 0, ...)
+    panel.key(..., which.panel = 2, corner = c(0.9, 0.9))
+  }
+)
+
+plot_O2_up <- xyplot(q_g_h_gDCW*-1 ~ factor(mu) | condition,
+  filter(df_gas, type == "O2"), groups = strain,
+  par.settings = custom.colorblind(), 
+  pch = 19, lwd = 2, ylim = c(0, 1.5),
+  as.table = TRUE, between = list(x = 0.5, y = 0.5),
+  xlab = expression("µ [h"^-1*"]"), 
+  ylab = expression("q"[O2]*" g gDCW"^-1*" h"^-1),
+  scales = list(alternating = FALSE),
+  panel=function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.errbars(x, y, ewidth = 0, ...)
+    panel.key(..., which.panel = 2, corner = c(0.9, 0.9))
+  }
+)
+
+print(plot_CO2_em, split = c(1,1,1,2), more = TRUE)
+print(plot_O2_up, split = c(1,2,1,2))
+```
+```{r, include = FALSE}
+# silently export svg figures
+svg("../figures/figure_CO2_O2.svg", width = 5, height = 5.5)
+print(plot_CO2_em, split = c(1,1,1,2), more = TRUE)
+print(plot_O2_up, split = c(1,2,1,2))
+dev.off()
+```
+
+
+
+
+
