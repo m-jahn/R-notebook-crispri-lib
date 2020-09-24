@@ -20,6 +20,245 @@ library(latticetools)
 library(tidyverse)
 ```
 
+## Chemostat cultivation, biomass and growth rate
+
+### Import and reshape cultivation data
+
+First we load the three cultivation data tables. These contain all four limiting conditions. We are thinning out the OD measurement data by 75% so that file sizes become smaller and more plottable.
+
+```{r}
+# load chemostat measurements
+df_chem <- read.csv("../data/input/20180921_chemostat_OD.csv") %>%
+  
+  # remove outlier data points originating from sampling
+  filter(!od_value > 0.6) %>%
+  
+  # thinning data to reduce file size
+  slice_sample(n = 4000)
+```
+
+### OD and growth rate
+
+The next step is to plot the OD<sub>720</sub> and growth rate for all cultivations.
+
+```{r, fig.width = 5, fig.height = 5.5}
+plot_OD <- xyplot(od_value ~ batchtime_h | condition, 
+  arrange(df_chem, batchtime_h),
+  groups = replicate, par.settings = custom.colorblind(),
+  as.table = TRUE,, between = list(x = 0.5, y = 0.5), type = "l", lwd = 2,
+  ylim = c(-0.06, 0.86), ylab = expression("OD"[720*nm])
+)
+
+plot_dil <- xyplot(dilution_rate ~ batchtime_h | condition, 
+  filter(df_chem, replicate == 1), 
+  between = list(x = 0.5, y = 0.5),
+  par.settings = custom.colorblind(), 
+  layout = c(1,4), as.table = TRUE,
+  type = "l", xlim = c(0, 335), ylim = c(-0.03, 0.43),
+  xlab = "time [h]", ylab = expression("µ [h"^-1*"]"),
+  panel = function(x, y, ...){
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.horizonplot(x, y, col.regions = grey(0.7, alpha = 0.5))
+  }
+)
+
+print(doubleYScale(plot_dil, plot_OD, use.style = FALSE, add.ylab2 = TRUE))
+```
+
+### Calculate biomass yield and maintenance
+
+
+First we summarize average OD and growth rate for all cultivations leaving out the first 25 h batch growth phase.
+
+```{r}
+df_summary <- filter(df_chem, batchtime_h > 25) %>%
+  
+  # summarize average OD
+  group_by(condition, dilution_rate, replicate) %>%
+  summarize(OD720 = mean(od_value, na.rm = TRUE)) %>%
+  
+  # then we need medium substrate concentration for FA, FRC, NH4CL, SUC
+  mutate(c_substrate = case_when(
+    condition == "ammonium" ~ 0.025,
+    condition == "formate" ~ 1.0,
+    TRUE ~ 0.5
+  ))
+```
+
+For yield calculations, the residual substrate (mg) needs to be subtracted from feed substrate concentration (g) to determine portion of substrate that is taken up.
+
+```{r, message = FALSE}
+df_residual <- read_csv("../data/input/20181116_chemostat_residual_substrate.csv") %>%
+  rename(condition = limitation) %>%
+  mutate(condition = recode(condition, `formic acid` = "formate", `Nlim - fructose` = "ammonium")) %>%
+  mutate(c_residual_g_L = mean_concentration_mg.L/1000 %>% replace(., . < 0, 0))
+
+# join the summary df with residual substrate data
+df_summary <- left_join(df_summary, df_residual %>%
+    select(condition, dilution_rate, c_residual_g_L) %>%
+    filter(!duplicated(c_residual_g_L), condition != "ammonium")) %>%
+  mutate(c_residual_g_L = c_residual_g_L %>% replace_na(0))
+
+print(head(df_summary))
+```
+
+Nest step is to add the DCW in g/L depending on OD and condition. The DCW-OD relationship for each limiting condition was determined in a different experiment (calibration performed 2020-07-30). 50 mL shake flasks were used to determine OD at 720 nm, final gDCW per OD<sub>720</sub> and L, and maximum growth rate (in duplicates). The gDCW per OD was similar for all C-limiting condition and more different for the N-limitation due to accumulation of PHB granules. They absorb/scatter stronger than cellular biomass and therefore lead to over-estimation of cell density/biomass.
+
+
+We calculate substrate uptake rate q_S with the corrected substrate concentration (S_uptake = S_feed - S_residual). The rate q_S is then dilution rate times feed concentration divided by biomass in the culture: qS [g/OD720*L] = D [h-1] * c [g/L] / OD720. All other following calculations are just variations of that converting OD to gDCW per L, or converting g to C/N-mole.
+  
+```{r}
+df_summary <- df_summary %>% mutate(gDCW_L = case_when(
+    condition == "fructose" ~ OD720*0.3980,
+    condition == "succinate" ~ OD720*0.3392,
+    condition == "formate" ~ OD720*0.3600,
+    condition == "ammonium" ~ OD720*0.2766
+  )) %>%
+  
+  # substrate uptake rate per OD
+  # qS [g/OD720*L] = D [h-1] * c [g/L] / OD720
+  mutate(qS_g_OD720 = dilution_rate*(c_substrate-c_residual_g_L)/OD720) %>%
+  
+  # substrate uptake rate per gDCW
+  # qS [g/gDCW] = D [h-1] * c [g/L] / gDCW * L
+  mutate(qS_g_gDCW = dilution_rate*(c_substrate-c_residual_g_L)/gDCW_L) %>%
+  
+  # substrate uptake rate in C-mol per C-mol biomass (25.35 gDCW/Cmol = 0.03944 Cmol/gDCW)
+  # (source: Grunwald et al., Mirco Biotech, 2015)
+  mutate(Cmol_g = case_when(
+    condition == "formate" ~ 1/46.03 * 1,
+    condition == "fructose" ~ 1/180.16 * 6,
+    condition == "succinate" ~ 1/118.09 * 4,
+    condition == "ammonium" ~ 1/53.49 * 1 # here it is N-mol! NH4Cl has 1 N
+  )) %>%
+  
+  # for NH4Cl, we actually use N-mol per N-mol biomass per h. 
+  # N-mol in biomass is around 4x lower than C mol (bionumbers)
+  mutate(qS_Cmol_Cmol_DCW = case_when(
+    condition == "ammonium" ~ qS_g_gDCW * Cmol_g / (0.03944/4),
+    TRUE ~ qS_g_gDCW * Cmol_g / 0.03944
+  ))
+
+head(df_summary)
+```
+
+Finally we can create a so-called Herbert-Pirt plot, that is growth rate versus substrate uptake rate. This plot will usually reveal a linear relationship, meaning that substrate uptake and growth are proportional to each other. If there is a kink (change in slope) of the data and one linear model would not be sufficient to describe the data, then the yield has changed, i.e. cells start using a different pathway for energy generation (e.g. respiration versus fermentation). In the default scenario (linear relationship), the yield is the slope of the linear model and the maintenance coeffcient is the intersection with the Y axis.
+
+```{r, fig.width = 6.7, fig.height = 6.7}
+HP_plot <- function(data, xlimits = c(0, 0.3), ylimits = c(0, 1)) {
+  xyplot(qS_g_gDCW ~ dilution_rate | condition, data,
+    par.settings = custom.lattice, lwd = 1.5,
+    xlim = xlimits, ylim = ylimits,
+    ylab = expression("q"[S]*" [g h"^-1*" gDCW"^-1*"]"),
+    xlab = expression('µ [h'^'-1'*']'),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.xyplot(x, y, cex = 0.9, ...)
+      # regression line through linear part of the data (omit µ = 0.25/h)
+      sel <- x != 0.25; x = x[sel]; y = y[sel]
+      panel.lmlineq(x, y, fontfamily = "FreeSans", 
+        pos = 3, offset = 7, r.squared = TRUE, cex = 0.7, col.text = grey(0.3), ...)
+      coef <- lm(y ~ x, data.frame(x, y))$coeff
+      # displaying maintenance and yield coefficients
+      panel.abline(h = coef[[1]], lty = 2, ...)
+      panel.text(0.15, coef[[1]],
+        paste("ms =", round(coef[[1]], 3), "g h-1 gDCW-1"),
+        col = grey(0.3), pos = 3, cex = 0.7)
+      panel.text(0.15, coef[[1]], paste(expression("Yx/S ="),
+        round(1/coef[[2]], 3), "gDCW g-1"),
+        col = grey(0.3), pos = 1, cex = 0.7)
+    }
+  )
+}
+
+print(HP_plot(data = filter(df_summary, condition == "formate"),
+  ylimits = c(-7/4, 7)), split = c(1,1,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition == "fructose"),
+  ylimits = c(-1.5/4, 1.5)), split = c(2,1,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition == "ammonium"),
+  ylimits = c(-0.25/4, 0.25)), split = c(1,2,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition == "succinate"),
+  ylimits = c(-1.5/4, 1.5)), split = c(2,2,2,2))
+```
+
+
+```{r, include = FALSE}
+# silently export figure
+svg("../figures/figure_growth_vs_uptake.svg", width = 6.7, height = 6.7)
+print(HP_plot(data = filter(df_summary, condition == "formate"),
+  ylimits = c(-7/4, 7)), split = c(1,1,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition=="fructose"),
+  ylimits = c(-1.5/4, 1.5)), split = c(2,1,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition=="ammonium"),
+  ylimits = c(-0.25/4, 0.25)), split = c(1,2,2,2), more = TRUE)
+print(HP_plot(data = filter(df_summary, condition=="succinate"),
+  ylimits = c(-1.5/4, 1.5)), split = c(2,2,2,2))
+dev.off()
+```
+
+
+A similar plot could be made for C-mole and N-mole per C-mole biomass instead of [gram] units. Since the data is similar and only the units change, we just extract the slope and intercept of the four linear models for each substrate.
+
+```{r, message = FALSE}
+get_lm_coeff <- function(x, y) {
+  linmod <- lm(y ~ x, data.frame(x = x, y = y))
+  c(round(linmod$coeff[[1]], 3), round(1/linmod$coeff[[2]], 3))
+}
+df_summary %>% group_by(condition) %>%
+  summarize(value = get_lm_coeff(dilution_rate, qS_Cmol_Cmol_DCW)) %>% 
+  ungroup %>%
+  mutate(variable = rep(c("mS [Cmole Cmole_DCW-1 h-1]", "Yx/S [Cmole DCW Cmole-1]"), 4))
+```
+
+
+
+### Biomass, residual substrate
+
+This is just an auxiliary plot for the cultivation overview of OD and growth rate from above. In this plot, the average biomass concentration is shown per condition.
+
+```{r, fig.width = 6, fig.height =2.5}
+xyplot(gDCW_L ~ factor(dilution_rate) | condition, df_summary,
+  as.table = FALSE, xlab = "µ [h-1]", ylab = "biomass [gDCW/L]",
+  between = list(x = 0.7, y = 0.7),
+  scales = list(alternating = FALSE), lwd = 3,
+  par.settings = custom.colorblind(), layout = c(4, 1),
+  pch = 19, ylim = c(-0.02, 0.27),
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.errbars(x, y, ewidth = 0, ...)
+  }
+)
+```
+Finally for this section we can plot raw measurements using double Y scale (% and ppm)
+
+```{r, fig.width = 6, fig.height = 2.5}
+plot_residual <- xyplot(concentration_mg.L ~ factor(dilution_rate) | condition,
+  df_residual,
+  par.settings = custom.colorblind(), as.table=TRUE,
+  pch = 19, ylim = c(-50, 1450), layout = c(4, 1),
+  between = list(x = 0.5, y = 0.5),
+  scales = list(alternating = FALSE, x = list(at = c(1,3,5))),
+  xlab = expression("µ [h"^-1*"]"), ylab = "concentration [mg/L]",
+  panel = function(x, y, ...) {
+    panel.grid(h = -1, v = -1, col = grey(0.9))
+    panel.barplot(x, y, ewidth = 0.3, lwd = 2, ...)
+    panel.xyplot(x, y, alpha = 0.3, ...)
+  }
+)
+
+print(plot_residual)
+```
+
+
+```{r, include = FALSE}
+# silently export figure
+svg("../figures/figure_chemostat_cult.svg", width = 5, height = 7.5)
+print(doubleYScale(plot_dil, plot_OD, use.style = FALSE, add.ylab2 = TRUE), 
+  position = c(0,0.27,1,1), more = TRUE)
+print(plot_residual, position = c(-0.01,0,1,0.32))
+dev.off()
+```
+
 
 ## PHB content of cells
 
@@ -215,6 +454,7 @@ cell_length <- xyplot(MajorAxisLength_um ~ factor(Metadata_mu) | limitation,
       notch = FALSE, do.out = FALSE, ...)
     n_cells = tapply(y, x, length)
     panel.text(labels = paste("n > ", min(n_cells, na.rm = TRUE)-1), x = 2, y = 5.5)
+    #lm(y ~ x, data.frame(x = x, y= y)) %>% summary %>% print
   }
 )
 
@@ -232,6 +472,7 @@ cell_volume <- xyplot(cell_volume_um3 ~ factor(Metadata_mu) | limitation,
       notch = FALSE, do.out = FALSE, ...)
     n_cells = tapply(y, x, length)
     panel.text(labels = paste("n > ", min(n_cells, na.rm = TRUE)-1), x = 2, y = 28)
+    #lm(y ~ x, data.frame(x = x, y= y)) %>% summary %>% print
   }
 )
 
@@ -243,8 +484,8 @@ print(cell_volume, split = c(1,2,1,2))
 ```{r, include = FALSE}
 # silently export svg figures
 svg("../figures/figure_imaging.svg", width = 5, height = 5.5)
-print(plot_CO2_em, split = c(1,1,1,2), more = TRUE)
-print(plot_O2_up, split = c(1,2,1,2))
+print(cell_length, split = c(1,1,1,2), more = TRUE)
+print(cell_volume, split = c(1,2,1,2))
 dev.off()
 ```
 

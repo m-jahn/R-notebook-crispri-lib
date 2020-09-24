@@ -1,0 +1,81 @@
+date,experiment,strain,medium,carbon_source,nitrogen_source,aeration,replicate,t_for_µ_start [h],t_for_µ_end [h],t_duration [h],µ_determination,µ_mean,tD,tR,5xtR,pump_rate_µL/min
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,1,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,2,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,3,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,4,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,1,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,2,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,3,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,4,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,1,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,2,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,3,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.1 mL air/ mL*min,4,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,1,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,2,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,3,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.1 mL air/ mL*min,4,115,185,70,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,1,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,2,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,3,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,4,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,1,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,2,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,3,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,4,185,260,75,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,1,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,2,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,3,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,4,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,1,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,2,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,3,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,4,260,305,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,1,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,2,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,3,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L fructose,1 g/L NH4Cl,0.15 mL air/mL*min,4,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,1,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,2,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,3,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-09-21,C-limitation,Ralstonia eutropha H16,MM,1.0 g/L formic acid,1 g/L NH4Cl,0.15 mL air/mL*min,4,305,335,30,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,1,250,360,110,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,2,250,360,110,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,3,250,360,110,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,4,250,360,110,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,1,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,2,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,3,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,4,0,115,115,fixed dilution rate,0.05,13.86,20.00,100,62
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,1,365,455,90,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,2,365,455,90,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,3,365,455,90,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,4,365,455,90,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,1,120,170,50,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,2,120,170,50,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,3,120,170,50,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,4,120,170,50,fixed dilution rate,0.1,6.93,10.00,50,125
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,1,460,500,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,2,460,500,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,3,460,500,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,4,460,500,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,1,175,215,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,2,175,215,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,3,175,215,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,4,175,215,40,fixed dilution rate,0.15,4.62,6.67,33,175
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,1,505,550,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,2,505,550,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,3,505,550,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,4,505,550,45,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,1,220,245,25,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,2,220,245,25,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,3,220,245,25,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,4,220,245,25,fixed dilution rate,0.2,3.47,5.00,25,250
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,1,,,0,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,2,,,0,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,3,,,0,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,N-lim,Ralstonia eutropha H16,MM,2 g/L fructose,0.025 g/L NH4Cl,0.15 mL air/mL*min,4,,,0,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,1,250,285,35,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,2,250,285,35,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,3,250,285,35,fixed dilution rate,0.25,2.77,4.00,20,375
+2018-10-10,C-limitation,Ralstonia eutropha H16,MM,0.5 g/L succinate,1 g/L NH4Cl,0.15 mL air/mL*min,4,250,285,35,fixed dilution rate,0.25,2.77,4.00,20,375
