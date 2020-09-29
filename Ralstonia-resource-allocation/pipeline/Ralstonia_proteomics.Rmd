@@ -278,7 +278,7 @@ plot_nmds <- xyplot(MDS2 ~ MDS1, df_nmds,
   panel = function(x, y, size, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.bubbleplot(x, y, z = size, ...)
-    panel.key(..., cex = 0.7, corner = c(0.95, 0.05))
+    panel.key(..., cex = 0.7, corner = c(0.95, 0.05), points = FALSE)
     for (p in 1:5) {panel.key(labels = as.character(p/20), col = grey(0.7),
       pch = 19, cex = 0.7, point.cex = p/3, corner = c(0.95, 0.95-(0.1*p)^1.5))
     }
@@ -324,7 +324,7 @@ PCA_result$rotation %>% as_tibble %>%
     }
   )
 ```
-## Visualizing protein abundance using circular maps
+## Visualizing protein abundance using genome maps
 
 ```{r, fig.width = 8, fig.height = 3.2}
 plot_prot_per_chrom <- Ralstonia_eutropha %>% ungroup %>%
@@ -422,8 +422,8 @@ The other set that would be interesting to look at are (formate de-) hydrogenase
 
 - genes for soluble, Mo-dependent S-FDH are organized in an operon of five genes fdsG, -B, -A, -C, -D on chromosome 1
 - genes for another set of S-FDH may be encoded by fdwA and fdwB on chromosome 2 (considerable seq similarity to fds genes)
-- genes for membrane-bound M-FDH are located on chromosome 1 and include three genes, fdhA1 , fdhB1 , and fdhC, which encode a catalytic subunit, an iron-sulfur subunit, and a transmembrane cytochrome b subunit, respectively. An accessory gene fdhD is present in this region. 
-- a second M-FDH gene cluster located on chromosome 2 comprises fdoG, fdoH, and fdoI. The products of these genes show only moderate similarity to the products of fdh
+- genes for membrane-bound M-FDH are located on chromosome 1 and include three genes, fdhA1 , fdhB1 , and fdhC, which encode a catalytic subunit, an iron-sulfur subunit, and a transmembrane cytochrome b subunit, respectively. An accessory gene fdhD is present in this region. We can also find duplicates of these genes, fdhA2, fdhD2, fdhE on chromosome 2.
+- a second M-FDH gene cluster located on chromosome 2 comprises fdoG, fdoH, and fdoI. The products of these genes show only moderate similarity to the products of fdh.
 
 Interesting side not in *Cramm et al.*: "S-FDH is formed only in formate-induced cells, M-FDH activity was detectable under various growth conditions [Burgdorf et al., 2001]"
 
@@ -507,6 +507,8 @@ print(gene_plot_2, position = c(0.47, 0.23, 0.76, 0.36), more = TRUE)
 print(gene_plot_4, position = c(0.75, 0.23, 0.98, 0.36), more = TRUE)
 print(plot_cbb, position = c(0, 0, 0.45, 0.29), more = TRUE)
 print(plot_fdh, position = c(0.42, 0, 1, 0.29), more = TRUE)
+grid::grid.text(c("CBB operon (Chr2)", "S-FDH operon (Chr1)", "M-FDH (Chr1)"), just =c(0,0),
+  x = c(0.08, 0.5, 0.78), y = c(0.315,  0.315,  0.315), gp = grid::gpar(cex = 0.7, col = grey(0.3)))
 ```
 
 ```{r, message = FALSE, echo = FALSE}
@@ -521,6 +523,8 @@ print(gene_plot_2, position = c(0.47, 0.23, 0.76, 0.36), more = TRUE)
 print(gene_plot_4, position = c(0.75, 0.23, 0.98, 0.36), more = TRUE)
 print(plot_cbb, position = c(0, 0, 0.45, 0.29), more = TRUE)
 print(plot_fdh, position = c(0.42, 0, 1, 0.29), more = TRUE)
+grid::grid.text(c("CBB operon (Chr2)", "S-FDH operon (Chr1)", "M-FDH (Chr1)"), just =c(0,0),
+  x = c(0.08, 0.5, 0.78), y = c(0.315,  0.315,  0.315), gp = grid::gpar(cex = 0.7, col = grey(0.3)))
 dev.off()
 ```
 
