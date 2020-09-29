@@ -39,7 +39,7 @@ library(stringi)
 
 ```{r}
 # define local input and output directories
-# Note: these are not part of the gitbuh repository
+# Note: these are not part of the github repository
 RBA_dir <- "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/data/"
 prot_dir <- "../../../ShinyProt/data/"
 ```
@@ -268,7 +268,7 @@ write_tsv(df_export, "../data/output/enzyme_efficiency_brenda.tsv", col_names = 
 
 ### Background
 
-The second approach of estimating k<sub>app</sub> values is to perform an estimation based on in-house measurements instead of using published k<sub>cat</sub> values from literature or databases. The k<sub>app</sub> constants are actually a collective parameter, a helper construct to link enzyme fluxes to enzyme abundance, so that flux v = k<sub>app</sub> * [E]. The k<sub>app</sub> includes also the saturation s of the enzyme, so that k<sub>app</sub> ~ k<sub>cat</sub> * s. The saturation is between 0 and 1 so that k<sub>app</sub> becomes only lower or equal to k<sub>cat</sub>
+The second approach of estimating k<sub>app</sub> values is to perform an estimation based on in-house measurements instead of using published k<sub>cat</sub> values from literature or databases. The k<sub>app</sub> constants are actually a collective parameter, a helper construct to link enzyme fluxes to enzyme abundance, so that flux v = k<sub>app</sub> * [E]. The k<sub>app</sub> includes also the saturation s of the enzyme, so that k<sub>app</sub> ~ k<sub>cat</sub> * s. The saturation is between 0 and 1 so that k<sub>app</sub> is lower or equal to k<sub>cat</sub>.
 
 However, the idea is that the k<sub>app</sub> parameter is kept constant for different conditions, while the flux (and the enzyme abundance) is allowed to change. We can then find different scenarios for enzyme saturation states:
 
@@ -280,11 +280,11 @@ However, the idea is that the k<sub>app</sub> parameter is kept constant for dif
 To estimate k<sub>app</sub> from available data, we only need to reformulate the simplified rate equation to:  k<sub>app</sub> =  v / [E]. For this purpose, we need two types of information:
 
 1. **enzyme abundance in mmol gDCW<sup>-1</sup>** for known substrate uptakes rates (chemostat cultivations, maximum growth rate 0.25 h<sup>-1</sup>). The maximum tested growth rate was chosen to obtain realistic enzyme saturation. Protein abundance data was obtained by MS measurements. The relative protein *mass fraction* was determined by dividing MS intensity per protein by sum of all intensities. The *mass fraction* (g/g total protein) was then converted to protein concentration in *mmol/gDCW* by multiplying it with estimated protein concentration of 0.65 g protein/gDCW (done previously), and then dividing by molar mass of each protein (g/mol).
-2. **flux per enzyme, in mmol h<sup>-1</sup> gDCW<sup>-1</sup>** for the corresponding substrate uptake rates under point 1. This information is obtained from flux sampling (FBA) simulations that were constrained to realistic flux distributions using data from [Alagesan *et al*., 2017](http://dx.doi.org/10.1007/s11306-017-1302-z). Input and output fluxes (exchange reactions) were determined from chemostat cultivations.
+2. **flux per enzyme, in mmol h<sup>-1</sup> gDCW<sup>-1</sup>** for the corresponding substrate uptake rates under point 1. This information is obtained from flux sampling (FBA) simulations that were constrained to realistic flux distributions using data from [Alagesan *et al*., 2017](http://dx.doi.org/10.1007/s11306-017-1302-z). Input and output fluxes (for exchange reactions) were determined from chemostat cultivations.
 
 ----------
 
-**Determine enzyme abundance for a standard condition.** Import Ralstonia mass fraction for the four tested conditions, growth on fructose, succinate, and formate, as well as a nitrogen limitation condition (C-source: fructose). Growth rate in all conditions was fixed to µ = 0.25 h<sup>-1</sup>, the maximum growth rate used in chemostat experiments.
+**Determine enzyme abundance for standard conditions.** Import Ralstonia mass fraction for the four tested conditions, fructose, succinate, formate, and ammonium (N-) limitation (with C-source fructose). Growth rate in all conditions was fixed to µ = 0.25 h<sup>-1</sup>, the maximum growth rate used in chemostat experiments.
 
 ```{r}
 # import proteomics data
@@ -304,7 +304,7 @@ df_flux_protein <- Ralstonia_eutropha %>%
   select(condition, locus_tag, growthrate, mass_g_per_gDCW, MolWeight) %>%
   filter(growthrate == 0.25) %>% 
   
-  # calculate protein concentration in mmol/gDCW. 
+  # calculate protein concentration in mmol/gDCW.
   # MW in kDa must be converted to g/mol, and concentration to mmol
   mutate(
     conc_mmol_gDCW = mass_g_per_gDCW * 1000 / (MolWeight * 1000),
@@ -323,14 +323,16 @@ for (cond in unique(df_flux_protein$condition)) {
 
 ----------
 
-**Determine reaction fluxes for same condition.** Several approaches were tested to obtain minimal and maximal fluxes per enzyme. The best approach turned out to be flux sampling with the additional constraint of reaching at least 95% of the maximum growth rate found by FBA. Flux sampling with 100 iterations was performed using COBRApy. We can see that there is a threshold of standard deviation ~ 1 above which variation gets very high for spurious reactions. These are artificial cycles. The exception to this is N-limitation that can have higher flux variability due to the surmount carbon supply (fructose not limiting). The N-limitation condition is therefore omitted for kapp determination.
+**Determine reaction fluxes for same condition.** Several approaches were tested to obtain minimal and maximal fluxes per enzyme. The best approach turned out to be flux sampling with the additional constraint of reaching at least 95% of the maximum growth rate found by FBA. Flux sampling with 100 iterations was performed using COBRApy. We can see that there is a threshold of standard deviation ~ 1 above which variation gets very high for some reactions. These are artificial cycles. The exception to this is N-limitation that can have higher flux variability due to the surmount carbon supply (fructose is not limiting). The N-limitation condition was therefore omitted for kapp determination.
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 5.5}
 # import flux sampling results for four conditions, max tested growth rate
 df_sampling <- lapply(list.files("../data/input/", pattern = "^FSA", full.names = TRUE), 
   read_csv) %>% bind_rows(.id = "condition") %>%
-  mutate(condition = recode(condition, `1` = "formate", `2` = "ammonium", `3` = "fructose", `4` = "succinate")) %>%
-  select(-2) %>% gather(key = "reaction_id", value = "flux", -condition) %>%
+  mutate(condition = recode(condition, `1` = "formate", `2` = "succinate", 
+    `3` = "ammonium", `4` = "fructose")) %>%
+  select(-2) %>% 
+  gather(key = "reaction_id", value = "flux", -condition) %>%
   
   group_by(condition, reaction_id) %>% summarize(
     flux_mmol_gDCW_h = median(flux), 
@@ -343,8 +345,13 @@ df_sampling <- lapply(list.files("../data/input/", pattern = "^FSA", full.names 
   
   # join with single optimal solution from loopless FBA.
   # Will help us to identify free running cycles in FSA
-  left_join(lapply(list.files("../data/input/", pattern = "^FBA", full.names = TRUE), 
-    read_csv) %>% bind_rows)
+  left_join(
+    lapply(list.files("../data/input/", pattern = "^FBA", full.names = TRUE),
+    read_csv) %>% bind_rows(.id = "condition") %>%
+    mutate(condition = recode(condition, `1` = "formate", `2` = "succinate", 
+      `3` = "ammonium", `4` = "fructose")) %>%
+    rename(reaction_id = X1, flux_mmol_gDCW_h_FBA = loopless)
+  )
 
   
 # plot results; 
@@ -407,8 +414,7 @@ for (cond in unique(df_sampling2$condition)) {
 
 ### Determine k<sub>app</sub> values
 
-The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction. This step was not performed in this R notebook but using the RBA built-in functions from the `RBApy estim` folder.
-
+The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction. This step was not performed in this R notebook but using the RBA built-in functions from the `RBApy estim` folder. Briefly, flux boundaries and protein concentration data that was exported serves as input for the script `kapp.py` ([link](https://github.com/m-jahn/Bacterial-RBA-models/tree/master/Ralstonia-eutropha-H16)). This script performs a series of FBA and RBA simulations constrained by these input data. It then gives an estimation of the k<sub>app</sub> for a particular condition.
 
 ----------
 
@@ -559,7 +565,7 @@ Regardless of the cultivation condition or substrate limitation, it is possible 
 The non-enzymatic fraction of proteins (proteins *not covered* by the model) decreases with growth rate from around 60% o 50% for cytoplasmic proteins, but is relatively constant for membrane associated ones. Most membrane-associated proteins (90% of mol fraction) are not covered by the model. The following figure summarizes all growth rate dependent trends.
 
 ```{r, fig.width = 9, fig.height = 2.6, message = FALSE}
-df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
+df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
   summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
   ungroup %>% mutate(
     location = recode(location, Cytoplasm = "CP", Cell_membrane = "CM"),
@@ -580,17 +586,17 @@ df_prot_per_comp %>% group_by(NE_protein, add = TRUE) %>%
 
 ----------
 
-## Combining estimated kapp values to global consensus kapp
+## Combining estimated k<sub>app</sub> values to global consensus k<sub>app</sub>
 
-The purpose of this section is to merge different kapp estimations from different conditions to obtain a **consensus kapp estimation**. The reawsoning here is that kapp is estimated from dividing the (sampled or measured) metabolic flux through an enzyme by its abundance, providing an estimate of enzyme efficiency. This efficiency depends also on the saturation of the enzyme. Estimation of kapp is therefore performed for highest available growth rates/fluxes, and four different conditions, in order to obtain enzyme efficiencies at the possiby highest saturation among the tested conditions.
+The purpose of this section is to merge different k<sub>app</sub> estimations from different conditions to obtain a **consensus k<sub>app</sub> estimation**. The reasoning here is that k<sub>app</sub> is estimated from dividing the (sampled or measured) metabolic flux through an enzyme by its abundance, providing an estimate of enzyme efficiency. This efficiency depends also on the saturation of the enzyme. Estimation of k<sub>app</sub> was therefore performed for highest available growth rates/fluxes for four different conditions, in order to obtain enzyme efficiency at the highest saturation among the tested conditions.
 
-Example: Formate dehydrogenase is not used under growth on fructose (no or low efficiency) while it is used under growth on formate (high efficiency). The maximum kapp should therefore be taken from formate condition.
+Example: Formate dehydrogenase is not used under growth on fructose (no or low efficiency) while it is used under growth on formate (high efficiency). The maximum k<sub>app</sub> should therefore be taken from formate condition.
 
-### Import kapp estimation from `RBA estim`
+### Import k<sub>app</sub> estimation data obtained from `RBA estim`
 
 ```{r, message = FALSE}
 # data directory
-kapp_calib_dir <- "~/Documents/SciLifeLab/Resources/Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/calibration/"
+kapp_calib_dir <- "../data/input/"
 
 # setting global parameter
 max_saturation = 0.5
@@ -619,6 +625,8 @@ df_kapp <- lapply(kapp_files, function(df) {
   group_by(reaction_id) %>% 
   mutate(kapp_mean = mean(kapp_forward)) %>%
   arrange(desc(kapp_mean))
+
+head(df_kapp)
 ```
 
 
@@ -674,9 +682,9 @@ print(plot_kapp_minmax[[2]], split = c(1,2,1,2))
 ```
 
 
-### Manual adjustment of kapp for selected reactions
+### Manual adjustment of k<sub>app</sub> for selected reactions
 
-We import a table with correction factors for kapps that have been estimated extremely wrong. This set of kapps was determined by comparing the correlation between predicted and measured protein abundance. Proteins that are more than 10 fold away from measured abundance are candidates for manual correction. Other reactions that need correction are kapps missing for important transporters. These are also included in the following section.
+We import a table with correction factors for k<sub>app</sub> values that have been estimated incorrectly. This set of k<sub>app</sub> values was determined by comparing the correlation between predicted and measured protein abundance. Proteins that are more than 10 fold away from measured abundance are candidates for manual correction. Other reactions that need correction are missing k<sub>app</sub> values for important transporters. These are also included in the following section.
 
 ```{r, message = FALSE}
 # set of adjusted kapp values for outlier enzymes not covered in kapp estimation
@@ -732,18 +740,14 @@ df_kapp_export <- df_kapp %>% group_by(reaction_id) %>%
 
 # export final result
 write_tsv(df_kapp_export, "../data/output/kapp_consensus.csv", col_names = FALSE)
-write_tsv(df_kapp_export, paste0(kapp_calib_dir, "kapp_consensus.csv"), col_names = FALSE)
 ```
 
+Finally we can create a summary figure for the process of k<sub>app</sub> estimation.
 
-```{r, include = FALSE, message = FALSE}
-# export figures for kapp determination
-png("../figures/kapp_estimation.png", width = 1000, height = 1600, res = 140)
-print(plot_kapp_dist[[2]], position = c(0, 0.74, 1, 1), more = TRUE)
-print(plot_kapp_dist[[1]], position = c(0, 0.42, 1, 0.77), more = TRUE)
-print(plot_kapp_minmax[[1]], position = c(0, 0.2, 1, 0.45), more = TRUE)
-print(plot_kapp_minmax[[2]], position = c(0, 0, 1, 0.25))
-dev.off()
+```{r, message = FALSE, fig.width = 5.5, fig.height = 8}
+
+print(plot_kapp_dist[[2]], position = c(0, 0.73, 1, 1), more = TRUE)
+print(plot_kapp_dist[[1]], position = c(0, 0.42, 1, 0.78), more = TRUE)
 ```
 
 
