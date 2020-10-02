@@ -430,6 +430,7 @@ df_protein <- Ralstonia_eutropha %>%
   # select only required columns and spread to long format
   select(condition, locus_tag, growthrate, Psortb_localization, mol_fraction) %>%
   set_names(c("condition", "protein", "growthrate", "location", "mol_fraction")) %>%
+  mutate(condition = recode(condition, `FA` = "formate", `NLIM` = "ammonium", `FRC` = "fructose", `SUC` = "succinate")) %>%
   
   # match localization names to model, simplify
   mutate(location = recode(location, Unknown = "Cytoplasm", Cytoplasmic = "Cytoplasm")) %>%
@@ -463,13 +464,13 @@ df_prot_per_comp <- df_protein %>%
 
 The following plot shows a slight increase in cytoplasmic proteins and decrease in cell membrane proteins with growth rate.
 
-```{r, fig.width = 7, fig.height = 2.8, message = FALSE}
-plot_prot_comp <- xyplot(prot_per_compartment ~ growthrate | condition, 
+```{r, fig.width = 3, fig.height = 3.2, message = FALSE}
+plot_prot_comp <- xyplot(prot_per_compartment ~ growthrate, 
   df_prot_per_comp %>%
     summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)),
-  groups = location, ylim = c(-0.15, 1.15),
-  par.settings = custom.colorblind(), cex = 0.6,
-  scales = list(alternating = FALSE), layout = c(4,1),
+  groups = location, ylim = c(-0.1, 1.1),
+  par.settings = custom.colorblind(), cex = 0.7,
+  scales = list(alternating = FALSE),
   between = list(x = 0.5, y = 0.5),
   xlab = expression("µ [h"^-1*"]"),
   ylab = "protein mass fraction",
@@ -480,16 +481,16 @@ plot_prot_comp <- xyplot(prot_per_compartment ~ growthrate | condition,
   }, panel.groups = function(x, y, ...) {
     panel.xyplot(x, y, ...)
     panel.lmlineq(x, y, r.squared = TRUE,
-      pos = 3, offset = 0.6, ...)
+      pos = 3, offset = 1, ...)
   }
 )
 
 print(plot_prot_comp)
 ```
 
-We can obtain the consensus fit instead of a fit for a single isolated condition. The two linear models will sum to one for any arbitrary growth rate.
+<!-- We can obtain the consensus fit instead of a fit for a single isolated condition. The two linear models will sum to one for any arbitrary growth rate. -->
 
-```{r, message = FALSE}
+```{r, include = FALSE}
 fit_cytoplasm <- df_prot_per_comp %>%
   filter(location == "Cytoplasm") %>%
   summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
@@ -521,7 +522,7 @@ print(fit_cell_membrane)
 
 The previous calculation determined how the total protein pool is distributed over compartments. In this section, we will go one level deeper and determine the fraction of **non-enzymatic protein** per compartment, analogously to the previous calculation. That means every compartment's protein pool is further subdivided into two sectors, enzymatic and non-enzymatic proteins, and these sectors can have --again-- a linear dependency on growth rate. According to the RBApy manual, the proteins that are **considered non-enzymatic are all proteins not acting as enzymes or molecular machines** in the model (such as ribosomes, chaperones, DNA polymerase and so on). Non-enzymatic (NE) proteins are therefore all proteins not captured by the RBA model at all. The fraction of NE proteins per compartment is a percentage of the proteins for that compartment only (each compartment sums to 1).
 
-```{r, fig.width = 7, fig.height = 2.8, message = FALSE}
+```{r, fig.width = 3, fig.height = 3.2, message = FALSE}
 # determine NE protein per compartment
 df_ne_prot_per_comp <- df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
   summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
@@ -530,14 +531,14 @@ df_ne_prot_per_comp <- df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>
   )
   
 # the fraction of NE protein per compartment decreases with growth rate
-plot_prot_NE <- xyplot(ne_prot_per_compartment ~ growthrate | condition,
+plot_prot_NE <- xyplot(ne_prot_per_compartment ~ growthrate,
   df_ne_prot_per_comp,
-  groups = location, ylim = c(-0.15, 1.15),
+  groups = location, ylim = c(-0.1, 1.1),
   par.settings = custom.colorblind(),
-  scales = list(alternating = FALSE), layout = c(4,1),
-  between = list(x = 0.5, y = 0.5), cex = 0.6,
+  scales = list(alternating = FALSE),
+  between = list(x = 0.5, y = 0.5), cex = 0.7,
   xlab = expression("µ [h"^-1*"]"),
-  ylab = "protein mass fraction",
+  ylab = "NE protein mass fraction",
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.superpose(x, y, ...)
@@ -545,18 +546,16 @@ plot_prot_NE <- xyplot(ne_prot_per_compartment ~ growthrate | condition,
   }, panel.groups = function(x, y, ...) {
     panel.xyplot(x, y, ...)
     panel.lmlineq(x, y, r.squared = TRUE,
-      pos = 3, offset = 0.6, ...)
+      pos = 3, offset = 1, ...)
   }
 )
 
 print(plot_prot_NE)
 ```
 
-----------
+<!-- These two models describe the relative fraction of NE  proteins *within* a compartment. We use again the consensus fit instead of a single isolated condition. -->
 
-These two models describe the relative fraction of NE  proteins *within* a compartment. We use again the consensus fit instead of a single isolated condition.
-
-```{r, fig.width = 9, fig.height = 5, message = FALSE}
+```{r, include = FALSE}
 fit_ne_cytoplasm <- df_ne_prot_per_comp %>%
   filter(location == "Cytoplasm") %>%
   lm(ne_prot_per_compartment ~ growthrate, .) %>% 
@@ -580,7 +579,7 @@ Regardless of the cultivation condition or substrate limitation, it is possible 
 The non-enzymatic fraction of proteins (proteins *not covered* by the model) decreases with growth rate from around 60% o 50% for cytoplasmic proteins, but is relatively constant for membrane associated ones. Most membrane-associated proteins (90% of mol fraction) are not covered by the model. The following figure summarizes all growth rate dependent trends.
 
 ```{r, fig.width = 7, fig.height = 2.4, message = FALSE}
-df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
+plot_prot_pie <- df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
   summarize(prot_per_compartment = sum(mol_fraction, na.rm = TRUE)) %>%
   ungroup %>% mutate(
     location = recode(location, Cytoplasm = "CP", Cell_membrane = "CM"),
@@ -591,7 +590,7 @@ df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
   xyplot( ~ prot_per_compartment | condition, .,
     groups = factor(location), scales = list(draw = FALSE),
     xlab = "mol fraction of proteome, per compartment",
-    par.settings = custom.colorblind(),
+    par.settings = custom.colorblind(), layout = c(4,1),
     between = list(x = 0.5, y = 0.5),
     cex = 0.6, border = grey(0.3),
     panel = function(x, y, ...) {
@@ -599,6 +598,8 @@ df_prot_per_comp %>% group_by(NE_protein, .add = TRUE) %>%
         diameter_sector = 0.15, ...)
     }
   )
+
+print(plot_prot_pie)
 ```
 
 ----------
@@ -762,17 +763,23 @@ write_tsv(df_kapp_export, "../data/output/kapp_consensus.csv", col_names = FALSE
 Finally we can create a summary figure for the parameters constraining the RBA model. The first is k<sub>app</sub> estimation and the two other constraints are proteome mass fraction per compartment and proteome mass fraction of enzymatic (all RBA model reactions) and non-enzymatic proteins, per compartment.
 
 ```{r, message = FALSE, fig.width = 6, fig.height = 9}
-print(plot_kapp_dist[[1]], position = c(0, 0.66, 1, 1), more = TRUE)
-print(plot_kapp_dist[[2]], position = c(0, 0.46, 1, 0.70), more = TRUE)
-print(plot_prot_comp, position = c(0, 0.22, 1, 0.49), more = TRUE)
-print(plot_prot_NE, position = c(0, 0, 1, 0.27))
+print(plot_kapp_dist[[1]], position = c(0, 0.68, 1, 1.02), more = TRUE)
+print(plot_kapp_dist[[2]], position = c(0, 0.48, 1, 0.72), more = TRUE)
+print(plot_prot_comp, position = c(0, 0.19, 0.5, 0.52), more = TRUE)
+print(plot_prot_NE, position = c(0.5, 0.19, 1, 0.52), more = TRUE)
+print(plot_prot_pie, position = c(0.02, 0, 0.98, 0.22))
+grid::grid.text(c("A", "B", "C", "D", "E"), x = c(0.02,0.02,0.02,0.5,0.02), 
+  y = c(0.97,0.68,0.48, 0.48,0.21))
 ```
 
 ```{r, include = FALSE}
 svg("../figures/figure_model_constraints.svg", width = 6, height = 9)
-print(plot_kapp_dist[[1]], position = c(0, 0.66, 1, 1), more = TRUE)
-print(plot_kapp_dist[[2]], position = c(0, 0.46, 1, 0.70), more = TRUE)
-print(plot_prot_comp, position = c(0, 0.22, 1, 0.49), more = TRUE)
-print(plot_prot_NE, position = c(0, 0, 1, 0.27))
+print(plot_kapp_dist[[1]], position = c(0, 0.68, 1, 1.02), more = TRUE)
+print(plot_kapp_dist[[2]], position = c(0, 0.48, 1, 0.72), more = TRUE)
+print(plot_prot_comp, position = c(0, 0.19, 0.5, 0.52), more = TRUE)
+print(plot_prot_NE, position = c(0.5, 0.19, 1, 0.52), more = TRUE)
+print(plot_prot_pie, position = c(0.02, 0, 0.98, 0.22))
+grid::grid.text(c("A", "B", "C", "D", "E"), x = c(0.02,0.02,0.02,0.5,0.02), 
+  y = c(0.97,0.68,0.48, 0.48,0.21))
 dev.off()
 ```
