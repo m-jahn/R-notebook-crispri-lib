@@ -617,7 +617,7 @@ Example: Formate dehydrogenase is not used under growth on fructose (no or low e
 kapp_calib_dir <- "../data/input/"
 
 # setting global parameter
-max_saturation = 0.5
+max_saturation = 0.75
 
 # load kapp estimation from different conditions
 conditions <- c("ammonium", "formate", "fructose", "succinate")
@@ -728,7 +728,7 @@ kapp_transport <- data.frame(stringsAsFactors = FALSE,
     "R_MG2t_enzyme", "R_COBALTt5_enzyme", "R_FORt_enzyme", "R_NH4t_enzyme", 
     "R_FRUabc_enzyme", "R_HEXf_enzyme", "R_SUCCt2r_enzyme", "R_FRUpts2_enzyme", 
     "R_SUCCabc_enzyme", "R_SUCFUMt_enzyme"),
-  kapp_forward = c(rep(1000000, 10), rep(100000, 4), 10000, rep(0, 3))
+  kapp_forward = c(rep(1000000, 10), 200000, rep(100000, 4), rep(0, 3))
   ) %>% mutate(kapp_reverse = kapp_forward)
 ```
 
@@ -758,6 +758,7 @@ df_kapp_export <- df_kapp %>% group_by(reaction_id) %>%
 
 # export final result
 write_tsv(df_kapp_export, "../data/output/kapp_consensus.csv", col_names = FALSE)
+write_tsv(df_kapp_export, "../../../../Models/Bacterial-RBA-models/Ralstonia-eutropha-H16/calibration/kapp_consensus.csv", col_names = FALSE)
 ```
 
 Finally we can create a summary figure for the parameters constraining the RBA model. The first is k<sub>app</sub> estimation and the two other constraints are proteome mass fraction per compartment and proteome mass fraction of enzymatic (all RBA model reactions) and non-enzymatic proteins, per compartment.
