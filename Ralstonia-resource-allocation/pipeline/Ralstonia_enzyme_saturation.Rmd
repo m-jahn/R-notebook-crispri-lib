@@ -153,7 +153,7 @@ df_prot %>% summarize(
 
 ----------
 
-The simulated protein mass per gDCW changes with growth rate, and it is considerably lower then the estimated ~0.65 g total protein/gDCW that was previously estimated for bacteria (see e.g. Park et al., biomass composition for *Ralstonia eutropha* model, or Touloupakis et al., biomass composition for cyanobacteria). One reason is that above numbers only include enzymatic proteins (the ones represented by the GSM). For machinery such as ribosomal proteins, a separate calculation needs to be performed. The model returns estimated concentration of machineries for replication, transcription, translation, and protein folding. The associated proteins can be imported from the model folder and the total mass estimated using molecular weight and subunit stoichiometry as done before for enzymatic proteins.
+The simulated protein mass per gDCW changes with growth rate, and it is considerably lower then the estimated ~0.65-0.68 g total protein/gDCW that was previously estimated for bacteria (see e.g. Park et al., biomass composition for *Ralstonia eutropha* model, or Touloupakis et al., biomass composition for cyanobacteria). One reason is that above numbers only include enzymatic proteins (the ones represented by the GSM). For machinery such as ribosomal proteins, a separate calculation needs to be performed. The model returns estimated concentration of machineries for replication, transcription, translation, and protein folding. The associated proteins can be imported from the model folder and the total mass estimated using molecular weight and subunit stoichiometry as done before for enzymatic proteins.
 
 ```{r, message = FALSE}
 machinery_names <- c("replication", "transcription", "ribosome", "chaperones")
@@ -184,7 +184,7 @@ df_machinery %>% summarize(
   sum_g_gDCW = sum(predicted_mass_g_gDCW, na.rm = TRUE))
 ```
 
-If the utilized protein for enzymes and machinery is summed up, it does not exceed ~0.25 g/gDCW. The reason for this is that up to 60% of the protein mass is not modeled (non enzymatic, NE proteome, 57.7% at µ = 0, see R notebook `Ralstonia-model-constraints`), and only around 65% of the total cell mass is protein. If we consider this, than total protein mass can be estimated as m = 0.25/(1-0.6) = `r round(0.25/(1-0.6), 3)` g/gDCW. This is much closer to the estimated 0.65 g protein/gDCW. The difference can be attributed to default values of amino acid concentration in `RBApy` that determine the size of the 'protein pool'. It is important to note that the sum of utilizable proteins is not a constant value but a linear function of growth rate. The total proteome pool *including non-enzymatic proteins* is, however, constant.
+If the utilized protein for enzymes and machinery is summed up, it does not exceed ~0.25 g/gDCW. The reason for this is that up to 60% of the protein mass is not modeled (non enzymatic, NE proteome, 57.7% at µ = 0, see R notebook `Ralstonia-model-constraints`), and only around 68% of the total cell mass is protein. If we consider this, than total protein mass can be estimated as m = 0.25/(1-0.6) = `r round(0.25/(1-0.6), 3)` g/gDCW. This is much closer to the estimated 0.68 g protein/gDCW. The difference can be attributed to default values of amino acid concentration in `RBApy` that determine the size of the 'protein pool'. It is important to note that the sum of utilizable proteins is not a constant value but a linear function of growth rate. The total proteome pool *including non-enzymatic proteins* is, however, constant.
 
 
 ## Correlation between predicted and experimentally determined proteome
@@ -213,8 +213,9 @@ Ralstonia_eutropha <- Ralstonia_eutropha %>%
     growth_rate, COG_Process, R1:R4) %>%
   
   # turn raw intensity measurements into mass in g per gDCW (assuming a 
-  # total protein concentration of 0.65 g/gDCW)
-  mutate(across(matches("R[1234]"), function(x) x/sum(x, na.rm = TRUE)*0.65)) %>%
+  # total protein concentration of 0.68 g/gDCW)
+  group_by(condition) %>%
+  mutate(across(matches("R[1234]"), function(x) x/sum(x, na.rm = TRUE)*0.68)) %>%
   gather(key = "replicate", value = "mass_g_gDCW", R1:R4)
 ```
 
@@ -297,7 +298,7 @@ df_prot_comp <- df_model_reactions %>%
   group_by(condition, genes, replicate) %>% 
   mutate(n_reactions = length(reaction_id)) %>%
   
-  # calculate mass fractions
+  # calculate protein mass in g/gDCW
   group_by(condition) %>% mutate(
     predicted_mass_g_gDCW = predicted_mass_g_gDCW/n_reactions,
     mass_g_gDCW = mass_g_gDCW/n_reactions
