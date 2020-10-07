@@ -375,7 +375,6 @@ utilized_machinery <- df_machinery %>% pull(Entry)
 
 # new df with annotated utilization
 df_utilization <- Ralstonia_eutropha %>% 
-  ungroup %>% filter(!duplicated(locus_tag)) %>%
   mutate(
     utilization = case_when(
       locus_tag %in% utilized_enzymes ~ "utilized\nenzymes",
@@ -386,7 +385,7 @@ df_utilization <- Ralstonia_eutropha %>%
   )
 
 # get summary of proteins per group (same for all conditions)
-df_utilization %>% group_by(utilization) %>%
+df_utilization %>% ungroup %>% filter(!duplicated(locus_tag)) %>% group_by(utilization) %>%
   summarize(n_proteins = length(locus_tag))
 ```
 
