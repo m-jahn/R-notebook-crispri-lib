@@ -70,7 +70,7 @@ print(doubleYScale(plot_dil, plot_OD, use.style = FALSE, add.ylab2 = TRUE))
 
 First we summarize average OD and growth rate for all cultivations leaving out the first 25 h batch growth phase.
 
-```{r}
+```{r, message = FALSE}
 df_summary <- filter(df_chem, batchtime_h > 25) %>%
   
   # summarize average OD
@@ -102,17 +102,14 @@ df_summary <- left_join(df_summary, df_residual %>%
 print(head(df_summary))
 ```
 
-Nest step is to add the DCW in g/L depending on OD and condition. The DCW-OD relationship for each limiting condition was determined in a different experiment (calibration performed 2020-07-30). 50 mL shake flasks were used to determine OD at 720 nm, final gDCW per OD<sub>720</sub> and L, and maximum growth rate (in duplicates). The gDCW per OD was similar for all C-limiting condition and more different for the N-limitation due to accumulation of PHB granules. They absorb/scatter stronger than cellular biomass and therefore lead to over-estimation of cell density/biomass.
+Nest step is to add the DCW in g/L depending on OD and condition. The DCW-OD relationship was determined previously by a master student (Raquel Perruca) using a dilution series. It was found to be `gDCW = 0.5177 * OD_720nm - 0.0108`. The relationship for ammonium-limited cells was redetermined in a separate calibration experiment (2020-07-30, 50 mL shake flask culture), as extreme PHB content in these cells changed light scattering/absorption. The gDCW per OD for ammonium-limitation was corrected based on this result.
 
-
-We calculate substrate uptake rate q_S with the corrected substrate concentration (S_uptake = S_feed - S_residual). The rate q_S is then dilution rate times feed concentration divided by biomass in the culture: qS [g/OD720*L] = D [h-1] * c [g/L] / OD720. All other following calculations are just variations of that converting OD to gDCW per L, or converting g to C/N-mole.
+We calculate substrate uptake rate q_S with the corrected substrate concentration (S_uptake = S_feed - S_residual). The rate `qS` is then dilution rate times feed concentration divided by biomass in the culture: `qS [g/OD720*L] = D [h-1] * c [g/L] / OD720`. All other following calculations are just variations of OD conversion to gDCW/L, or converting g to C/N-mole.
   
 ```{r}
 df_summary <- df_summary %>% mutate(gDCW_L = case_when(
-    condition == "fructose" ~ OD720*0.3980,
-    condition == "succinate" ~ OD720*0.3392,
-    condition == "formate" ~ OD720*0.3600,
-    condition == "ammonium" ~ OD720*0.2766
+    condition != "ammonium" ~ (0.5177*OD720)-0.0108,
+    condition == "ammonium" ~ (0.2766*OD720)-0.0108
   )) %>%
   
   # substrate uptake rate per OD
