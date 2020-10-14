@@ -327,7 +327,7 @@ for (cond in unique(df_flux_protein$condition)) {
 
 ```{r, message = FALSE, warning = FALSE, fig.width = 8, fig.height = 5.5}
 # import flux sampling results for four conditions, max tested growth rate
-df_sampling <- lapply(list.files("../data/input/", pattern = "^FSA", full.names = TRUE), 
+df_sampling <- lapply(list.files("../data/input", pattern = "^FSA", full.names = TRUE), 
   read_csv) %>% bind_rows(.id = "condition") %>%
   mutate(condition = recode(condition, `1` = "formate", `2` = "succinate", 
     `3` = "ammonium", `4` = "fructose")) %>%
@@ -346,7 +346,7 @@ df_sampling <- lapply(list.files("../data/input/", pattern = "^FSA", full.names 
   # join with single optimal solution from loopless FBA.
   # Will help us to identify free running cycles in FSA
   left_join(
-    lapply(list.files("../data/input/", pattern = "^FBA", full.names = TRUE),
+    lapply(list.files("../data/input", pattern = "^FBA", full.names = TRUE),
     read_csv) %>% bind_rows(.id = "condition") %>%
     mutate(condition = recode(condition, `1` = "formate", `2` = "succinate", 
       `3` = "ammonium", `4` = "fructose")) %>%
@@ -357,7 +357,8 @@ df_sampling <- lapply(list.files("../data/input/", pattern = "^FSA", full.names 
 # plot results; 
 plot_sampling <- lapply(list(A = c(-50, 550), B = c(-3, 28)), function(ylim) {
   xyplot(sd_flux ~ seq_along(sd_flux) | condition,
-    filter(df_sampling, sd_flux != 0),
+    filter(df_sampling, sd_flux != 0), 
+    between = list(x = 0.5, y = 0.5),
     groups = condition, xlab = NULL, ylim = ylim,
     scales = list(alternating = FALSE),
     par.settings = custom.colorblind(), layout = c(4, 1),
@@ -414,7 +415,7 @@ for (cond in unique(df_sampling2$condition)) {
 
 ### Determine k<sub>app</sub> values
 
-The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction. This step was not performed in this R notebook but using the RBA built-in functions from the `RBApy estim` folder. Briefly, flux boundaries and protein concentration data that was exported serves as input for the script `kapp.py` ([link](https://github.com/m-jahn/Bacterial-RBA-models/tree/master/Ralstonia-eutropha-H16)). This script performs a series of FBA and RBA simulations constrained by these input data. It then gives an estimation of the k<sub>app</sub> for a particular condition.
+The final step is to merge both datasets by computing the enzyme abundance allocated to each reaction. The estimated k<sub>app</sub> is then determined by dividing the flux through the enzyme abundance available for this reaction. This step was not performed in this R notebook but using the RBA built-in functions from the `RBApy estim` folder. Briefly, flux boundaries and protein concentration data was exported and serves as input for the script `kapp.py` ([link](https://github.com/m-jahn/Bacterial-RBA-models/tree/master/Ralstonia-eutropha-H16)). This script performs a series of FBA and RBA simulations constrained by the input fluxes and protein concentrations. It then gives an estimation of the k<sub>app</sub> for a particular condition.
 
 ----------
 
@@ -726,9 +727,9 @@ kapp_transport <- data.frame(stringsAsFactors = FALSE,
   reaction_id = c("R_H2Ot_enzyme", "R_CO2t_enzyme", "R_O2t_emzyme", "R_SO4t_enzyme",
     "R_PIt2r_enzyme", "R_Ktr_enzyme", "R_NAt3_15_enzyme", "R_FE2abc_enzyme",
     "R_MG2t_enzyme", "R_COBALTt5_enzyme", "R_FORt_enzyme", "R_NH4t_enzyme", 
-    "R_FRUabc_enzyme", "R_HEXf_enzyme", "R_SUCCt2r_enzyme", "R_FRUpts2_enzyme", 
+    "R_FRUabc_enzyme", "R_SUCCt2r_enzyme", "R_FRUpts2_enzyme", 
     "R_SUCCabc_enzyme", "R_SUCFUMt_enzyme"),
-  kapp_forward = c(rep(1000000, 10), 200000, rep(100000, 4), rep(0, 3))
+  kapp_forward = c(rep(1000000, 11), rep(100000, 3), rep(0, 3))
   ) %>% mutate(kapp_reverse = kapp_forward)
 ```
 
