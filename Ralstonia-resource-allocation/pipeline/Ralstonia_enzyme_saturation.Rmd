@@ -492,7 +492,7 @@ grid::grid.text(c("A", "B"), x = c(0.02, 0.79), y = c(0.97,0.97))
 ```
 
 ```{r, include = FALSE}
-svg("../figures/figure_machine_util.svg", width = 7.0, height = 5.5,)
+svg("../figures/figure_machine_util.svg", width = 7.0, height = 5.5)
 print(plot_machinery, position = c(0, 0, 0.82, 1), more = TRUE)
 print(plot_machinery_util, position = c(0.79, 0, 1, 1.))
 grid::grid.text(c("A", "B"), x = c(0.02, 0.79), y = c(0.97,0.97))
@@ -590,6 +590,13 @@ print(plot_calvin_util, position = c(0.81, 0, 1, 1.))
 grid::grid.text(c("A", "B"), x = c(0.02, 0.81), y = c(0.97,0.97))
 ```
 
+```{r, include = FALSE}
+svg("../figures/figure_calvin_util.svg", width = 7.5, height = 5.5)
+print(plot_calvin, position = c(0, 0, 0.84, 1), more = TRUE)
+print(plot_calvin_util, position = c(0.81, 0, 1, 1.))
+grid::grid.text(c("A", "B"), x = c(0.02, 0.81), y = c(0.97,0.97))
+dev.off()
+```
 ----------
 
 The following plot is a summary of underutilized enzyme mass *per condition*. Included are only reactions that carry flux under at least one condition or growth rate (that means reactions that never carry flux in any simulation are removed).
@@ -648,8 +655,7 @@ plot_underutil_by_pw <- df_prot_comp %>%
   
   xyplot(percent_utilization ~ model_group_basic %>% factor(., unique(.)[c(2,6,4,1,3,5)]) | substrate, .,
     par.settings = custom.colorblind(),
-    xlab = expression(µ*" [h"^-1*"]"),
-    ylab = "utilization", ylim = c(0, 1.3),
+    xlab = "", ylab = "utilization", ylim = c(0, 1.3),
     scales = list(alternating = FALSE, x = list(cex = 0.6, rot = 25)), as.table = TRUE,
     between = list(x = 0.5, y = 0.5), col = grey(0.5),
     ewidth = 0.2, lwd = 2, layout = c(4, 1),
@@ -661,6 +667,15 @@ plot_underutil_by_pw <- df_prot_comp %>%
 
 print(plot_underutil_by_pw)
 ```
+
+```{r, include = FALSE}
+#silently export composite figure
+svg("../figures/figure_pathway_util.svg", width = 6.5, height = 4.5)
+print(plot_underutil_by_cond, position = c(0, 0.49, 1, 1), more = TRUE)
+print(plot_underutil_by_pw, position = c(0, 0, 1, 0.58))
+dev.off()
+```
+
 
 ### Trends in protein utilization hint towards flux control
 
@@ -730,27 +745,10 @@ print(plot_underutil_clusters)
 
 We can see that the trends are similar for all substrates: Most of the enzyme mass ends up in *growth function*, the group where enzyme abundance increases with growth rate for experiment and simulation. Interestingly, the formate condition shows not only higher utilization, which can be an artifact of simulated higher growth rate for a given substrate uptake rate. But it also shows better correlation with model predictions, particularly the True positive reactions (correlated with growth in prediction and experiment). Typical growth-related reactions are also mainly collected in *growth function*, while some amino acid biosynthesis related reactions end up in the last group *unmodeled growth function*. Those correlate with growth in experiment, but are not used in model.
 
-### Combined figure for underutilization
-
-
-```{r, message = FALSE, fig.width = 7.5, fig.height = 9}
-print(plot_underutil_clusters, position = c(0, 0.31, 1, 0.71), more = TRUE)
-print(plot_underutil_by_pw, position = c(0, -0.02, 1, 0.37))
-```
-
-
-```{r, message = FALSE, fig.width = 7.5, fig.height = 9}
-# also export same image as svg file
-svg("../figures/figure_underutilization_basic.svg", width = 7.5, height = 9)
-print(plot_underutil_clusters, position = c(0, 0.31, 1, 0.71), more = TRUE)
-print(plot_underutil_by_pw, position = c(0, -0.02, 1, 0.37))
-dev.off()
-```
-
 
 ## Yield-growth rate tradeoff under mixotrophic growth?
 
-It was experimentally observed before that *R. eutropha* expresses Rubisco and other *cbb*-operon located genes even on growth on fructose or other heterotrophic substrates. Bowien et al., 1990, show that Rubisco activity can be found under growth on fructose, but on pyruvate. Dangle & Tabita, 2015, review the regulation by CbbR type regulators among others also in *R. eutropha* and mention that citrate also leads to activation of *cbb* expression. They hypothesize that ribulose bisphosphate (RuBP) is an activating effector while other central metabolism intermediates such as phosphoenol pyruvate (PEP) are repressing effector molecules. It was speculated in Bowien et al. that regulation by cbbR might actually be a repression-derepression rather than activation, which means that the default state would be a bound cbbR repressing the *cbb* operon. However it became clear that this is not the case. Shimizu et al., 2015, knocked the cbbR gene out and the result was reduced expression of *cbb* genes by 100 fold. This proves that cbbR is a required activator and not a repressor of cbb, otherwise cbbR deletion would lead to constitutive activation of cbb expression.
+It was experimentally observed before that *R. eutropha* expresses Rubisco and other *cbb*-operon located genes even on growth on fructose or other heterotrophic substrates. [Bowien et al., 1990](http://doi.wiley.com/10.1016/0378-1097(90)90493-A), show that Rubisco activity can be found under growth on fructose, but not on pyruvate. [Dangel & Tabita, 2015](https://jb.asm.org/content/197/22/3488), review the regulation by CbbR type regulators among others also in *R. eutropha* and mention that citrate also leads to activation of *cbb* expression. They hypothesize that ribulose bisphosphate (RuBP) is an activating effector while other central metabolism intermediates such as phosphoenol pyruvate (PEP) are repressing effector molecules. It was speculated in Bowien et al. that regulation by cbbR might actually be a repression-derepression rather than activation, which means that the default state would be a bound cbbR repressing the *cbb* operon. However it became clear that this is not the case. [Shimizu et al., 2015](http://www.nature.com/articles/srep11617), knocked the cbbR gene out and the result was reduced expression of *cbb* genes by 100 fold. This proves that cbbR is a required activator and not a repressor of cbb, otherwise cbbR deletion would lead to constitutive activation of cbb expression.
 
 They same group speculated in their study that the additional Rubisco expression could have a benefit for carbon yield, specifically for product yield of PHB. They show that PHB from the WT contains slightly more 13C labeled mass (and total mass) than the cbbR and cbbS/L knockouts. This means that the cell would have a (product or biomass) yield advantage by Rubisco expression on fructose, so called mixotrophic growth.
 
@@ -763,38 +761,50 @@ mixotroph_dir <- gsub("substrate_limitation", "mixotrophy", simulation_dir)
 # read simulation results
 df_mixflux <- read_rba_result(list.files(mixotroph_dir, pattern = "fluxes_.*.tsv$", full.names = TRUE))
 df_mixmacr <- read_rba_result(list.files(mixotroph_dir, pattern = "macroprocesses_.*.tsv", full.names = TRUE))
-```
 
-The next part is to compare yield, growth rate, CO2 emission and other fluxes for a range of simulations where Rubisco was forced to re-fix emitted CO2 from growth on fructose. Simulations were performed for increasing flux through Rubisco from 0 to 5 mmol gDCW-1 h-1.
-
-```{r, fig.width = 5, fig.height = 3}
 # rename column
 df_mixmacr <- df_mixmacr %>% rename(CO2_refixation = sim_run)
+df_mixflux <- df_mixflux %>% rename(CO2_refixation = sim_run)
+```
 
-xyplot(value ~ as.factor(CO2_refixation) | key,
-  filter(df_mixmacr, key %in% c("mu", "yield")),
+The next task is to compare yield, growth rate, CO<sub>2</sub> emission and other fluxes for a range of simulations where Rubisco was forced to re-fix emitted CO<sub>2</sub> from growth on fructose. Simulations were performed for increasing flux through Rubisco from 0 to 5 mmol gDCW<sup>-1</sup> h<sup>-1</sup>.
+
+```{r, fig.width = 5, fig.height = 3}
+plot_mixo_mu <- xyplot(value ~ as.factor(CO2_refixation) | key,
+  filter(df_mixmacr, key %in% c("mu", "yield")) %>%
+    mutate(key = gsub("mu", "growth rate", key)),
+  groups = carbon_conc,
   scales = list(alternating = FALSE), ylim = c(0, 0.6),
-  between = list(x = 0.5, y = 0.5),
-  par.settings = custom.colorblind(), lwd = 2,
-  xlab = expression("forced CO2 refixation [mmol h"^-1*"gDCW"^-1*"]"),
+  between = list(x = 0.5, y = 0.5), layout = c(2,1),
+  par.settings = custom.colorblind(), type = "b", pch = 19, lwd = 2,
+  xlab = expression("forced CO"[2]*" refixation [mmol h"^-1*" gDCW"^-1*"]"),
   ylab = expression("µ / Y"),
   panel = function(x, y, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
     panel.xyplot(x, y, ...)
+    panel.key(...)
   }
 )
+
+print(plot_mixo_mu)
 ```
-There is no increase in growth rate or yield possible according to the RBA model. The yield is in fact calculated based on the growth rate µ and the substrate uptake rate qS. If qS is kept constant, yield and growth rate depend on each other in the relation Y [gDCW/gS] = µ [h-1] / qS [gS gDCW-1 h-1]. Therefore, the model was also allowed to have variable substrate uptake rate (but fixed initial substrate concentration) but it did not make a difference. The model actually calculates already a high-yield phenotype and if CO2 re-fixation would have had an advantage for growth, it might have been detected earlier depending on the protein costs for the respective pathway. Before a final verdict, we can follow the fate of the fixed CO2 through the metabolism.
+There is no increase in growth rate or yield with additional CO<sub>2</sub> fixation according to the RBA model. The yield is in fact calculated based on the growth rate µ and the substrate uptake rate qS. Yield and growth rate depend on each other in the relation Y [gDCW/gS] = µ [h-1] / qS [gS gDCW-1 h-1]. 
+
+Since only the initial substrate concentration is constrained, the model could predict a lower substrate uptake rate or lower CO2 emission per biomass in order to reach a yield increase. However this was not the case under any simulation, see below for details of specific metabolites. 
+
+The model seems to predict a high-yield phenotype already. If CO2 re-fixation would have had an advantage for growth, it might have been detected earlier depending on the protein costs for the respective pathway. Before a final verdict, we can follow the fate of the fixed CO2 through the metabolism.
+
 
 ```{r, fig.width = 5, fig.height = 5}
-# rename column
-df_mixflux <- df_mixflux %>% rename(CO2_refixation = sim_run)
+enzyme_selection <- c("CO2t", "RBPC", "PRUK", "FruABC", "EDD", "EDA", "TKT1", "CS", "AKGDH", "O2t")
 
-xyplot(abs(value) ~ as.factor(CO2_refixation) | factor(key, unique(key)[c(4,8,9,6,7,3,5,1,2)]),
-  filter(df_mixflux, key %in% c("CO2t", "RBPC", "PRUK", "FruABC", "EDD", "EDA", "TKT1", "CS", "AKGDH", "O2t")),
+plot_mixo_enz <- xyplot(abs(value) ~ as.factor(CO2_refixation) | factor(key, unique(key)[c(4,8,9,6,7,3,5,1,2)]),
+  filter(df_mixflux, key %in% enzyme_selection),
+  groups = carbon_conc,
   scales = list(alternating = FALSE),
+  type = "b", pch = 19, lwd = 2,
   between = list(x = 0.5, y = 0.5), as.table = TRUE,
-  par.settings = custom.colorblind(), lwd = 2,
+  par.settings = custom.colorblind(), 
   xlab = expression("forced CO2 refixation [mmol h"^-1*"gDCW"^-1*"]"),
   ylab = expression("flux [mmol h"^-1*"gDCW"^-1*"]"),
   panel = function(x, y, ...) {
@@ -802,7 +812,19 @@ xyplot(abs(value) ~ as.factor(CO2_refixation) | factor(key, unique(key)[c(4,8,9,
     panel.xyplot(x, y, ...)
   }
 )
+
+print(plot_mixo_enz)
 ```
+
+```{r, include = FALSE}
+#silently export composite figure
+svg("../figures/figure_mixotrophy.svg", width = 4.5, height = 7.0)
+print(plot_mixo_mu, position = c(0, 0.6, 1, 1), more = TRUE)
+print(plot_mixo_enz, position = c(0.013, 0, 1, 0.65))
+dev.off()
+```
+
+### Conclusion
 
 It becomes clear that yield and growth rate decrease, and not increase, with additional CO2 fixation, because:
 
