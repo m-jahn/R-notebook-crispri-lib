@@ -390,14 +390,13 @@ df_prot_comp %>% group_by(reaction_id, substrate, growth_rate) %>%
 
 ### Change of machinery proteins with growth rate
 
-The simulation and measurement data was prepared and merged by condition in the previous sections. Now it can be plotted to e.g. compare protein allocation over growth rate. Interestingly, we see that model predictions are quite accurately reflecting the range of protein allocation for the four different machineries, see following paragraphs. This is a good confirmation of the model's predictive power, given that the rates of these machineries were not fitted from data but taken purely from literature.  There are however some deviations from the predicted 'optimal' proteome:
+The simulation and measurement data was prepared and merged by condition in the previous sections. Now it can be plotted to e.g. compare protein allocation over growth rate. Interestingly, we see that model predictions are quite accurately reflecting the range of protein allocation for the four different machineries, see following paragraphs. This is a good confirmation of the model's predictive power, given that the rates of these machineries were *not fitted* from data but taken purely from literature. There are however some deviations from the predicted 'optimal' proteome:
 
-- the most important machine is the ribosome. Prediction and experiment show a very similar increase of ribosome abundance with growth rate, but the intersection (amount of unused ribosomes) is much higher in experiment
+- the most important machine is the ribosome. Prediction and experiment show a very similar increase of ribosome abundance with growth rate (slope of linear model), but the intersection (amount of unused ribosomes at zero growth) is much higher in experiment
 - chaperones show an inverse proportional relationship with growth rate contrary to model prediction. Do (some of?) these proteins have another role than just folding, like stress response?
 - transcription sector is quite stable, however, requires more enzymes than expected. Abundance is underestimated by 1 order of magnitude (5x10^-3 vs 5x10^-4 g/gDCW)
 - replication sector is heavily underestimated by 3 orders of magnitude (10^-3 vs 10^-6 g/gDCW)
 
-The following code section gathers growth rate/mass measurements and predictions in a single column each. This is better for summarizing and plotting.
 
 ```{r, echo = FALSE}
 # A generalized plotting function to save some repetition
@@ -450,6 +449,13 @@ plot_machinery <- df_machinery %>%
 
 print(plot_machinery)
 ```
+
+The protein allocation for the two low-abundant machines, replication and transcription is very hard to see. We can update the Y-axis limits for this plot and replot it, a simple way to 'zoom in' 10-fold. By doing so, we notice that abundance of replication machinery increases with growth rate from 0.0010 to a maximum of 0.0015 g/gDCW, an increase by 20-50%. For transcription, abundance increases with growth rate from 0.006 to 0.008 g/gDCW, an increase of 33%. 
+
+```{r, message = FALSE, fig.width = 5.5, fig.height = 5.5}
+update(plot_machinery, ylim = c(-0.001, 0.012))
+```
+
 
 ### Under-utilization of machinery proteins
 
@@ -547,9 +553,9 @@ Note that this analysis only includes enzymes that are **actually utilized by th
 
 ### Under-utilization of enzymes
 
-For this branch of analysis, it is sufficient to determine the underutilized protein fraction (of all utilized proteins) by subtracting the simulated optimal protein allocation from the experimentally measured.
+For this branch of analysis, it is sufficient to determine the underutilized protein fraction (of all utilized proteins) by subtracting the simulated optimal protein allocation from the experimentally measured. Utilization of the same selection of Calvin cycle enzymes is plotted as in previous section. This plot is not shown here 
 
-```{r, message = FALSE, fig.width = 7.5, fig.height = 5.5}
+```{r, message = FALSE, fig.width = 6, fig.height = 2.7}
 plot_calvin_util <- df_prot_comp %>%
   
   # filter set of enzymes
@@ -572,7 +578,7 @@ plot_calvin_util <- df_prot_comp %>%
   # plot
   xyplot(percent_utilization ~ factor(growth_rate) | enzyme * substrate, .,
     par.settings = custom.colorblind(), ylim = c(0, 1),
-    scales = list(y = list(draw = FALSE), x = list(at = c(2,4))),
+    scales = list(alternating = FALSE, y = list(draw = FALSE), x = list(at = c(2,4))),
     xlab = expression("µ [h"^-1*"]"), ylab = "",
     as.table = TRUE, between = list(x = 0.5, y = 0.5),
     pch = 19, lwd = 2, layout = c(1, 4),
@@ -585,18 +591,9 @@ plot_calvin_util <- df_prot_comp %>%
     }
   ) %>% useOuterStrips
 
-print(plot_calvin, position = c(0, 0, 0.84, 1), more = TRUE)
-print(plot_calvin_util, position = c(0.81, 0, 1, 1.))
-grid::grid.text(c("A", "B"), x = c(0.02, 0.81), y = c(0.97,0.97))
+print(update(plot_calvin_util, layout = c(4,1)))
 ```
 
-```{r, include = FALSE}
-svg("../figures/figure_calvin_util.svg", width = 7.5, height = 5.5)
-print(plot_calvin, position = c(0, 0, 0.84, 1), more = TRUE)
-print(plot_calvin_util, position = c(0.81, 0, 1, 1.))
-grid::grid.text(c("A", "B"), x = c(0.02, 0.81), y = c(0.97,0.97))
-dev.off()
-```
 ----------
 
 The following plot is a summary of underutilized enzyme mass *per condition*. Included are only reactions that carry flux under at least one condition or growth rate (that means reactions that never carry flux in any simulation are removed).
@@ -616,10 +613,10 @@ plot_underutil_by_cond <- df_prot_comp %>% group_by(reaction_id) %>%
   # remove 1 non-quantified replicate
   filter(!(substrate == "fructose" & growth_rate == 0.1 & replicate == "R2")) %>%
   
-  xyplot(percent_utilization ~ factor(growth_rate) | substrate, .,
+  xyplot(100*percent_utilization ~ factor(growth_rate) | substrate, .,
     par.settings = custom.colorblind(),
     xlab = expression(µ*" [h"^-1*"]"),
-    ylab = "utilization", ylim = c(0, 1),
+    ylab = "utilization [%]", ylim = c(0, 100),
     scales = list(alternating = FALSE), as.table = TRUE,
     between = list(x = 0.5, y = 0.5), col = grey(0.5),
     ewidth = 0.2, lwd = 2, layout = c(4, 1),
@@ -635,7 +632,7 @@ print(plot_underutil_by_cond)
 The most interesting figure is probably a comparison between different pathways. For this purpose we can use the unambiguous pathway annotation for each reaction contained in the genome scale model. Each reaction is mapped to one pathway only, however, the gene associated to this reaction can be associated with other reactions and then the protein mass is shared/distributed between those.
 Included are only reactions that carry flux under at least one condition or growth rate (that means reactions that never carry flux in any simulation are removed). For this figure **only the highest tested growth rate** µ = 0.25 h-1 was selected.
 
-```{r, , fig.width = 7.3, fig.height = 3.3, message = FALSE}
+```{r, , fig.width = 7, fig.height = 3.0, message = FALSE}
 plot_underutil_by_pw <- df_prot_comp %>%
   
   # filter out all reactions that never carry flux under any condition
@@ -653,9 +650,9 @@ plot_underutil_by_pw <- df_prot_comp %>%
   # filter out uninformative group
   filter(model_group_basic != "Other") %>%
   
-  xyplot(percent_utilization ~ model_group_basic %>% factor(., unique(.)[c(2,6,4,1,3,5)]) | substrate, .,
+  xyplot(100*percent_utilization ~ model_group_basic %>% factor(., unique(.)[c(2,6,4,1,3,5)]) | substrate, .,
     par.settings = custom.colorblind(),
-    xlab = "", ylab = "utilization", ylim = c(0, 1.3),
+    xlab = "", ylab = "utilization [%]", ylim = c(0, 125),
     scales = list(alternating = FALSE, x = list(cex = 0.6, rot = 25)), as.table = TRUE,
     between = list(x = 0.5, y = 0.5), col = grey(0.5),
     ewidth = 0.2, lwd = 2, layout = c(4, 1),
@@ -668,26 +665,27 @@ plot_underutil_by_pw <- df_prot_comp %>%
 print(plot_underutil_by_pw)
 ```
 
-```{r, include = FALSE}
+```{r, include = FALSE, fig.width = 7.0, fig.height = 7.0}
 #silently export composite figure
-svg("../figures/figure_pathway_util.svg", width = 6.5, height = 4.5)
-print(plot_underutil_by_cond, position = c(0, 0.49, 1, 1), more = TRUE)
-print(plot_underutil_by_pw, position = c(0, 0, 1, 0.58))
+svg("../figures/figure_calvin_util.svg", width = 7.0, height = 7.0)
+print(plot_calvin, position = c(0, 0.35, 0.84, 1), more = TRUE)
+print(plot_calvin_util, position = c(0.81, 0.35, 1, 1.), more = TRUE)
+print(plot_underutil_by_pw, position = c(0.02, 0, 1.03, 0.4))
+grid::grid.text(c("A", "B", "C"), x = c(0.03, 0.81, 0.03), y = c(0.97, 0.97, 0.37))
 dev.off()
 ```
 
 
-### Trends in protein utilization hint towards flux control
+### Growth and housekeeping related proteins are much 10x more abundant
 
-The first task is to make a simple assessment of trends in protein abundance for simulation and experimental results.
-One completely supervised strategy could for example entail the summary of each reaction's protein abundance over growth rate by fitting a linear regression model. One could then coarsely cluster (or hand pick) groups of proteins that will
+The next task is to identify trends in protein abundance for simulation and experimental results. One completely supervised strategy is for example the summary of each reaction's protein abundance over growth rate by fitting a linear regression model. We can then coarsely cluster (or hand pick) groups of proteins that will
 
 - increase in simulation, increase in experiment (TRUE POSITIVE)
 - remain constant in simulation, decrease/are constant in experiment (TRUE NEGATIVE)
 - remain constant in simulation, increase in experiment (FALSE POSITIVE)
 - increase in simulation, decrease/are constant in experiment (FALSE NEGATIVE)
 
-One additional layer of complexity is that this analysis can be performed for all four available substrate limitations. The individual trends for one or the other limitation might be different for the same protein. We can group the data by reaction and substrate limitation and fit a model over five growth rates and four replicates (20 data points). The slope, intercept and ANOVA p-value can be extracted for experimental protein abundance. For model simulations, the slope is sufficient as intercept is likely zero, and p-value unnecessary to determine due to the inherent linearity of model predictions versus growth rate.
+One additional layer of complexity is that this analysis can be performed for all four available substrate limitations. The individual trends for one or the other limitation might be different for the same protein/reation. We can group the data by reaction and substrate limitation and fit a model over five growth rates and four replicates (20 data points). The slope, intercept and ANOVA p-value can be extracted for experimental protein abundance. For model simulations, the slope is sufficient as intercept is likely zero, and p-value unnecessary to determine due to the inherent linearity of model predictions versus growth rate.
 
 ```{r, fig.width = 5, fig.height = 5, message = FALSE}
 df_clusters <- df_prot_comp %>%
@@ -713,37 +711,58 @@ df_clusters <- df_prot_comp %>%
   ))
 ```
 
+----------
+
+According to these definitions, we can for example investigate some properties of the reactions/proteins within each group. One simple thing to look at first is the distribution of highly and lowly abundant proteins within these groups. The following plot shows that --with very high significance of `p <= 10^-18`-- readiness and unmodeled/unknown growth functions 
 
 ```{r, fig.width = 7.5, fig.height = 3.7, message = FALSE}
-# number of reactions and total protein mass per 'cluster'
-plot_underutil_clusters <- df_clusters %>%
-  group_by(substrate, cluster, model_group_basic) %>%
-  summarize(average_mass_g_gDCW = sum(average_mass_g_gDCW)) %>%
-  ungroup %>% arrange(desc(average_mass_g_gDCW)) %>%
-  mutate(model_group_basic = model_group_basic %>% factor(., unique(.))) %>%
-  
-  xyplot(average_mass_g_gDCW ~ factor(cluster) | substrate, .,
-    par.settings = custom.colorblind(),
-    groups = model_group_basic, layout = c(4, 1),
-    col = colorRampPalette(c("#E7298A", "#66A61E", "#E6AB02"))(7),
-    xlab = "", ylab = expression("m"[protein]*" [g gDCW"^-1*"]"),
-    ylim = c(0, 0.2), border = grey(0.85),
+boxplot_colorblind <- custom.colorblind()
+boxplot_colorblind$box.rectangle$lwd = 1.5
+boxplot_colorblind$box.umbrella$lwd = 1.5
+
+
+plot_underutil_clusters <- xyplot(log10(average_mass_g_gDCW) ~ 
+      factor(cluster) | substrate,
+    df_clusters %>% filter(average_mass_g_gDCW != 0),
+    par.settings = boxplot_colorblind,
+    layout = c(4, 1), horizontal = FALSE, do.out = FALSE,
+    xlab = "", ylab = expression("m"[protein]*" [log"[10]*" g gDCW"^-1*"]"),
     scales = list(alternating = FALSE, x = list(rot = 25)), as.table = TRUE,
     between = list(x = 0.5, y = 0.5),
-    ewidth = 0.15, beside = TRUE, lwd = 1,
-    panel = function(x, y, subscripts, groups, col = col, ...) {
-      panel.key(groups = groups, subscripts = subscripts, 
-        cex = 0.6, points = FALSE, col = col)
+    panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.barchart(x, y, horizontal = FALSE, stack = TRUE,
-        groups = groups, subscripts = subscripts, col = col, ...)
+      panel.violin(x, y, lwd = 0, col = grey(0.6, 0.5), box.width = 0.7, ...)
+      panel.bwplot(x, y, pch = "|", box.width = 0.4, ...)
+      panel.pvalue(x, y, cex = 0.7, fixed_pos = -0.6, verbose = TRUE, ...)
+      panel.text(unique(x), -8, labels = paste0("n=", table(x)), cex = 0.6)
     }
   )
 
 print(plot_underutil_clusters)
 ```
 
-We can see that the trends are similar for all substrates: Most of the enzyme mass ends up in *growth function*, the group where enzyme abundance increases with growth rate for experiment and simulation. Interestingly, the formate condition shows not only higher utilization, which can be an artifact of simulated higher growth rate for a given substrate uptake rate. But it also shows better correlation with model predictions, particularly the True positive reactions (correlated with growth in prediction and experiment). Typical growth-related reactions are also mainly collected in *growth function*, while some amino acid biosynthesis related reactions end up in the last group *unmodeled growth function*. Those correlate with growth in experiment, but are not used in model.
+----------
+
+How are the mean values distributed for the four conditions?
+We can summarize them.
+
+```{r, message = FALSE}
+df_clusters %>% group_by(substrate, cluster) %>%
+  filter(average_mass_g_gDCW != 0) %>%
+  summarize(mean_mass = 10^mean(log10(average_mass_g_gDCW))) %>%
+  spread(cluster, mean_mass)
+```
+
+
+```{r, include = FALSE}
+#silently export figure
+svg("../figures/figure_abundance_vs_regulation.svg", width = 7.0, height = 3.5)
+print(plot_underutil_clusters)
+dev.off()
+```
+
+
+We can see that the trends are similar for all substrates: Enzymes related to *growth* or *housekeeping* function are on average more abundant than *readiness* or *unmodeled growth* functions. These differences are highly significant despite a similar number of reactions associated to one or the other group. While typical growth-related reactions are indeed mainly collected in *growth function*, some amino acid biosynthesis related reactions end up in the last group *unmodeled growth function*. Those correlate with growth in experiment, but are not used in the model.
 
 
 ## Yield-growth rate tradeoff under mixotrophic growth?
