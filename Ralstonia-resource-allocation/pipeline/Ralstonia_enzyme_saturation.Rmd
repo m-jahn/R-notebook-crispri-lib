@@ -715,26 +715,26 @@ df_clusters <- df_prot_comp %>%
 
 According to these definitions, we can for example investigate some properties of the reactions/proteins within each group. One simple thing to look at first is the distribution of highly and lowly abundant proteins within these groups. The following plot shows that --with very high significance of `p <= 10^-18`-- readiness and unmodeled/unknown growth functions 
 
-```{r, fig.width = 7.5, fig.height = 3.7, message = FALSE}
+```{r, fig.width = 2.8, fig.height = 3.2, message = FALSE}
 boxplot_colorblind <- custom.colorblind()
 boxplot_colorblind$box.rectangle$lwd = 1.5
 boxplot_colorblind$box.umbrella$lwd = 1.5
 
 
 plot_underutil_clusters <- xyplot(log10(average_mass_g_gDCW) ~ 
-      factor(cluster) | substrate,
+      factor(gsub(" function", "", cluster)),
     df_clusters %>% filter(average_mass_g_gDCW != 0),
     par.settings = boxplot_colorblind,
-    layout = c(4, 1), horizontal = FALSE, do.out = FALSE,
+    horizontal = FALSE, do.out = FALSE,
     xlab = "", ylab = expression("m"[protein]*" [log"[10]*" g gDCW"^-1*"]"),
-    scales = list(alternating = FALSE, x = list(rot = 25)), as.table = TRUE,
+    scales = list(alternating = FALSE, x = list(rot = 25, cex = 0.7)),
     between = list(x = 0.5, y = 0.5),
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.violin(x, y, lwd = 0, col = grey(0.6, 0.5), box.width = 0.7, ...)
       panel.bwplot(x, y, pch = "|", box.width = 0.4, ...)
       panel.pvalue(x, y, cex = 0.7, fixed_pos = -0.6, verbose = TRUE, ...)
-      panel.text(unique(x), -8, labels = paste0("n=", table(x)), cex = 0.6)
+      panel.text(unique(x), -8.3, labels = paste0("n=", round(table(x)/4)), cex = 0.6)
     }
   )
 
@@ -743,8 +743,9 @@ print(plot_underutil_clusters)
 
 ----------
 
-How are the mean values distributed for the four conditions?
-We can summarize them.
+How are the mean values distributed for the four conditions? We can summarize them and then see that *readiness* or *unmodeled growth*-related protein abundance are indeed around 5x and 10x lower than *growth*-related protein abundance, respectively. This analysis does not include growth-related *machinery* proteins such as ribosomes, but solely metabolic enzymes.
+
+The differences are highly significant despite a similar number of reactions associated to one or the other group. While typical growth-related reactions are indeed mainly collected in *growth function*, some amino acid biosynthesis related reactions end up in the last group, *unmodeled growth*. Those correlate with growth in experiment, but are not used in the model.
 
 ```{r, message = FALSE}
 df_clusters %>% group_by(substrate, cluster) %>%
@@ -753,16 +754,55 @@ df_clusters %>% group_by(substrate, cluster) %>%
   spread(cluster, mean_mass)
 ```
 
+### Enrichment of functional pathways per group
+
+
+```{r, fig.width = 7.2, fig.height = 3.2, message = FALSE}
+plot_pathways_clusters <- df_clusters %>%
+  
+  # group by model pathway annotation
+  group_by(cluster, substrate, model_group_basic) %>%
+  
+  # summarize number of reactions annotated with a certain function
+  filter(average_mass_g_gDCW != 0) %>%
+  summarize(reactions_per_group = length(reaction_id)) %>%
+  
+  # relative over or under-representation from average
+  group_by(substrate, model_group_basic) %>%
+  mutate(reactions_per_group_ORA = (reactions_per_group-mean(reactions_per_group))/
+    mean(reactions_per_group)*100) %>%
+  
+  xyplot(reactions_per_group_ORA ~ factor(gsub(" function", "", cluster)), .,
+    groups = substr(model_group_basic, 1, 12), beside = TRUE, origin = 0,
+    par.settings = boxplot_colorblind, ylim = c(-150, 150),
+    horizontal = FALSE, do.out = FALSE, lwd = 2,
+    auto.key = list(space = "right", cex = 0.6),
+    xlab = "", ylab = expression(Delta*"n reactions [%]"),
+    scales = list(alternating = FALSE, x = list(rot = 25, cex = 0.7)),
+    between = list(x = 0.5, y = 0.5),
+    panel = function(x, y, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.barplot(x, y, ...)
+    }
+  )
+
+print(plot_pathways_clusters)
+```
 
 ```{r, include = FALSE}
-#silently export figure
-svg("../figures/figure_abundance_vs_regulation.svg", width = 7.0, height = 3.5)
-print(plot_underutil_clusters)
-dev.off()
+# optionally implement ORA using hypergeomtric test
+#phyper(q, m, n, k, lower.tail = TRUE)
 ```
 
 
-We can see that the trends are similar for all substrates: Enzymes related to *growth* or *housekeeping* function are on average more abundant than *readiness* or *unmodeled growth* functions. These differences are highly significant despite a similar number of reactions associated to one or the other group. While typical growth-related reactions are indeed mainly collected in *growth function*, some amino acid biosynthesis related reactions end up in the last group *unmodeled growth function*. Those correlate with growth in experiment, but are not used in the model.
+```{r, include = FALSE}
+# silently export figure
+svg("../figures/figure_abundance_vs_regulation.svg", width = 7.0, height = 5.0)
+print(plot_underutil_clusters, position = c(0,0,0.37,0.6), more = TRUE)
+print(plot_pathways_clusters, position = c(0.33,0,1.03,0.6))
+dev.off()
+```
+
 
 
 ## Yield-growth rate tradeoff under mixotrophic growth?
