@@ -676,7 +676,7 @@ dev.off()
 ```
 
 
-### Growth and housekeeping related proteins are much 10x more abundant
+### Growth and housekeeping related proteins are 10x more abundant
 
 The next task is to identify trends in protein abundance for simulation and experimental results. One completely supervised strategy is for example the summary of each reaction's protein abundance over growth rate by fitting a linear regression model. We can then coarsely cluster (or hand pick) groups of proteins that will
 
@@ -685,7 +685,7 @@ The next task is to identify trends in protein abundance for simulation and expe
 - remain constant in simulation, increase in experiment (FALSE POSITIVE)
 - increase in simulation, decrease/are constant in experiment (FALSE NEGATIVE)
 
-One additional layer of complexity is that this analysis can be performed for all four available substrate limitations. The individual trends for one or the other limitation might be different for the same protein/reation. We can group the data by reaction and substrate limitation and fit a model over five growth rates and four replicates (20 data points). The slope, intercept and ANOVA p-value can be extracted for experimental protein abundance. For model simulations, the slope is sufficient as intercept is likely zero, and p-value unnecessary to determine due to the inherent linearity of model predictions versus growth rate.
+One additional layer of complexity is that this analysis can be performed for all four available substrate limitations. The individual trends for one or the other limitation might be different for the same protein/reaction. We can group the data by reaction and substrate limitation and fit a model over five growth rates and four replicates (20 data points). The slope, intercept and ANOVA p-value can be extracted for experimental protein abundance. For model simulations, the slope is sufficient as intercept is likely zero, and p-value unnecessary to determine due to the inherent linearity of model predictions versus growth rate.
 
 ```{r, fig.width = 5, fig.height = 5, message = FALSE}
 df_clusters <- df_prot_comp %>%
@@ -713,7 +713,7 @@ df_clusters <- df_prot_comp %>%
 
 ----------
 
-According to these definitions, we can for example investigate some properties of the reactions/proteins within each group. One simple thing to look at first is the distribution of highly and lowly abundant proteins within these groups. The following plot shows that --with very high significance of `p <= 10^-18`-- readiness and unmodeled/unknown growth functions 
+According to these definitions, we can for example investigate some properties of the reactions/proteins within each group. One simple thing to look at first is the distribution of highly and lowly abundant proteins within these groups. The following plot shows that --with very high significance of `p <= 10^-18`-- readiness and unmodeled/unknown growth functions are on average much lower abundant, up to 10 times.
 
 ```{r, fig.width = 2.8, fig.height = 3.2, message = FALSE}
 boxplot_colorblind <- custom.colorblind()
@@ -732,9 +732,9 @@ plot_underutil_clusters <- xyplot(log10(average_mass_g_gDCW) ~
     panel = function(x, y, ...) {
       panel.grid(h = -1, v = -1, col = grey(0.9))
       panel.violin(x, y, lwd = 0, col = grey(0.6, 0.5), box.width = 0.7, ...)
-      panel.bwplot(x, y, pch = "|", box.width = 0.4, ...)
+      panel.bwplot(x, y, pch = "|", box.width = 0.3, ...)
       panel.pvalue(x, y, cex = 0.7, fixed_pos = -0.6, verbose = TRUE, ...)
-      panel.text(unique(x), -8.3, labels = paste0("n=", round(table(x)/4)), cex = 0.6)
+      panel.text(unique(x), -8.3, labels = paste0("n=", table(x)), cex = 0.6)
     }
   )
 
@@ -756,33 +756,60 @@ df_clusters %>% group_by(substrate, cluster) %>%
 
 ### Enrichment of functional pathways per group
 
+We try an overrepresentation analysis (ORA) using the hypergeometric test. This requires some careful design of the important sample groups. Every analysis is first grouped by substrate, then we add a hypergeometric test for every combination of substrate, cluster, and pathway. An analogy here is an urn filled with black and white balls. If we draw balls N times, how likely is it that we end up drawing more than X white balls (ORA) / less than Y white balls (URA).
+
 
 ```{r, fig.width = 7.2, fig.height = 3.2, message = FALSE}
-plot_pathways_clusters <- df_clusters %>%
+df_ORA <- df_clusters %>%
   
   # group by model pathway annotation
-  group_by(cluster, substrate, model_group_basic) %>%
+  group_by(substrate, model_group_basic, cluster) %>%
   
   # summarize number of reactions annotated with a certain function
   filter(average_mass_g_gDCW != 0) %>%
   summarize(reactions_per_group = length(reaction_id)) %>%
   
-  # relative over or under-representation from average
-  group_by(substrate, model_group_basic) %>%
-  mutate(reactions_per_group_ORA = (reactions_per_group-mean(reactions_per_group))/
-    mean(reactions_per_group)*100) %>%
+  # determine key numbers for hypergeomtric test:
+  # total number of reactions per model group ('white balls')
+  group_by(substrate, cluster) %>%
+  mutate(n_reactions_total = sum(reactions_per_group)) %>%
   
-  xyplot(reactions_per_group_ORA ~ factor(gsub(" function", "", cluster)), .,
-    groups = substr(model_group_basic, 1, 12), beside = TRUE, origin = 0,
-    par.settings = boxplot_colorblind, ylim = c(-150, 150),
+  # total number of all reactions together ('black balls'+'white balls')
+  group_by(substrate) %>%
+  mutate(n_total = sum(reactions_per_group)) %>%
+  
+  group_by(substrate, model_group_basic) %>%
+  mutate(n_drawn = sum(reactions_per_group)) %>%
+  
+  # determine significance of over- and underrepresentation
+  mutate(hypgeo_pvalue_OR = phyper(
+    reactions_per_group, # white balls drawn
+    n_reactions_total, # total number white balls
+    n_total-n_reactions_total, # total number black balls
+    n_drawn, lower.tail= FALSE) # total number of balls drawn
+  )
+
+head(df_ORA)
+```
+
+
+```{r, fig.width = 7.2, fig.height = 3.2, message = FALSE}
+plot_pathways_clusters <- xyplot(-log10(hypgeo_pvalue_OR) ~ factor(gsub(" function", "", cluster)), df_ORA,
+    groups = substr(model_group_basic, 1, 12), beside = TRUE, origin = 0.01,
+    par.settings = boxplot_colorblind, ylim = c(0, 4),
     horizontal = FALSE, do.out = FALSE, lwd = 2,
     auto.key = list(space = "right", cex = 0.6),
-    xlab = "", ylab = expression(Delta*"n reactions [%]"),
+    xlab = "", ylab = expression("- log"[10]*" p-value"),
     scales = list(alternating = FALSE, x = list(rot = 25, cex = 0.7)),
     between = list(x = 0.5, y = 0.5),
     panel = function(x, y, ...) {
+      panel.rect(0.5,0,1.5,4, col = grey(0.95), lty = 0)
+      panel.rect(2.5,0,3.5,4, col = grey(0.95), lty = 0)
       panel.grid(h = -1, v = -1, col = grey(0.9))
-      panel.barplot(x, y, ...)
+      panel.abline(h = 2, col = grey(0.6), lty = 2, lwd = 2)
+      panel.text(4, 2.1, labels = "p-value = 0.01", col = grey(0.5), 
+        cex = 0.7, pos = 3)
+      panel.barplot(x, y, ewidth = 0.055, ...)
     }
   )
 
@@ -790,16 +817,11 @@ print(plot_pathways_clusters)
 ```
 
 ```{r, include = FALSE}
-# optionally implement ORA using hypergeomtric test
-#phyper(q, m, n, k, lower.tail = TRUE)
-```
-
-
-```{r, include = FALSE}
 # silently export figure
-svg("../figures/figure_abundance_vs_regulation.svg", width = 7.0, height = 5.0)
-print(plot_underutil_clusters, position = c(0,0,0.37,0.6), more = TRUE)
-print(plot_pathways_clusters, position = c(0.33,0,1.03,0.6))
+svg("../figures/figure_abundance_vs_regulation.svg", width = 7.0, height = 5.2)
+print(plot_underutil_clusters, position = c(0,-0.05,0.37,0.53), more = TRUE)
+print(plot_pathways_clusters, position = c(0.33,-0.05,1.08,0.53))
+grid::grid.text(c("A", "B", "C"), x = c(0.02, 0.02, 0.35), y = c(0.97, 0.48, 0.48))
 dev.off()
 ```
 
@@ -828,24 +850,31 @@ df_mixflux <- df_mixflux %>% rename(CO2_refixation = sim_run)
 
 The next task is to compare yield, growth rate, CO<sub>2</sub> emission and other fluxes for a range of simulations where Rubisco was forced to re-fix emitted CO<sub>2</sub> from growth on fructose. Simulations were performed for increasing flux through Rubisco from 0 to 5 mmol gDCW<sup>-1</sup> h<sup>-1</sup>.
 
-```{r, fig.width = 5, fig.height = 3}
-plot_mixo_mu <- xyplot(value ~ as.factor(CO2_refixation) | key,
-  filter(df_mixmacr, key %in% c("mu", "yield")) %>%
-    mutate(key = gsub("mu", "growth rate", key)),
-  groups = carbon_conc,
-  scales = list(alternating = FALSE), ylim = c(0, 0.6),
-  between = list(x = 0.5, y = 0.5), layout = c(2,1),
-  par.settings = custom.colorblind(), type = "b", pch = 19, lwd = 2,
-  xlab = expression("forced CO"[2]*" refixation [mmol h"^-1*" gDCW"^-1*"]"),
-  ylab = expression("µ / Y"),
-  panel = function(x, y, ...) {
-    panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.xyplot(x, y, ...)
-    panel.key(...)
-  }
-)
+```{r, fig.width = 5, fig.height = 2.7}
+plot_mixo_mu <- lapply(c("mu", "yield"), function(keys) {
+  
+  if (keys == "mu") ylabel <- expression("µ [h"^-1*"]")
+  if (keys == "yield") ylabel <- expression("Y [gDCW gS"^-1*"]")
+  
+  xyplot(value ~ factor(CO2_refixation),
+    filter(df_mixmacr, key == keys),
+    groups = carbon_conc, col = colorRampPalette(c("#66CD00", grey(0.5)))(5),
+    between = list(x = 0.5, y = 0.5), type = "b", lwd = 2,
+    par.settings = custom.colorblind(), 
+    z = filter(df_mixmacr, key == keys) %>% pull(CO2_refixation) %>% as.numeric,
+    xlab = expression("CO"[2]*" uptake [mmol h"^-1*" gDCW"^-1*"]"),
+    ylab = ylabel,
+    panel = function(x, y, z, ...) {
+      panel.grid(h = -1, v = -1, col = grey(0.9))
+      panel.symbols(x, y, z+15, ...)
+      if (keys == "yield") panel.key(..., corner = c(0.02, 0.05), 
+        cex = 0.7, points = FALSE)
+    }
+  )
+})
 
-print(plot_mixo_mu)
+print(plot_mixo_mu[[1]], position = c(0,0,0.53,1), more = TRUE)
+print(plot_mixo_mu[[2]], position = c(0.47,0,1,1))
 ```
 There is no increase in growth rate or yield with additional CO<sub>2</sub> fixation according to the RBA model. The yield is in fact calculated based on the growth rate µ and the substrate uptake rate qS. Yield and growth rate depend on each other in the relation Y [gDCW/gS] = µ [h-1] / qS [gS gDCW-1 h-1]. 
 
@@ -854,21 +883,25 @@ Since only the initial substrate concentration is constrained, the model could p
 The model seems to predict a high-yield phenotype already. If CO2 re-fixation would have had an advantage for growth, it might have been detected earlier depending on the protein costs for the respective pathway. Before a final verdict, we can follow the fate of the fixed CO2 through the metabolism.
 
 
-```{r, fig.width = 5, fig.height = 5}
-enzyme_selection <- c("CO2t", "RBPC", "PRUK", "FruABC", "EDD", "EDA", "TKT1", "CS", "AKGDH", "O2t")
+```{r, fig.width = 5, fig.height = 3.8}
+enzyme_selection <- c("CO2t", "RBPC", "EDD", "EDA", "CS", "O2t")
 
-plot_mixo_enz <- xyplot(abs(value) ~ as.factor(CO2_refixation) | factor(key, unique(key)[c(4,8,9,6,7,3,5,1,2)]),
+plot_mixo_enz <- xyplot(abs(value) ~ as.factor(CO2_refixation) | 
+    factor(key, unique(key)[c(6,2,1,4,5,3)]),
   filter(df_mixflux, key %in% enzyme_selection),
-  groups = carbon_conc,
+  groups = carbon_conc, layout = c(3,2),
   scales = list(alternating = FALSE),
-  type = "b", pch = 19, lwd = 2,
+  type = "b", lwd = 2, 
+  z = filter(df_mixflux, key %in% enzyme_selection) %>% 
+    pull(CO2_refixation) %>% as.numeric,
   between = list(x = 0.5, y = 0.5), as.table = TRUE,
-  par.settings = custom.colorblind(), 
-  xlab = expression("forced CO2 refixation [mmol h"^-1*"gDCW"^-1*"]"),
+  par.settings = custom.colorblind(),
+  col = colorRampPalette(c("#66CD00", grey(0.5)))(5),
+  xlab = expression("CO"[2]*" uptake [mmol h"^-1*" gDCW"^-1*"]"),
   ylab = expression("flux [mmol h"^-1*"gDCW"^-1*"]"),
-  panel = function(x, y, ...) {
+  panel = function(x, y, z, ...) {
     panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.xyplot(x, y, ...)
+    panel.symbols(x, y, z+15, ...)
   }
 )
 
@@ -877,9 +910,11 @@ print(plot_mixo_enz)
 
 ```{r, include = FALSE}
 #silently export composite figure
-svg("../figures/figure_mixotrophy.svg", width = 4.5, height = 7.0)
-print(plot_mixo_mu, position = c(0, 0.6, 1, 1), more = TRUE)
-print(plot_mixo_enz, position = c(0.013, 0, 1, 0.65))
+svg("../figures/figure_mixotrophy.svg", width = 5.0, height = 6.0)
+print(plot_mixo_mu[[1]], position = c(0,0.57,0.53,1), more = TRUE)
+print(plot_mixo_mu[[2]], position = c(0.48,0.57,1,1), more = TRUE)
+print(plot_mixo_enz, position = c(0.035, 0, 1, 0.62))
+grid::grid.text(c("A", "B", "C"), x = c(0.03, 0.5, 0.03), y = c(0.97, 0.97, 0.57))
 dev.off()
 ```
 
