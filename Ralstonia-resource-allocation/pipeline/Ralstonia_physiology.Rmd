@@ -45,24 +45,32 @@ The next step is to plot the OD<sub>720</sub> and growth rate for all cultivatio
 plot_OD <- xyplot(od_value ~ batchtime_h | condition, 
   arrange(df_chem, batchtime_h),
   groups = replicate, par.settings = custom.colorblind(),
-  as.table = TRUE,, between = list(x = 0.5, y = 0.5), type = "l", lwd = 2,
-  ylim = c(-0.06, 0.86), ylab = expression("OD"[720*nm])
+  layout = c(1,4), as.table = TRUE,
+  type = "l", xlim = c(0, 335),
+  cols = custom.colorblind()$superpose.polygon$col[1:4],
+  between = list(x = 0.5, y = 0.5), lwd = 2,
+  ylim = c(-0.06, 0.86), ylab = expression("OD"[720*nm]),
+  panel = function(x, y, cols, ...) {
+    panel.xyplot(x, y, col = cols[panel.number()], ...)
+  }
 )
 
 plot_dil <- xyplot(dilution_rate ~ batchtime_h | condition, 
   filter(df_chem, replicate == 1), 
-  between = list(x = 0.5, y = 0.5),
-  par.settings = custom.colorblind(), 
-  layout = c(1,4), as.table = TRUE,
-  type = "l", xlim = c(0, 335), ylim = c(-0.03, 0.43),
+  par.settings = custom.colorblind(), type = "l",
+  between = list(x = 0.5, y = 0.5), ylim = c(-0.03, 0.43),
   xlab = "time [h]", ylab = expression("µ [h"^-1*"]"),
   panel = function(x, y, ...){
     panel.grid(h = -1, v = -1, col = grey(0.9))
-    panel.horizonplot(x, y, col.regions = grey(0.7, alpha = 0.5))
+    panel.horizonplot(c(x, 335), c(y, max(y)), col.regions = grey(0.7, alpha = 0.5))
+    arrow_x <- c(sort(x)[which(diff(sort(y)) != 0)], max(x)-1)
+    panel.arrows(x0 = arrow_x, y0 = 0.4, x1 = arrow_x, y1 = 0.32,
+      type = "closed", col = grey(0.5), lwd = 2, fill = grey(0.5), 
+      length = 0.05, unit = "npc")
   }
 )
 
-print(doubleYScale(plot_dil, plot_OD, use.style = FALSE, add.ylab2 = TRUE))
+print(doubleYScale(plot_OD, plot_dil, use.style = FALSE, add.ylab2 = TRUE, under = TRUE))
 ```
 
 ### Calculate biomass yield and maintenance
@@ -250,9 +258,9 @@ print(plot_residual)
 ```{r, include = FALSE}
 # silently export figure
 svg("../figures/figure_chemostat_cult.svg", width = 5, height = 7.5)
-print(doubleYScale(plot_dil, plot_OD, use.style = FALSE, add.ylab2 = TRUE), 
-  position = c(0,0.27,1,1), more = TRUE)
-print(plot_residual, position = c(-0.01,0,1,0.32))
+print(doubleYScale(plot_OD, plot_dil, use.style = FALSE, add.ylab2 = TRUE, under = TRUE), 
+  position = c(0,0.27,1.07,1), more = TRUE)
+print(plot_residual, position = c(-0.01,0,0.975,0.32))
 dev.off()
 ```
 
