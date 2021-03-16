@@ -47,8 +47,6 @@ rmarkdown::render("pipeline.Rmd")
 
 #### Ralstonia resource allocation (in preparation)
 
-- [_Ralstonia eutropha_ COG re-annotation](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_genome_re_annotation.nb.html)
-- [_Ralstonia eutropha_ gene essentiality analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_H16_essentiality_analysis.nb.html)
 - [_Ralstonia eutropha_ chemostats](https://m-jahn.github.io/R-notebooks/Ralstonia_physiology.nb.html)
 - [_Ralstonia eutropha_ proteomics data analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_proteomics.nb.html)
 - [_Ralstonia eutropha_ model constraints](https://m-jahn.github.io/R-notebooks/Ralstonia_model_constraints.nb.html)
