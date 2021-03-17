@@ -45,14 +45,6 @@ rmarkdown::render("pipeline.Rmd")
 
 ### Contents
 
-#### Ralstonia resource allocation (in preparation)
-
-- [_Ralstonia eutropha_ chemostats](https://m-jahn.github.io/R-notebooks/Ralstonia_physiology.nb.html)
-- [_Ralstonia eutropha_ proteomics data analysis](https://m-jahn.github.io/R-notebooks/Ralstonia_proteomics.nb.html)
-- [_Ralstonia eutropha_ model constraints](https://m-jahn.github.io/R-notebooks/Ralstonia_model_constraints.nb.html)
-- [_Ralstonia eutropha_ total protein utilization](https://m-jahn.github.io/R-notebooks/Ralstonia_variability_analysis.nb.html)
-- [_Ralstonia eutropha_ protein utilization on enzyme level](https://m-jahn.github.io/R-notebooks/Ralstonia_enzyme_saturation.nb.html)
-
 #### CRISPRi library in _Synechocystis_ sp. PCC6803 (published in Yao *et al*., Nature Communications, 2020)
 
 - [_Synechocystis_ CRISPRi library data processing](https://m-jahn.github.io/R-notebooks/CRISPRi_library_data_processing.nb.html)
