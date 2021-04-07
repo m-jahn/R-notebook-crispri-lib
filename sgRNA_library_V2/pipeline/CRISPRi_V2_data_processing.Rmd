@@ -1,0 +1,111 @@
+---
+title: "CRISPRi library V2, data processing pipeline"
+output:
+  html_notebook: 
+    theme: cosmo
+    toc: yes
+    number_sections: true
+---
+
+----------
+
+# Description
+
+This R notebook details the data processing and visualization for growth competition experiments with a CRISPRi sgRNA library. The library contains around 20,000 unique sgRNA repression mutants tailored for the cyanobacterium _Synechocystis_ sp. PCC6803. This library is the second version (therefore "V2") of an sgRNA library for _Synechocystis_, containing 5 instead of only 2 sgRNAs per gene if possible. Some genes or ncRNAs are very short and hence it was no possible to design the maximum number of individual sgRNAs. The first iteration of the library was [published in Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7).
+
+# Quality control
+
+## Data import
+
+Load required packages.
+
+```{r, message = FALSE }
+library(tidyverse)
+```
+
+Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
+
+```{r}
+load("../data/input/DESeq2_result.Rdata", )
+df_main <- DESeq_result_table; rm(DESeq_result_table)
+```
+
+Make a custom theme that is reused for all later plots.
+
+```{r}
+custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
+custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0) {
+  theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
+    plot.margin = unit(c(12,12,12,12), "points"),
+    axis.ticks.length = unit(0.25, "cm"),
+    axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
+    axis.text.x = element_text(colour = "black", size = 10),
+    axis.text.y = element_text(colour = "black", size = 10),
+    panel.grid.major = element_line(size = 0.8, linetype = "solid", colour = "#cacaca8F"),
+    panel.grid.minor = element_line(size = 0.8, linetype = "solid", colour = "#cacaca8F"),
+    panel.border = element_rect(linetype = "solid", colour = "black", fill = NA, size = 1.0),
+    strip.background = element_rect(fill = grey(0.85), colour = "black"),
+    strip.text = element_text(colour = "black", size = 10),
+    panel.background = element_blank()
+  )
+}
+```
+
+
+## Data annotation
+
+Different annotation columns are added to the main data frame, including a short sgRNA identifier (excluding the position on the gene), an sgRNA index (1 to 5), and genome annotation from Uniprot. Note: The Uniprot data can also be dynamically downloaded for every update of this pipeline using their very simple API:
+`read_tsv("https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab")`.
+
+```{r, message = FALSE}
+df_main <- df_main %>%
+  # correct an error in sgRNA naming
+  mutate(sgRNA = gsub('”', '2', sgRNA)) %>%
+  # split sgRNA names into target gene and position
+  separate(sgRNA, into = c("sgRNA_target", "sgRNA_position"), sep = "\\|",
+    remove = FALSE) %>%
+  
+  # add sgRNA index number (1 to maximally 5) and type
+  group_by(sgRNA_target) %>%
+  mutate(
+    sgRNA_index = sgRNA_position %>% as.numeric %>% as.factor %>%
+    as.numeric,
+    sgRNA_type = if_else(grepl("^nc_", sgRNA), "ncRNA", "gene")) %>%
+
+  # map trivial names to LocusTags using a manually curated list
+  left_join(
+    read_tsv("../data/input/mapping_trivial_names.tsv", col_types = cols()),
+    by = c("sgRNA_target" = "gene")) %>%
+  
+  # one more join, this time with the annotation db
+  # containing uniprot and categorial (KEGG Brite) data
+  left_join(read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv")[c(1,4:6,11,20,22,27:32)], 
+    by = c("locus" = "GeneID"))
+
+head(df_main)
+```
+
+
+## Covariation of sgRNAs
+
+Each gene is represented by up to five sgRNAs. We can test if all or only some of the 5 sgRNAs are "behaving" in the same way in the same conditions, more mathematically speaking we can estimate the covariation. First let's summarize how many genes have 5, 4, 3 sgRNAs and so on associated with them.
+
+```{r, message =FALSE}
+# N unique sgRNAs in dataset
+paste0("Number of unique sgRNAs: ", unique(df_main$sgRNA) %>% length)
+
+# N genes with 1,2,3,4 or 5 sgRNAs
+df_main %>%
+  group_by(sgRNA_type, sgRNA_target) %>%
+  summarize(n_sgRNAs = length(unique(sgRNA_position))) %>%
+  count(n_sgRNAs) %>% filter(n_sgRNAs <= 5) %>%
+  ggplot(aes(x = factor(n_sgRNAs), y = n, fill = factor(n_sgRNAs),
+    label = n)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(size = 3, nudge_y = 100) +
+  facet_grid(~sgRNA_type) +
+  custom_theme() +
+  scale_fill_manual(values = custom_colors)
+```
+
+
