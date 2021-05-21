@@ -37,16 +37,18 @@ custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E7
 custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0) {
   theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
     plot.margin = unit(c(12,12,12,12), "points"),
-    axis.ticks.length = unit(0.25, "cm"),
-    axis.ticks = element_line(colour = "black", linetype = "solid", lineend = "round"),
-    axis.text.x = element_text(colour = "black", size = 10),
-    axis.text.y = element_text(colour = "black", size = 10),
-    panel.grid.major = element_line(size = 0.8, linetype = "solid", colour = "#cacaca8F"),
-    panel.grid.minor = element_line(size = 0.8, linetype = "solid", colour = "#cacaca8F"),
-    panel.border = element_rect(linetype = "solid", colour = "black", fill = NA, size = 1.0),
-    strip.background = element_rect(fill = grey(0.85), colour = "black"),
-    strip.text = element_text(colour = "black", size = 10),
-    panel.background = element_blank()
+    axis.ticks.length = unit(0.2, "cm"),
+    axis.ticks = element_line(colour = grey(0.4), linetype = "solid", lineend = "round"),
+    axis.text.x = element_text(colour = grey(0.4), size = 10),
+    axis.text.y = element_text(colour = grey(0.4), size = 10),
+    panel.grid.major = element_line(size = 0.6, linetype = "solid", colour = grey(0.9)),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(linetype = "solid", colour = grey(0.4), fill = NA, size = 1.0),
+    panel.background = element_blank(),
+    strip.background = element_rect(fill = grey(0.4), colour = grey(0.4)),
+    strip.text = element_text(colour = "white", size = 10, margin = unit(rep(3,4), "points")),
+    legend.text = element_text(colour = grey(0.4), size = 10),
+    legend.title = element_text(colour = grey(0.4), size = 10),
   )
 }
 ```
@@ -80,17 +82,20 @@ df_main <- df_main %>%
   # one more join, this time with the annotation db
   # containing uniprot and categorial (KEGG Brite) data
   left_join(read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv")[c(1,4:6,11,20,22,27:32)], 
-    by = c("locus" = "GeneID"))
+    by = c("locus" = "GeneID")) %>% ungroup %>%
+  
+  # remove some empty rows (NA targets)
+  filter(!is.na(sgRNA_target))
 
 head(df_main)
 ```
 
 
-## Covariation of sgRNAs
+## Correlation of sgRNAs
 
-Each gene is represented by up to five sgRNAs. We can test if all or only some of the 5 sgRNAs are "behaving" in the same way in the same conditions, more mathematically speaking we can estimate the covariation. First let's summarize how many genes have 5, 4, 3 sgRNAs and so on associated with them.
+Each gene is represented by up to five sgRNAs. We can test if all or only some of the 5 sgRNAs are "behaving" in the same way in the same conditions, more mathematically speaking we can estimate the correlation of every sgRNA with another. First let's summarize how many genes have 5, 4, 3 sgRNAs and so on associated with them.
 
-```{r, message =FALSE}
+```{r, , fig.width = 6, fig.height = 3.5, message =FALSE}
 # N unique sgRNAs in dataset
 paste0("Number of unique sgRNAs: ", unique(df_main$sgRNA) %>% length)
 
@@ -107,5 +112,98 @@ df_main %>%
   custom_theme() +
   scale_fill_manual(values = custom_colors)
 ```
+
+Different methods can be used to estimate similarity between samples (sgRNAs). For example, factor analysis is a method to dissect underlying sources of variation within the dataset, and the contribution to overall variation. The most famous example is principal component analysis (PCA). More simple is to use the correlation coefficient of sgRNAs to each other to see if one of the sgRNAs contributes stronger to overall variation. The first gene in the data set, `aat`, has for example 5 sgRNAs with one of them (number 3) showing a different depletion pattern over time. This sgRNA should get a lower weight.
+
+```{r, fig.width = 8, fig.height = 4}
+df_main %>% filter(sgRNA_target == "aat") %>%
+  mutate(sgRNA_index = factor(sgRNA_index)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
+  geom_line() + geom_point() +
+  facet_wrap(~ condition, ncol = 4) +
+  custom_theme() +
+  scale_color_manual(values = custom_colors)
+```
+
+Another example is a strictly an apparently strictly essential gene, encoding the ribosomal protein `rps10`. Most of the sgRNA repressor strains are depleted, the correlation between sgRNAs is very high.
+
+```{r, fig.width = 8, fig.height = 4}
+df_main %>% filter(sgRNA_target == "rps10") %>%
+  mutate(sgRNA_index = factor(sgRNA_index)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
+  geom_line() + geom_point() +
+  facet_wrap(~ condition, ncol = 4) +
+  custom_theme() +
+  scale_color_manual(values = custom_colors)
+```
+
+A correlation score can be calculated by by computing the correlation coefficient of all sgRNAs to each other.
+This score is robustly summarized by taking the median, and rescaling it from the respective minima and maxima [-1, 1] to [0, 1].
+This serves as weight for each sgRNA to calculate the (global) weighted mean of log2 FC over all sgRNAs. The following example shows the correlation matrix for the 5 `rps10` sgRNAs, and their weights.
+
+```{r, fig.width = 4, fig.height = 4}
+cor_matrix <- df_main %>% filter(sgRNA_target == "rps10") %>% ungroup %>%
+  select(sgRNA_index, log2FoldChange, group) %>%
+  pivot_wider(names_from = group, values_from = log2FoldChange) %>%
+  arrange(sgRNA_index) %>% column_to_rownames("sgRNA_index") %>%
+  as.matrix %>% t %>% cor(method = "pearson")
+
+weights <- cor_matrix %>% replace(., . == 1, NA) %>%
+  apply(2, function(x) median(x, na.rm = TRUE)) %>%
+  scales::rescale(from = c(-1, 1), to = c(0, 1))
+
+# plot heatmap
+lattice::levelplot(cor_matrix,
+  col.regions = colorRampPalette(custom_colors[c(1,5,2)])(20))
+
+# print weights
+weights
+```
+
+-----------
+
+Now we can create a function that will compute weights for all sgRNAs, and add the weights to the data set.
+
+```{r, warning = FALSE}
+determine_weight <- function(index, value, group) {
+  # make correlation matrix
+  df <- data.frame(index = index, value = value, group = group)
+  cor_matrix <- pivot_wider(df, names_from = group, values_from = value) %>%
+    arrange(index) %>% column_to_rownames("index") %>%
+    as.matrix %>% t %>% cor(method = "pearson")
+  
+  # determine weights
+  weights <- cor_matrix %>% replace(., . == 1, NA) %>%
+    apply(2, function(x) median(x, na.rm = TRUE)) %>%
+    scales::rescale(from = c(-1, 1), to = c(0, 1)) %>%
+    enframe("index", "weight") %>% mutate(index = as.numeric(index))
+  
+  # return vector of weights the same order and length 
+  # as sgRNA index vector
+  left_join(df, weights, by = "index") %>% pull(weight)
+}
+
+df_main <- df_main %>% group_by(sgRNA_target) %>%
+  mutate(sgRNA_weight = determine_weight(sgRNA_index, log2FoldChange, group))
+```
+
+----------
+
+Plot the weight of each sgRNA to see if there's position bias. There is none.
+
+```{r, warning = FALSE}
+df_main %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_weight) %>%
+  filter(sgRNA_index <= 5) %>%
+  distinct %>%
+  # plot
+  ggplot(aes(x = factor(sgRNA_index), y = sgRNA_weight)) +
+  geom_violin() + ylim(-0.05, 1.05) +
+  stat_summary(fun.data = mean_sdl, geom = "pointrange",
+    size = 0.7, color = "red") +
+  custom_theme()
+```
+
+## Summarize sgRNA fitness to gene fitness
 
 
