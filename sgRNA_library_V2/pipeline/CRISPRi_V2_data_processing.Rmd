@@ -21,6 +21,9 @@ Load required packages.
 
 ```{r, message = FALSE }
 library(tidyverse)
+library(lattice)
+library(latticeExtra)
+library(latticetools)
 ```
 
 Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
@@ -30,11 +33,11 @@ load("../data/input/DESeq2_result.Rdata", )
 df_main <- DESeq_result_table; rm(DESeq_result_table)
 ```
 
-Make a custom theme that is reused for all later plots.
 
-```{r}
+```{r, echo = FALSE}
+# custom ggplot2 theme that is reused for all later plots
 custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
-custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0) {
+custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
   theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
     plot.margin = unit(c(12,12,12,12), "points"),
     axis.ticks.length = unit(0.2, "cm"),
@@ -49,6 +52,7 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
     strip.text = element_text(colour = "white", size = 10, margin = unit(rep(3,4), "points")),
     legend.text = element_text(colour = grey(0.4), size = 10),
     legend.title = element_text(colour = grey(0.4), size = 10),
+    ...
   )
 }
 ```
@@ -91,7 +95,7 @@ head(df_main)
 ```
 
 
-## Correlation of sgRNAs
+## Number of sgRNAs
 
 Each gene is represented by up to five sgRNAs. We can test if all or only some of the 5 sgRNAs are "behaving" in the same way in the same conditions, more mathematically speaking we can estimate the correlation of every sgRNA with another. First let's summarize how many genes have 5, 4, 3 sgRNAs and so on associated with them.
 
@@ -113,13 +117,15 @@ df_main %>%
   scale_fill_manual(values = custom_colors)
 ```
 
+## Correlation of sgRNAs
+
 Different methods can be used to estimate similarity between samples (sgRNAs). For example, factor analysis is a method to dissect underlying sources of variation within the dataset, and the contribution to overall variation. The most famous example is principal component analysis (PCA). More simple is to use the correlation coefficient of sgRNAs to each other to see if one of the sgRNAs contributes stronger to overall variation. The first gene in the data set, `aat`, has for example 5 sgRNAs with one of them (number 3) showing a different depletion pattern over time. This sgRNA should get a lower weight.
 
 ```{r, fig.width = 8, fig.height = 4}
 df_main %>% filter(sgRNA_target == "aat") %>%
   mutate(sgRNA_index = factor(sgRNA_index)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
-  geom_line() + geom_point() +
+  geom_line(size = 1) + geom_point(size = 2) +
   facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = custom_colors)
@@ -131,7 +137,7 @@ Another example is a strictly an apparently strictly essential gene, encoding th
 df_main %>% filter(sgRNA_target == "rps10") %>%
   mutate(sgRNA_index = factor(sgRNA_index)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
-  geom_line() + geom_point() +
+  geom_line(size = 1) + geom_point(size = 2) +
   facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = custom_colors)
@@ -176,7 +182,8 @@ determine_weight <- function(index, value, group) {
   weights <- cor_matrix %>% replace(., . == 1, NA) %>%
     apply(2, function(x) median(x, na.rm = TRUE)) %>%
     scales::rescale(from = c(-1, 1), to = c(0, 1)) %>%
-    enframe("index", "weight") %>% mutate(index = as.numeric(index))
+    enframe("index", "weight") %>% mutate(index = as.numeric(index)) %>%
+    mutate(weight = replace(weight, is.na(weight), 1))
   
   # return vector of weights the same order and length 
   # as sgRNA index vector
@@ -191,19 +198,171 @@ df_main <- df_main %>% group_by(sgRNA_target) %>%
 
 Plot the weight of each sgRNA to see if there's position bias. There is none.
 
-```{r, warning = FALSE}
+```{r, fig.width = 5, fig.height = 4}
 df_main %>%
   select(sgRNA_target, sgRNA_index, sgRNA_weight) %>%
   filter(sgRNA_index <= 5) %>%
   distinct %>%
   # plot
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_weight)) +
-  geom_violin() + ylim(-0.05, 1.05) +
+  geom_violin() + 
+  coord_cartesian(ylim = c(-0.05, 1.05)) +
   stat_summary(fun.data = mean_sdl, geom = "pointrange",
     size = 0.7, color = "red") +
   custom_theme()
 ```
 
+We can also quantify how many genes have strongly correlated sgRNAs and how many have outliers. In order to do this, the median weight of the (up to) 5 sgRNAs per gene is plotted. Generally, the median weight ranges between 0.5 and 1.0, showing on average good correlation.
+
+```{r, fig.width = 5, fig.height = 4}
+df_main %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_weight) %>%
+  filter(sgRNA_index <= 5) %>%
+  distinct %>% group_by(sgRNA_target) %>%
+  summarize(
+    median_sgRNA_weight = median(sgRNA_weight),
+    min_sgRNA_weight = min(sgRNA_weight)
+  ) %>%
+  # plot
+  ggplot(aes(x = median_sgRNA_weight)) +
+  geom_histogram(bins = 40, fill = custom_colors[1], alpha = 0.7) +
+  custom_theme()
+```
+
+## Position bias of sgRNA repression strength
+
+Another question is if the binding position of the sgRNAs is correlated to the strength of repression. In other words, if sgRNAs binding closer to the promoter have a stronger ability to repress a gene. We perform this analysis for genes only, as the absolute majority has 5 sgRNAs. We also use only the latest time point with --presumably-- the strongest effect on repression.
+
+```{r, fig.width = 5, fig.height = 4}
+df_main %>%
+  filter(sgRNA_index <= 5, sgRNA_type == "gene", time == 10) %>%
+  ggplot(aes(x = factor(sgRNA_index), y = log2FoldChange)) +
+  geom_boxplot(notch = FALSE, outlier.shape = ".") +
+  coord_cartesian(ylim = c(-2, 2)) +
+  stat_summary(fun.data = mean_sdl, geom = "pointrange",
+    size = 0.7, color = "red") +
+  custom_theme()
+```
+
+
+
 ## Summarize sgRNA fitness to gene fitness
 
+With the weight per sgRNA, we can compute the **weighted mean of all sgRNAs**, but also the standard **arithmetic mean** for comparison. Metrics are calculated for log2 FC, and fitness.
 
+```{r}
+df_gene <- df_main %>%
+  
+  # keep all annotation columns
+  group_by(sgRNA_target, sgRNA_type, locus, condition, time, Process, 
+    Pathway, Protein, Gene.names, Gene.ontology.IDs, Length, MolWeight, location, start_bp, end_bp) %>%
+  
+  # summarize FC and fitness with and without weights
+  summarize(.groups = "drop",
+    mean_log2FoldChange = mean(log2FoldChange),
+    wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_weight),
+    sd_log2FoldChange = sd(log2FoldChange),
+    mean_fitness = mean(fitness),
+    wmean_fitness = weighted.mean(fitness, sgRNA_weight),
+    sd_fitness = sd(fitness)
+  )
+```
+
+A comparison of log2 FC aggregated by weighted mean or by regular mean shows marginal differences between the two metrics. The plot below shows the first 36 genes by alphabetical order, for one selected condition only.
+
+```{r, fig.width = 8, fig.height = 8}
+df_gene %>% filter(
+    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
+    condition == "1% CO2, BG11, 1000uE") %>%
+  pivot_longer(cols = matches("mean_log2FoldChange"), names_to = "metric", values_to = "log2 FC") %>%
+  mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
+  ggplot(aes(x = time, y = `log2 FC`, 
+    ymin = `log2 FC`-sd_log2FoldChange, ymax = `log2 FC`+sd_log2FoldChange, color = metric)) +
+  geom_linerange(size = 1) + geom_line(size = 1) + geom_point(size = 2) +
+  facet_wrap(~ sgRNA_target, ncol = 6) +
+  custom_theme(legend.position = "top") +
+  coord_cartesian(ylim = c(-5, 5)) +
+  scale_color_manual(values = custom_colors)
+```
+
+The same control can be performed for gene fitness, that is, the AUC of log2 FC over all time points, for each individual sgRNA. Fitness was also summarized using the mean, or weighted mean, for each of the 36 first genes by alphabetical order and one selected condition only. We can conclude from the plot below that mean and weighted mean only result in marginal difference in estimation of fitness, and continue with the weighted versions for all following analyses.
+
+```{r, fig.width = 8, fig.height = 4}
+df_gene %>% filter(
+    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
+    condition == "1% CO2, BG11, 1000uE", time == 0) %>%
+  pivot_longer(cols = matches("mean_fitness"), names_to = "metric", values_to = "fitness") %>%
+  mutate(metric = str_remove(metric, "_fitness")) %>%
+  ggplot(aes(x = sgRNA_target, y = fitness, 
+    ymin = fitness-sd_fitness, ymax = fitness+sd_fitness, fill = metric, color = metric)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(position = "dodge", size = 1) +
+  custom_theme(legend.position = "top") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_manual(values = custom_colors[1:2]) +
+  scale_color_manual(values = custom_colors[1:2])
+```
+
+## Global distribution of gene fitness
+
+```{r, fig.width = 8, fig.height = 4}
+df_gene %>% filter(time == 0) %>%
+  ggplot(aes(x = wmean_fitness, fill = sgRNA_type)) +
+  geom_histogram(bins = 100) +
+  coord_cartesian(xlim = c(-2, 2), ylim = c(0, 1000)) +
+  facet_wrap( ~ condition, ncol = 4) +
+  custom_theme() +
+  scale_fill_manual(values = custom_colors[3:4])
+```
+
+
+## Behavior of control sgRNAs
+
+Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness.
+
+
+```{r, fig.width = 8, fig.height = 4}
+df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_target)) +
+  geom_line(size = 1) + geom_point(size = 2) + ylim(-3, 3) +
+  facet_wrap(~ condition, ncol = 4) +
+  custom_theme() +
+  scale_color_manual(values = rep_along(1:10, custom_colors))
+```
+
+# Unsupervised clustering of genes
+
+## Cluster genes by similarity
+
+```{r, fig.width = 8, fig.height = 1.6}
+# generate colorpalette for heatmap
+heat_cols <- colorspace::diverging_hcl(n = 7, h = c(255, 12), c = c(50, 80), l = c(20, 97), power = c(1, 1.3))
+
+# create a matrix from wide fitness data for plotting heatmap
+mat_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
+  select(locus, condition, wmean_fitness) %>%
+  mutate(wmean_fitness = wmean_fitness %>%
+    replace(., . > 3, 3) %>% replace(., . < -3, 3)) %>%
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  #filter(if_any(.cols = matches("uE$"), ~ !between(., -1.5, 1.5))) %>%
+  column_to_rownames(var = "locus") %>%
+  as.matrix
+
+# create cluster for reordering
+mat_cluster <- mat_heatmap %>% dist %>% hclust(method = "ward.D")
+mat_heatmap <- mat_heatmap[order.dendrogram(as.dendrogram(mat_cluster)), c(1,3,2,4,6,5,7)]
+
+# plot heatmap
+plot_heatmap <- levelplot(mat_heatmap,
+  par.settings = custom.colorblind(),
+  col.regions = colorRampPalette(heat_cols)(16),
+  at = seq(-3, 3, 0.5), aspect = "fill",
+  xlab = paste0("sgRNA (", nrow(mat_heatmap),")"), ylab = "", scales = list(x = list(draw = FALSE)),
+  panel = function(x, y, z, ...) {
+    panel.levelplot(x, y, z, ...)
+    panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
+  }
+)
+
+print(plot_heatmap)
+```
