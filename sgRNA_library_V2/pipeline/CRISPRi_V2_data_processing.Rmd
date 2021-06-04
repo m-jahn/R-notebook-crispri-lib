@@ -189,7 +189,8 @@ determine_weight <- function(index, value, group) {
   left_join(df, weights, by = "index") %>% pull(weight)
 }
 
-df_main <- df_main %>% group_by(sgRNA_target) %>%
+df_main <- df_main %>%
+  group_by(sgRNA_target) %>%
   mutate(sgRNA_weight = determine_weight(sgRNA_index, log2FoldChange, group))
 ```
 
@@ -200,7 +201,7 @@ The correlation of each sgRNA with each other is a "global" parameter as it is i
 
 We calculate sgRNA efficiency $E$ as the median absolute fitness (AUC of log2FC over time) of an sgRNA $x = 1 .. m$ over all observations [conditions] $y = 1 .. n$.
 
-$E_x=median(fitness_{x1, y1}, fitness_{x1, y2}, ..., fitness_{x1, yn})$
+$E_x=median(abs(fitness_{x1, y1}, fitness_{x1, y2}, ..., fitness_{x1, yn}))$
 
 To normalize between all sgRNAs, $E$ is rescaled to a range between 0 and 1.
 
@@ -232,10 +233,12 @@ df_main %>%
   distinct %>%
   # plot
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_weight)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.shape = "") +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
     label = round(median(x), 2)), geom = "text") +
-  coord_cartesian(ylim = c(-0.05, 1.05)) +
+  stat_summary(fun.data = function(x) c(y = 1.2, 
+    label = length(x)), geom = "text", color = grey(0.5)) +
+  coord_cartesian(ylim = c(-0.25, 1.25)) +
   custom_theme()
 ```
 
@@ -267,64 +270,95 @@ df_main %>%
   coord_cartesian(ylim = c(-0.25, 1.25)) +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
     label = round(median(x), 2)), geom = "text") +
+  stat_summary(fun.data = function(x) c(y = 1.2, 
+    label = length(x)), geom = "text", color = grey(0.5)) +
   custom_theme()
 ```
 
 ## Summarize sgRNA fitness to gene fitness
 
-With the correlation (weight) and the efficiency per sgRNA, we can compute the **weighted mean of all sgRNAs**, but also the standard **arithmetic mean** for comparison. Metrics are calculated for log2 FC, and fitness.
+With the correlation and the efficiency per sgRNA, we can compute the **weighted mean of all sgRNAs**. For comparison, we also test simple strategies such as the standard **arithmetic mean** and a top 1 and top 2 sgRNAs strategy. Metrics are calculated for log2 FC, and fitness.
 
-```{r}
+```{r, warning = FALSE, message = FALSE}
 df_gene <- df_main %>%
   
   # keep all annotation columns
   group_by(sgRNA_target, sgRNA_type, locus, condition, time, Process, 
-    Pathway, Protein, Gene.names, Gene.ontology.IDs, Length, MolWeight, location, start_bp, end_bp) %>%
+    Pathway, Protein, Gene.names, Gene.ontology.IDs, Length, MolWeight,
+    location, start_bp, end_bp) %>%
   
-  # summarize FC and fitness with and without weights
+  # summarize FC and fitness...
   summarize(.groups = "drop",
+    # log2 FC
     mean_log2FoldChange = mean(log2FoldChange),
-    wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_weight),
+    wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_weight * sgRNA_efficiency),
+    top1_log2FoldChange = log2FoldChange[which.max(sgRNA_efficiency)],
+    top2_log2FoldChange = mean(log2FoldChange[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
     sd_log2FoldChange = sd(log2FoldChange),
+    # fitness
     mean_fitness = mean(fitness),
-    wmean_fitness = weighted.mean(fitness, sgRNA_weight),
+    wmean_fitness = weighted.mean(fitness, sgRNA_weight * sgRNA_efficiency),
+    top1_fitness = fitness[which.max(sgRNA_efficiency)],
+    top2_fitness = mean(fitness[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
     sd_fitness = sd(fitness)
   )
 ```
 
-A comparison of log2 FC aggregated by weighted mean or by regular mean shows marginal differences between the two metrics. The plot below shows the first 36 genes by alphabetical order, for one selected condition only.
+A comparison of log2 FC aggregated by the different method shows clear differences. For the example gene `rps10` the weighted mean and the top method give similar results, representative of the stronger influence from highly depleted sgRNA repression strains. The regular mean is robust, but "shallow", probably underestimating the real effect n fitness. The top 1 method simply picks the most depleted/enriched sgRNA (over all conditions) as representative.
 
-```{r, fig.width = 8, fig.height = 8}
-df_gene %>% filter(
-    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
-    condition == "1% CO2, BG11, 1000uE") %>%
-  pivot_longer(cols = matches("mean_log2FoldChange"), names_to = "metric", values_to = "log2 FC") %>%
+```{r, fig.width = 8, fig.height = 4}
+df_gene %>% filter(sgRNA_target == "rps10") %>%
+  pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
   mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
-  ggplot(aes(x = time, y = `log2 FC`, 
-    ymin = `log2 FC`-sd_log2FoldChange, ymax = `log2 FC`+sd_log2FoldChange, color = metric)) +
-  geom_linerange(size = 1) + geom_line(size = 1) + geom_point(size = 2) +
+  ggplot(aes(x = time, y = log2FoldChange, 
+    ymin = log2FoldChange-sd_log2FoldChange, 
+    ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
+  geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
+  facet_wrap(~ condition, ncol = 4) +
+  custom_theme(legend.position = "right") +
+  coord_cartesian(ylim = c(-3.75, 0.75)) +
+  scale_color_manual(values = custom_colors)
+```
+
+This plot shows a comparison of the 4 methods for the first 36 genes by alphabetical order, for one selected condition only (1% CO2, BG11, 1,000 µmol photons m-1 s-1). Here we can see that the top1 method is often but not always representative for the gene: For apcD or apcF, it does not seem representative compared to the mean, weighted mean, and top2 methods.
+
+```{r, fig.width = 9, fig.height = 9}
+df_gene %>% filter(
+    #str_detect(Gene.names, "rps"),
+    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
+    condition == "1% CO2, BG11, 1000uE"
+  ) %>%
+  pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
+  mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
+  ggplot(aes(x = time, y = log2FoldChange, 
+    ymin = log2FoldChange-sd_log2FoldChange,
+    ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
+  geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
   facet_wrap(~ sgRNA_target, ncol = 6) +
   custom_theme(legend.position = "top") +
   coord_cartesian(ylim = c(-5, 5)) +
   scale_color_manual(values = custom_colors)
 ```
 
-The same control can be performed for gene fitness, that is, the AUC of log2 FC over all time points, for each individual sgRNA. Fitness was also summarized using the mean, or weighted mean, for each of the 36 first genes by alphabetical order and one selected condition only. We can conclude from the plot below that mean and weighted mean only result in marginal difference in estimation of fitness, and continue with the weighted versions for all following analyses.
+The same control can be performed for gene fitness, that is, the AUC of log2 FC over all time points, for each individual sgRNA. Fitness was also summarized using the mean, weighted mean, or a top1 and top2 method for each of the 36 first genes by alphabetical order and one selected condition only. We can conclude from the plot below that mean and weighted mean only result in marginal difference in estimation of fitness, and continue with the weighted versions for all following analyses.
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 9, fig.height = 4.5}
 df_gene %>% filter(
+    #str_detect(Gene.names, "rps"),
     Gene.names %in% unique(.data[["Gene.names"]])[1:36],
-    condition == "1% CO2, BG11, 1000uE", time == 0) %>%
-  pivot_longer(cols = matches("mean_fitness"), names_to = "metric", values_to = "fitness") %>%
-  mutate(metric = str_remove(metric, "_fitness")) %>%
+    condition == "1% CO2, BG11, 1000uE"
+  ) %>%
+  pivot_longer(cols = matches("[n12]_fitness"), names_to = "metric", values_to = "fitness") %>%
+  mutate(metric = str_remove(metric, "_fitness")) %>% distinct %>%
   ggplot(aes(x = sgRNA_target, y = fitness, 
-    ymin = fitness-sd_fitness, ymax = fitness+sd_fitness, fill = metric, color = metric)) +
+    ymin = fitness-sd_fitness, 
+    ymax = fitness+sd_fitness, fill = fct_inorder(metric), color = fct_inorder(metric))) +
   geom_col(position = "dodge") +
   geom_errorbar(position = "dodge", size = 1) +
   custom_theme(legend.position = "top") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_manual(values = custom_colors[1:2]) +
-  scale_color_manual(values = custom_colors[1:2])
+  scale_fill_manual(values = custom_colors[1:4]) +
+  scale_color_manual(values = custom_colors[1:4])
 ```
 
 ## Global distribution of gene fitness
@@ -342,13 +376,12 @@ df_gene %>% filter(time == 0) %>%
 
 ## Behavior of control sgRNAs
 
-Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness.
-
+Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness, except probably 2 sgRNAs in one specific condition.
 
 ```{r, fig.width = 8, fig.height = 4}
 df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_target)) +
-  geom_line(size = 1) + geom_point(size = 2) + ylim(-3, 3) +
+  geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
   facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = rep_along(1:10, custom_colors))
@@ -358,35 +391,60 @@ df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
 
 ## Cluster genes by similarity
 
-```{r, fig.width = 8, fig.height = 1.6}
+```{r, fig.width = 8, fig.height = 5}
+# library to work dendrograms
+library(dendextend)
+
 # generate colorpalette for heatmap
 heat_cols <- colorspace::diverging_hcl(n = 7, h = c(255, 12), c = c(50, 80), l = c(20, 97), power = c(1, 1.3))
 
-# create a matrix from wide fitness data for plotting heatmap
-mat_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
+# create a matrix-like df with wide fitness data for plotting heatmap
+df_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
   select(locus, condition, wmean_fitness) %>%
   mutate(wmean_fitness = wmean_fitness %>%
     replace(., . > 3, 3) %>% replace(., . < -3, 3)) %>%
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
-  #filter(if_any(.cols = matches("uE$"), ~ !between(., -1.5, 1.5))) %>%
-  column_to_rownames(var = "locus") %>%
-  as.matrix
+  column_to_rownames(var = "locus")
+
 
 # create cluster for reordering
 mat_cluster <- mat_heatmap %>% dist %>% hclust(method = "ward.D")
 mat_heatmap <- mat_heatmap[order.dendrogram(as.dendrogram(mat_cluster)), c(1,3,2,4,6,5,7)]
 
+
+
+#filter(if_any(.cols = matches("uE$"), ~ !between(., -1.5, 1.5))) %>%
+#  as.matrix
+
+plot_cluster_dend <- mat_cluster %>%
+  as.dendrogram %>%
+  set("branches_k_color", k = 5) %>%
+  set("labels_cex", 0) %>%
+  set("branches_lwd", 0.5) %>%
+  as.ggdend %>%
+  ggplot()
+```
+
+
+```{r, fig.width = 8, fig.height = 3}
 # plot heatmap
 plot_heatmap <- levelplot(mat_heatmap,
   par.settings = custom.colorblind(),
   col.regions = colorRampPalette(heat_cols)(16),
   at = seq(-3, 3, 0.5), aspect = "fill",
-  xlab = paste0("sgRNA (", nrow(mat_heatmap),")"), ylab = "", scales = list(x = list(draw = FALSE)),
+  xlab = paste0("sgRNA (", nrow(mat_heatmap),")"),
+  ylab = "", scales = list(x = list(draw = FALSE)),
   panel = function(x, y, z, ...) {
     panel.levelplot(x, y, z, ...)
     panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
   }
 )
 
-print(plot_heatmap)
+gridExtra::grid.arrange(
+  # coords for unit: top, right, bottom, left
+  plot_cluster_dend + 
+    theme(plot.margin = unit(c(-1.5, 0.08, -0.4, 0.265),"npc")),
+  plot_heatmap,
+  nrow = 2
+)
 ```
