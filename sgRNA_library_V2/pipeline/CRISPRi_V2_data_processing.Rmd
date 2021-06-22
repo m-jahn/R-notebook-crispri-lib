@@ -20,12 +20,14 @@ This R notebook details the data processing and visualization for growth competi
 Load required packages.
 
 ```{r, message = FALSE }
-library(tidyverse)
-library(lattice)
-library(latticeExtra)
-library(latticetools)
-library(scales)
-library(dendextend)
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(lattice)
+  library(latticeExtra)
+  library(latticetools)
+  library(scales)
+  library(dendextend)
+})
 ```
 
 Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
@@ -283,6 +285,8 @@ df_main %>%
   custom_theme()
 ```
 
+# Gene fitness calculation
+
 ## Summarize sgRNA fitness to gene fitness
 
 With the correlation and the efficiency per sgRNA, we can compute the **weighted mean of all sgRNAs**. For comparison, we also test simple strategies such as the standard **arithmetic mean** and a top 1 and top 2 sgRNAs strategy. Metrics are calculated for log2 FC, and fitness.
@@ -457,9 +461,8 @@ plot_heatmap_sig <- levelplot(mat_heatmap_sig,
   }
 )
 
-plot_cluster_dend <- mat_cluster_sig %>%
-  as.dendrogram %>% #reorder(., order(cutree(., k = 5))) %>% cutree(k = 5) %>%
-  set("branches_k_col", custom_colors[c(3,5,1,4,2)], k = 5) %>%
+plot_cluster_dend <- mat_cluster_sig %>% as.dendrogram %>%
+  set("branches_k_col", custom_colors[1:5], k = 5) %>%
   set("branches_lwd", 0.5) %>%
   as.ggdend %>%
   ggplot(labels = FALSE)
@@ -477,13 +480,14 @@ Clustering shows that the depletion/enrichment patterns in different conditions 
 
 - genes heavily depleted in all conditions
 - genes somewhat depleted in all conditions
-- genes depleted **only in low CO2, low light** (air, 60 µE)
-- genes enriched **only in high CO2, high light** (1% CO2, 1000 µE)
+- genes depleted **primarily in low light**
+- genes depleted **primarily in low light + glucose (+DCMU)**
+- genes enriched **in high CO2, high light**
 
 ```{r}
 df_gene <- mat_cluster_sig %>%
-  as.dendrogram %>%
-  cutree(k = 5) %>% enframe("locus", "cluster") %>%
+  cutreeord(k = 5) %>% enframe("locus", "cluster") %>%
+  mutate(cluster_order = match(locus, mat_cluster_sig$labels[mat_cluster_sig$order])) %>%
   right_join(df_gene, by = "locus")
 
 df_gene %>% select(locus, cluster) %>%
@@ -497,6 +501,9 @@ We use two different dimensionality reduction methods, **nMDS** and **t-SNE**. W
 ```{r, fig.width = 8, fig.height = 4}
 library(tsne)
 library(vegan)
+
+# set a seed to obtain same pattern for stochastic methods
+set.seed(123)
 
 # run nMDS analysis
 NMDS <- df_heatmap2 %>% as.matrix %>% dist %>% metaMDS
@@ -527,88 +534,148 @@ gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
 
 ## Extract and analyze most interesting gene clusters
 
-- Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
+**Cluster 2**: Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 7.5, fig.height = 3.5}
-df_gene %>% filter(cluster == 5, time == 0) %>%
+df_gene %>% filter(cluster == 2, time == 0) %>%
   ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
     ymin = wmean_fitness-sd_fitness, 
     ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
   geom_col(position = "dodge") +
   geom_errorbar(position = "dodge", size = 1) +
-  custom_theme() + labs(title = "Cluster 5: enriched in high light, high CO2") +
+  custom_theme() + labs(title = "Cluster 2: mutants enriched in high light/CO2") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_manual(values = custom_colors) +
   scale_color_manual(values = custom_colors)
 ```
 
+More space-effcient representation as a heat map.
+
+```{r, fig.width = 5.0, fig.height = 2.5}
+df_gene %>% filter(cluster == 2, time == 0) %>%
+  arrange(cluster_order) %>% 
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
+  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Cluster 2: high light/CO2", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_distiller(palette = "RdBu")
+  #palettes: BrBG, PiYG, PRGn, PuOr, RdBu, RdGy, RdYlBu, RdYlGn, Spectral
+```
+
+**Cluster 4** Genes depleted **on glucose + low light** (0.05 or 1% CO2, glucose (+DCMU), 60 µmol photons m^-2 s^-1)
+
+```{r, fig.width = 8.5, fig.height = 2.5}
+df_gene %>% filter(cluster == 4, time == 0) %>%
+  arrange(cluster_order) %>% 
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
+  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Cluster 4: mutants depleted on glucose + low light", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_distiller(palette = "RdBu")
+```
+
+**Cluster 5**: Genes depleted **on low light** (0.05 or 1% CO2, 60 µmol photons m^-2 s^-1)
+
+```{r, fig.width = 8.5, fig.height = 2.5}
+df_gene %>% filter(cluster == 5, time == 0) %>%
+  arrange(cluster_order) %>% 
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
+  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Cluster 5: mutants depleted on low light", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_distiller(palette = "RdBu")
+```
+
 - **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
-```{r, fig.width = 8.5, fig.height = 3.5}
+
+```{r, fig.width = 6.5, fig.height = 2.5}
 df_gene %>% filter(str_detect(Gene.names, "[ac]pc"), time == 0) %>%
-  ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
-    ymin = wmean_fitness-sd_fitness, 
-    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
-  geom_col(position = "dodge") +
-  geom_errorbar(position = "dodge", size = 1) +
-  custom_theme(legend.position = 0) +
-  labs(title = "Apc/Cpc mutants are also enriched in high light, high CO2") +
+  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Apc/Cpc mutants enriched in high light/CO2", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  scale_fill_manual(values = custom_colors) +
-  scale_color_manual(values = custom_colors)
+  scale_fill_distiller(palette = "RdBu")
 ```
 
 ## Interaction analysis using STRING database
 
 The next step is to retrieve additional information about these clusters to find correlated genes, groups, pathways, or regulatory networks. We can use the STRING database for this task.
 
-```{r, message = FALSE}
-library(ggraph)
-library(tidygraph)
+```{r, echo = FALSE}
+suppressPackageStartupMessages({
+  library(ggraph)
+  library(tidygraph)
+})
 
 # function to retrieve network interaction data from STRING DB
 # separate gene IDs by "%0d"; species/taxon ID for Synechocystis sp. PCC 6803: 1148
 # (see https://string-db.org/cgi/organisms)
-retrieve_STRING <- function(gene_ID, taxon_ID, min_score = 0000, ref = NULL) {
+plot_STRING <- function(gene_ID, taxon_ID, 
+  min_score = 0000, ref = NULL, plot = TRUE, groups = NULL
+) {
   gene_list <- paste(gene_ID, collapse = "%0d")
   string_graph <- paste0(
     "https://string-db.org/api/tsv/network?identifiers=", 
     gene_list, "&species=", taxon_ID, "&required_score=", min_score) %>%
-  read_tsv(col_types = cols()) %>%
-  select(-stringId_A, -stringId_B) %>%
-  as_tbl_graph()
+    read_tsv(col_types = cols()) %>%
+    select(-stringId_A, -stringId_B) %>%
+    as_tbl_graph()
   if (!is.null(ref)) {
-    left_join(string_graph, ref, by = "name")
-  } else {
-    string_graph
+    # add gene annotation
+    string_graph <- left_join(string_graph, ref, by = "name")
+  }
+  if (plot) {
+    # function to space labels in certain distance to circle
+    nudge_circle <- function(n, size_x = 0.2, size_y = 0.15) {
+      nudge_x = size_x * -cos(seq(0.5*pi, 2.5*pi, length.out = n))
+      nudge_y = size_y * sin(seq(0.5*pi, 2.5*pi, length.out = n))
+      list(x = nudge_x, y = nudge_y)
+    }
+    # plot using ggraph
+    n_nodes <- string_graph %>% activate(nodes) %>% pull(name) %>% length
+    string_graph %>% arrange(across(matches(groups))) %>% activate(edges) %>%
+      filter(score >= 0.4) %>%
+      ggraph(layout = 'linear', circular = TRUE) +
+      geom_edge_arc(colour = grey(0.6, 0.5), aes(width = score)) + 
+      geom_node_point(aes(colour = get(groups)), size = 4) +
+      geom_node_text(nudge_x = nudge_circle(n_nodes)$x, 
+        nudge_y = nudge_circle(n_nodes)$y, 
+        size = 3, aes(label = name, colour = get(groups))) +
+      scale_edge_width(range = c(0.2, 2)) +
+      theme_graph(background = "white", foreground = grey(0.5),
+        plot_margin = margin(10, 10, 10, 10))
   }
 }
-
-# function to space labels in certain distance to circle
-nudge_circle <- function(n, size_x = 0.15, size_y = 0.1) {
-  nudge_x = size_x * -cos(seq(0.5*pi, 2.5*pi, length.out = n))
-  nudge_y = size_y * sin(seq(0.5*pi, 2.5*pi, length.out = n))
-  list(x = nudge_x, y = nudge_y)
-}
 ```
 
 
-```{r, fig.width = 8.5, fig.height = 4.8}
-graph_cluster <- retrieve_STRING(
-  gene_ID = filter(df_gene, cluster == 1) %>% pull(locus) %>% unique,
+```{r, fig.width = 6.5, fig.height = 3.3}
+plot_STRING(
+  gene_ID = filter(df_gene, cluster == 4) %>% pull(locus) %>% unique,
   taxon_ID = 1148,
   ref = df_gene %>% select(sgRNA_target, locus, Process, Pathway, Protein, Gene.names) %>% 
-    distinct %>% rename(name = sgRNA_target)
+    distinct %>% rename(name = sgRNA_target),
+  groups = "Process"
 )
-
-graph_cluster %>% arrange(Process) %>% activate(edges) %>%
-  filter(score >= 0.4) %>%
-  ggraph(layout = 'linear', circular = TRUE) +
-  geom_edge_arc(colour = grey(0.6, 0.5), aes(width = score)) + 
-  geom_node_point(aes(colour = Process), size = 5) +
-  geom_node_text(nudge_x = nudge_circle(74)$x, nudge_y = nudge_circle(74)$y, 
-    size = 3.2, aes(label = name, colour = Process)) +
-  scale_edge_width(range = c(0.2, 2)) +
-  theme_graph(background = "white", foreground = grey(0.5),
-    plot_margin = margin(10, 10, 10, 10))
 ```
+
+
+```{r, fig.width = 6.2, fig.height = 3.3}
+plot_STRING(
+  gene_ID = filter(df_gene, cluster == 5) %>% pull(locus) %>% unique,
+  taxon_ID = 1148,
+  ref = df_gene %>% select(sgRNA_target, locus, Process, Pathway, Protein, Gene.names) %>% 
+    distinct %>% rename(name = sgRNA_target),
+  groups = "Process"
+)
+```
+
+
+# Gene enrichment analysis
+
+## KEGG pathway enrichment
+
