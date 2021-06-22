@@ -25,6 +25,7 @@ library(lattice)
 library(latticeExtra)
 library(latticetools)
 library(scales)
+library(dendextend)
 ```
 
 Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
@@ -40,6 +41,7 @@ df_main <- DESeq_result_table; rm(DESeq_result_table)
 custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
 custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
   theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
+    title = element_text(colour = grey(0.4), size = 10),
     plot.margin = unit(c(12,12,12,12), "points"),
     axis.ticks.length = unit(0.2, "cm"),
     axis.ticks = element_line(colour = grey(0.4), linetype = "solid", lineend = "round"),
@@ -52,7 +54,8 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
     strip.background = element_rect(fill = grey(0.4), colour = grey(0.4)),
     strip.text = element_text(colour = "white", size = 10, margin = unit(rep(3,4), "points")),
     legend.text = element_text(colour = grey(0.4), size = 10),
-    legend.title = element_text(colour = grey(0.4), size = 10),
+    legend.title = element_blank(),
+    legend.background = element_blank(),
     ...
   )
 }
@@ -83,6 +86,11 @@ df_main <- df_main %>%
   left_join(
     read_tsv("../data/input/mapping_trivial_names.tsv", col_types = cols()),
     by = c("sgRNA_target" = "gene")) %>%
+  
+  # remove 1 condition without response ("BG11") and reformat
+  filter(condition != "BG11") %>%
+  mutate(condition = str_remove(condition, "BG11, ") %>%
+    str_replace("air", "0.05% CO2")) %>%
   
   # one more join, this time with the annotation db
   # containing uniprot and categorial (KEGG Brite) data
@@ -124,12 +132,12 @@ Different methods can be used to estimate similarity between samples (sgRNAs). F
 
 This is an example of an apparently strictly essential gene, encoding the ribosomal protein `rps10`. Most of the sgRNA repressor strains are depleted, the correlation between sgRNAs is high. The strength of depletion varies though, and the strain with sgRNA 3 is not depleted at all. We want to give higher weights to sgRNAs that correlate well with each other, and/or show stronger effect (depletion/enrichment).
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 7, fig.height = 4}
 df_main %>% filter(sgRNA_target == "rps10") %>%
   mutate(sgRNA_index = factor(sgRNA_index)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
   geom_line(size = 1) + geom_point(size = 2) +
-  facet_wrap(~ condition, ncol = 4) +
+  facet_wrap(~ condition, ncol = 3) +
   custom_theme() +
   scale_color_manual(values = custom_colors)
 ```
@@ -306,7 +314,7 @@ df_gene <- df_main %>%
 
 A comparison of log2 FC aggregated by the different method shows clear differences. For the example gene `rps10` the weighted mean and the top method give similar results, representative of the stronger influence from highly depleted sgRNA repression strains. The regular mean is robust, but "shallow", probably underestimating the real effect n fitness. The top 1 method simply picks the most depleted/enriched sgRNA (over all conditions) as representative.
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 7, fig.height = 4}
 df_gene %>% filter(sgRNA_target == "rps10") %>%
   pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
   mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
@@ -314,7 +322,7 @@ df_gene %>% filter(sgRNA_target == "rps10") %>%
     ymin = log2FoldChange-sd_log2FoldChange, 
     ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
   geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
-  facet_wrap(~ condition, ncol = 4) +
+  facet_wrap(~ condition, ncol = 3) +
   custom_theme(legend.position = "right") +
   coord_cartesian(ylim = c(-3.75, 0.75)) +
   scale_color_manual(values = custom_colors)
@@ -324,9 +332,8 @@ This plot shows a comparison of the 4 methods for the first 36 genes by alphabet
 
 ```{r, fig.width = 9, fig.height = 9}
 df_gene %>% filter(
-    #str_detect(Gene.names, "rps"),
     Gene.names %in% unique(.data[["Gene.names"]])[1:36],
-    condition == "1% CO2, BG11, 1000uE"
+    condition == "1% CO2, 1000uE"
   ) %>%
   pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
   mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
@@ -346,7 +353,7 @@ The same control can be performed for gene fitness, that is, the AUC of log2 FC 
 df_gene %>% filter(
     #str_detect(Gene.names, "rps"),
     Gene.names %in% unique(.data[["Gene.names"]])[1:36],
-    condition == "1% CO2, BG11, 1000uE"
+    condition == "1% CO2, 1000uE"
   ) %>%
   pivot_longer(cols = matches("[n12]_fitness"), names_to = "metric", values_to = "fitness") %>%
   mutate(metric = str_remove(metric, "_fitness")) %>% distinct %>%
@@ -363,12 +370,14 @@ df_gene %>% filter(
 
 ## Global distribution of gene fitness
 
-```{r, fig.width = 8, fig.height = 4}
+Global distribution of weighted mean fitness for all genes. Effect of ncRNA repression seems to be much lower than effect of gene repression.
+
+```{r, fig.width = 7, fig.height = 4}
 df_gene %>% filter(time == 0) %>%
   ggplot(aes(x = wmean_fitness, fill = sgRNA_type)) +
   geom_histogram(bins = 100) +
   coord_cartesian(xlim = c(-2, 2), ylim = c(0, 1000)) +
-  facet_wrap( ~ condition, ncol = 4) +
+  facet_wrap( ~ condition, ncol = 3) +
   custom_theme() +
   scale_fill_manual(values = custom_colors[3:4])
 ```
@@ -378,11 +387,11 @@ df_gene %>% filter(time == 0) %>%
 
 Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness, except probably 2 sgRNAs in one specific condition.
 
-```{r, fig.width = 8, fig.height = 4}
+```{r, fig.width = 7, fig.height = 4}
 df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_target)) +
   geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
-  facet_wrap(~ condition, ncol = 4) +
+  facet_wrap(~ condition, ncol = 3) +
   custom_theme() +
   scale_color_manual(values = rep_along(1:10, custom_colors))
 ```
@@ -392,46 +401,40 @@ df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
 ## Cluster genes by similarity
 
 ```{r, fig.width = 8, fig.height = 5}
-# library to work dendrograms
-library(dendextend)
-
 # generate colorpalette for heatmap
 heat_cols <- colorspace::diverging_hcl(n = 7, h = c(255, 12), c = c(50, 80), l = c(20, 97), power = c(1, 1.3))
 
 # create a matrix-like df with wide fitness data for plotting heatmap
-df_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
+df_heatmap <- df_gene %>%
+  filter(time == 0, !is.na(locus)) %>%
   select(locus, condition, wmean_fitness) %>%
-  mutate(wmean_fitness = wmean_fitness %>%
-    replace(., . > 3, 3) %>% replace(., . < -3, 3)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
   column_to_rownames(var = "locus")
 
+# subset of df with *significantly changed* genes
+df_heatmap2 <- df_heatmap %>%
+  filter(if_any(.cols = matches("uE$"), ~ !between(., -2, 2)))
 
 # create cluster for reordering
-mat_cluster <- mat_heatmap %>% dist %>% hclust(method = "ward.D")
-mat_heatmap <- mat_heatmap[order.dendrogram(as.dendrogram(mat_cluster)), c(1,3,2,4,6,5,7)]
+mat_cluster <- df_heatmap %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
+mat_heatmap <- df_heatmap %>% as.matrix %>%
+  .[order.dendrogram(as.dendrogram(mat_cluster)), 6:1]
 
-
-
-#filter(if_any(.cols = matches("uE$"), ~ !between(., -1.5, 1.5))) %>%
-#  as.matrix
-
-plot_cluster_dend <- mat_cluster %>%
-  as.dendrogram %>%
-  set("branches_k_color", k = 5) %>%
-  set("labels_cex", 0) %>%
-  set("branches_lwd", 0.5) %>%
-  as.ggdend %>%
-  ggplot()
+# repeat this step with subset of *significantly changed* genes
+mat_cluster_sig <- df_heatmap2 %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
+mat_heatmap_sig <- df_heatmap2 %>% as.matrix %>%
+  .[order.dendrogram(as.dendrogram(mat_cluster_sig)), 6:1]
 ```
 
 
-```{r, fig.width = 8, fig.height = 3}
-# plot heatmap
-plot_heatmap <- levelplot(mat_heatmap,
+Now we can plot _all_ genes, a subset with only significant genes, and a dendrogram for clustering.
+ 
+```{r, fig.width = 8, fig.height = 1.6}
+levelplot(mat_heatmap,
   par.settings = custom.colorblind(),
-  col.regions = colorRampPalette(heat_cols)(16),
-  at = seq(-3, 3, 0.5), aspect = "fill",
+  col.regions = colorRampPalette(heat_cols)(20),
+  at = seq(-4, 4, 0.5), aspect = "fill",
   xlab = paste0("sgRNA (", nrow(mat_heatmap),")"),
   ylab = "", scales = list(x = list(draw = FALSE)),
   panel = function(x, y, z, ...) {
@@ -439,12 +442,173 @@ plot_heatmap <- levelplot(mat_heatmap,
     panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
   }
 )
+```
+
+```{r, fig.width = 8, fig.height = 3}
+plot_heatmap_sig <- levelplot(mat_heatmap_sig,
+  par.settings = custom.colorblind(),
+  col.regions = colorRampPalette(heat_cols)(20),
+  at = seq(-4, 4, 0.5), aspect = "fill",
+  xlab = paste0("sgRNA (", nrow(mat_heatmap_sig),")"),
+  ylab = "", scales = list(x = list(draw = FALSE)),
+  panel = function(x, y, z, ...) {
+    panel.levelplot(x, y, z, ...)
+    panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
+  }
+)
+
+plot_cluster_dend <- mat_cluster_sig %>%
+  as.dendrogram %>% #reorder(., order(cutree(., k = 5))) %>% cutree(k = 5) %>%
+  set("branches_k_col", custom_colors[c(3,5,1,4,2)], k = 5) %>%
+  set("branches_lwd", 0.5) %>%
+  as.ggdend %>%
+  ggplot(labels = FALSE)
 
 gridExtra::grid.arrange(
   # coords for unit: top, right, bottom, left
   plot_cluster_dend + 
-    theme(plot.margin = unit(c(-1.5, 0.08, -0.4, 0.265),"npc")),
-  plot_heatmap,
+    theme(plot.margin = unit(c(0.1, 0.08, -0.35, 0.28),"npc")),
+  plot_heatmap_sig,
   nrow = 2
 )
+```
+
+Clustering shows that the depletion/enrichment patterns in different conditions are quite similar. Different clusters entail genes with:
+
+- genes heavily depleted in all conditions
+- genes somewhat depleted in all conditions
+- genes depleted **only in low CO2, low light** (air, 60 µE)
+- genes enriched **only in high CO2, high light** (1% CO2, 1000 µE)
+
+```{r}
+df_gene <- mat_cluster_sig %>%
+  as.dendrogram %>%
+  cutree(k = 5) %>% enframe("locus", "cluster") %>%
+  right_join(df_gene, by = "locus")
+
+df_gene %>% select(locus, cluster) %>%
+  distinct %>% count(cluster)
+```
+
+## Visualize gene similarity by dimensionality reduction methods
+
+We use two different dimensionality reduction methods, **nMDS** and **t-SNE**. We can check if these methods reproduce the clustering for the significantly regulated genes produced with `hclust`. Analysis shows that the small clusters are more strongly separated from the rest.
+
+```{r, fig.width = 8, fig.height = 4}
+library(tsne)
+library(vegan)
+
+# run nMDS analysis
+NMDS <- df_heatmap2 %>% as.matrix %>% dist %>% metaMDS
+df_nmds <- NMDS$points %>% as_tibble(rownames = "locus") %>%
+  left_join(df_gene %>% select(locus, cluster) %>% distinct)
+
+# run t-SNE analysis
+SNE <- tsne::tsne(df_heatmap2 %>% as.matrix %>% dist)
+df_tsne <- SNE %>% setNames(c("x", "y")) %>% as_tibble %>%
+  mutate(locus = rownames(df_heatmap2)) %>%
+  left_join(df_gene %>% select(locus, cluster) %>% distinct)
+
+plot_nmds <- df_nmds %>% 
+  ggplot(aes(x = MDS1, y = MDS2, color = factor(cluster))) +
+  geom_point(size = 2) + labs(title = "nMDS") +
+  custom_theme(legend.position = c(0.85, 0.25)) +
+  scale_color_manual(values = custom_colors)
+
+plot_tsne <- df_tsne %>% 
+  ggplot(aes(x = V1, y = V2, color = factor(cluster))) +
+  geom_point(size = 2) + labs(title = "t-SNE") +
+  custom_theme(legend.position = c(0.85, 0.78)) +
+  scale_color_manual(values = custom_colors)
+
+gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
+```
+
+
+## Extract and analyze most interesting gene clusters
+
+- Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
+
+```{r, fig.width = 7.5, fig.height = 3.5}
+df_gene %>% filter(cluster == 5, time == 0) %>%
+  ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(position = "dodge", size = 1) +
+  custom_theme() + labs(title = "Cluster 5: enriched in high light, high CO2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_manual(values = custom_colors) +
+  scale_color_manual(values = custom_colors)
+```
+
+- **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
+
+```{r, fig.width = 8.5, fig.height = 3.5}
+df_gene %>% filter(str_detect(Gene.names, "[ac]pc"), time == 0) %>%
+  ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+  geom_col(position = "dodge") +
+  geom_errorbar(position = "dodge", size = 1) +
+  custom_theme(legend.position = 0) +
+  labs(title = "Apc/Cpc mutants are also enriched in high light, high CO2") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  scale_fill_manual(values = custom_colors) +
+  scale_color_manual(values = custom_colors)
+```
+
+## Interaction analysis using STRING database
+
+The next step is to retrieve additional information about these clusters to find correlated genes, groups, pathways, or regulatory networks. We can use the STRING database for this task.
+
+```{r, message = FALSE}
+library(ggraph)
+library(tidygraph)
+
+# function to retrieve network interaction data from STRING DB
+# separate gene IDs by "%0d"; species/taxon ID for Synechocystis sp. PCC 6803: 1148
+# (see https://string-db.org/cgi/organisms)
+retrieve_STRING <- function(gene_ID, taxon_ID, min_score = 0000, ref = NULL) {
+  gene_list <- paste(gene_ID, collapse = "%0d")
+  string_graph <- paste0(
+    "https://string-db.org/api/tsv/network?identifiers=", 
+    gene_list, "&species=", taxon_ID, "&required_score=", min_score) %>%
+  read_tsv(col_types = cols()) %>%
+  select(-stringId_A, -stringId_B) %>%
+  as_tbl_graph()
+  if (!is.null(ref)) {
+    left_join(string_graph, ref, by = "name")
+  } else {
+    string_graph
+  }
+}
+
+# function to space labels in certain distance to circle
+nudge_circle <- function(n, size_x = 0.15, size_y = 0.1) {
+  nudge_x = size_x * -cos(seq(0.5*pi, 2.5*pi, length.out = n))
+  nudge_y = size_y * sin(seq(0.5*pi, 2.5*pi, length.out = n))
+  list(x = nudge_x, y = nudge_y)
+}
+```
+
+
+```{r, fig.width = 8.5, fig.height = 4.8}
+graph_cluster <- retrieve_STRING(
+  gene_ID = filter(df_gene, cluster == 1) %>% pull(locus) %>% unique,
+  taxon_ID = 1148,
+  ref = df_gene %>% select(sgRNA_target, locus, Process, Pathway, Protein, Gene.names) %>% 
+    distinct %>% rename(name = sgRNA_target)
+)
+
+graph_cluster %>% arrange(Process) %>% activate(edges) %>%
+  filter(score >= 0.4) %>%
+  ggraph(layout = 'linear', circular = TRUE) +
+  geom_edge_arc(colour = grey(0.6, 0.5), aes(width = score)) + 
+  geom_node_point(aes(colour = Process), size = 5) +
+  geom_node_text(nudge_x = nudge_circle(74)$x, nudge_y = nudge_circle(74)$y, 
+    size = 3.2, aes(label = name, colour = Process)) +
+  scale_edge_width(range = c(0.2, 2)) +
+  theme_graph(background = "white", foreground = grey(0.5),
+    plot_margin = margin(10, 10, 10, 10))
 ```
