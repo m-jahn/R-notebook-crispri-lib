@@ -549,7 +549,7 @@ df_gene %>% filter(cluster == 2, time == 0) %>%
   scale_color_manual(values = custom_colors)
 ```
 
-More space-effcient representation as a heat map.
+More space-efficient representation as a heat map.
 
 ```{r, fig.width = 5.0, fig.height = 2.5}
 df_gene %>% filter(cluster == 2, time == 0) %>%
@@ -741,5 +741,14 @@ gridExtra::grid.arrange(nrow = 3, ncol = 2,
 
 # Gene enrichment analysis
 
+Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted,
+or both at the same time / the same conditions.
+
 ## KEGG pathway enrichment
+
+kegga/goana
+
+```{r}
+
+```
 
