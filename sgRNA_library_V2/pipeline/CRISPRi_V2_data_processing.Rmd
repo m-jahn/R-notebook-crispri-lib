@@ -94,7 +94,7 @@ df_main <- df_main %>%
     by = c("sgRNA_target" = "gene")) %>%
   
   # remove 1 condition without response ("BG11") and reformat
-  filter(condition != "BG11") %>%
+  filter(!condition %in% c("BG11", "air, BG11, 200uE")) %>%
   mutate(condition = str_remove(condition, "BG11, ") %>%
     str_replace("air", "0.05% CO2")) %>%
   
@@ -359,7 +359,6 @@ The same control can be performed for gene fitness, that is, the AUC of log2 FC 
 
 ```{r, fig.width = 9, fig.height = 4.5}
 df_gene %>% filter(
-    #str_detect(Gene.names, "rps"),
     Gene.names %in% unique(.data[["Gene.names"]])[1:36],
     condition == "1% CO2, 1000uE"
   ) %>%
@@ -409,7 +408,7 @@ df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
 ## Cluster genes by similarity
 
 ```{r, fig.width = 8, fig.height = 5}
-# generate colorpalette for heatmap
+# generate color palette for heatmap
 heat_cols <- colorspace::diverging_hcl(n = 7, h = c(255, 12), c = c(50, 80), l = c(20, 97), power = c(1, 1.3))
 
 # create a matrix-like df with wide fitness data for plotting heatmap
@@ -427,12 +426,12 @@ df_heatmap2 <- df_heatmap %>%
 # create cluster for reordering
 mat_cluster <- df_heatmap %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
 mat_heatmap <- df_heatmap %>% as.matrix %>%
-  .[order.dendrogram(as.dendrogram(mat_cluster)), 6:1]
+  .[order.dendrogram(as.dendrogram(mat_cluster)), ncol(.):1]
 
 # repeat this step with subset of *significantly changed* genes
 mat_cluster_sig <- df_heatmap2 %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
 mat_heatmap_sig <- df_heatmap2 %>% as.matrix %>%
-  .[order.dendrogram(as.dendrogram(mat_cluster_sig)), 6:1]
+  .[order.dendrogram(as.dendrogram(mat_cluster_sig)), ncol(.):1]
 ```
 
 
@@ -535,16 +534,16 @@ gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
 
 ## Extract and analyze most interesting gene clusters
 
-**Cluster 2**: Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
+**Cluster 1**: Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 7.5, fig.height = 3.5}
-df_gene %>% filter(cluster == 2, time == 0) %>%
+df_gene %>% filter(cluster == 1, time == 0) %>%
   ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
     ymin = wmean_fitness-sd_fitness, 
     ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
   geom_col(position = "dodge") +
   geom_errorbar(position = "dodge", size = 1) +
-  custom_theme() + labs(title = "Cluster 2: mutants enriched in high light/CO2") +
+  custom_theme() + labs(title = "Mutants enriched in high light/CO2") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_manual(values = custom_colors) +
   scale_color_manual(values = custom_colors)
@@ -553,44 +552,43 @@ df_gene %>% filter(cluster == 2, time == 0) %>%
 More space-efficient representation as a heat map.
 
 ```{r, fig.width = 5.0, fig.height = 2.5}
-df_gene %>% filter(cluster == 2, time == 0) %>%
+df_gene %>% filter(cluster == 1, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., .>3, 3) %>% replace(., .<-3, -3)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  labs(title = "Cluster 2: high light/CO2", x = "", y = "") +
+  labs(title = "High light/CO2", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
   #palettes: BrBG, PiYG, PRGn, PuOr, RdBu, RdGy, RdYlBu, RdYlGn, Spectral
 ```
 
-**Cluster 4** Genes depleted **on glucose + low light** (0.05 or 1% CO2, glucose (+DCMU), 60 µmol photons m^-2 s^-1)
+**Cluster 5** Genes depleted **on glucose + low light** (0.05 or 1% CO2, glucose (+DCMU), 60 µmol photons m^-2 s^-1)
 
-```{r, fig.width = 8.5, fig.height = 2.5}
+```{r, fig.width = 10.5, fig.height = 2.5}
 df_gene %>% 
-  filter(cluster == 4, time == 0) %>%
-  #filter(grepl("gap", Gene.names), time == 8) %>%
+  filter(cluster == 5, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., .>3, 3) %>% replace(., .<-3, -3)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  labs(title = "Cluster 4: mutants depleted on glucose + low light", x = "", y = "") +
+  labs(title = "Mutants depleted on glucose + low light", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
 ```
 
-**Cluster 5**: Genes depleted **on low light** (0.05 or 1% CO2, 60 µmol photons m^-2 s^-1)
+**Cluster 4**: Genes depleted **on low light** (0.05 or 1% CO2, 60 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 8.5, fig.height = 2.5}
-df_gene %>% filter(cluster == 5, time == 0) %>%
+df_gene %>% filter(cluster == 4, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., .>3, 3) %>% replace(., .<-3, -3)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  labs(title = "Cluster 5: mutants depleted on low light", x = "", y = "") +
+  labs(title = "Mutants depleted on low light", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
 ```
@@ -600,7 +598,7 @@ df_gene %>% filter(cluster == 5, time == 0) %>%
 
 ```{r, fig.width = 6.5, fig.height = 2.5}
 df_gene %>% filter(str_detect(Gene.names, "[ac]pc"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., .>3, 3) %>% replace(., .<-3, -3)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
   labs(title = "Apc/Cpc mutants enriched in high light/CO2", x = "", y = "") +
@@ -660,7 +658,7 @@ plot_STRING <- function(gene_ID, taxon_ID,
 ```
 
 
-```{r, fig.width = 6.5, fig.height = 3.3}
+```{r, fig.width = 5.5, fig.height = 3.3}
 plot_STRING(
   gene_ID = filter(df_gene, cluster == 4) %>% pull(locus) %>% unique,
   taxon_ID = 1148,
@@ -671,7 +669,7 @@ plot_STRING(
 ```
 
 
-```{r, fig.width = 6.2, fig.height = 3.3}
+```{r, fig.width = 6.8, fig.height = 3.3}
 plot_STRING(
   gene_ID = filter(df_gene, cluster == 5) %>% pull(locus) %>% unique,
   taxon_ID = 1148,
@@ -725,11 +723,9 @@ make_fitness_plot <- function(data, vars, title = NULL) {
 }
 
 # CONDITIONS:
-# "0.05% CO2, 200uE"   "0.05% CO2, 60uE"   "0.05% CO2, dcmu, glucose, 60uE"
+# "0.05% CO2, 60uE"   "0.05% CO2, dcmu, glucose, 60uE"
 # "1% CO2, 1000uE"     "1% CO2, 60uE"      "1% CO2, Glucose, 60uE"
 gridExtra::grid.arrange(nrow = 3, ncol = 2,
-  make_fitness_plot(df_gene, c("0.05% CO2, 60uE", "0.05% CO2, 200uE"),
-    title = "low CO2, low vs high light"),
   make_fitness_plot(df_gene, c("0.05% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
     title = "low CO2, photo-heterotrophy"),
   make_fitness_plot(df_gene, c("1% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
@@ -747,13 +743,7 @@ gridExtra::grid.arrange(nrow = 3, ncol = 2,
 
 ## Central carbon metabolism
 
-To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. We can list the different KEGG databases that can be queried:
-
-```{r}
-listDatabases()
-```
-
-Next, gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
+To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. To list the different KEGG databases that can be queried, use `listDatabases()`. Gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
 
 ```{r}
 # get mapping of pathways for each gene
@@ -761,15 +751,18 @@ df_kegg <- keggLink("pathway", "syn") %>%
   enframe(name = "locus", value = "kegg_pathway_id") %>%
   
   # get list of pathways with name/ID pairs
-  left_join(
+  left_join(by = "kegg_pathway_id",
     keggList("pathway", "syn") %>%
     enframe(name = "kegg_pathway_id", value = "kegg_pathway")
   ) %>%
   
   # get list of gene/enzyme names
-  mutate(index = rep(1:10, length.out = n())) %>%
-  group_by(index) %>%
-  mutate(kegg_gene = keggList(locus)) %>%
+  left_join(by = "locus",
+    keggList("syn") %>%
+    enframe(name = "locus", value = "kegg_gene") %>%
+    mutate(kegg_gene_short = str_extract(kegg_gene, "^[a-zA-Z0-9]*;") %>% 
+      str_remove(";"))
+  ) %>%
   
   # trim useless prefixes
   mutate(
@@ -778,10 +771,77 @@ df_kegg <- keggLink("pathway", "syn") %>%
     kegg_pathway = str_remove(kegg_pathway, " - Synechocystis sp. PCC 6803")
   )
 
-
 head(df_kegg)
 ```
 
+Then we can extract gene sets for specific pathways and plot fitness. We start with glycolysis and Calvin cycle enzymes.
+
+```{r}
+list_central_met_pathways <- c(
+  "Glycolysis / Gluconeogenesis",
+  "Pentose phosphate pathway",
+  "Carbon fixation in photosynthetic organisms",
+  "Photosynthesis",
+  "Photosynthesis - antenna proteins",
+  "Pyruvate metabolism",
+  "Glyoxylate and dicarboxylate metabolism"
+)
+```
+
+
+```{r}
+plot_gene_fitness <- lapply(list_central_met_pathways, function(pw) {
+  df_gene %>% filter(time == 0) %>%
+    inner_join(df_kegg %>% filter(kegg_pathway == pw) %>% select(locus),
+      by = "locus") %>%
+    
+    ggplot(aes(x = condition, y = wmean_fitness, 
+      ymin = wmean_fitness-sd_fitness, 
+      ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+      geom_col(position = "dodge", width = 0.6) +
+      geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+      custom_theme(aspect.ratio = 1,
+        legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
+      labs(title = pw) +
+      theme(axis.text.x = element_blank()) +
+      scale_fill_manual(values = custom_colors) +
+      scale_color_manual(values = custom_colors) +
+      facet_wrap(~ sgRNA_target, ncol = 8)
+})
+```
+
+
+```{r, fig.width = 8, fig.height = 6}
+print(plot_gene_fitness[[1]])
+```
+```{r, fig.width = 8, fig.height = 5}
+print(plot_gene_fitness[[2]])
+```
+
+```{r, fig.width = 8, fig.height = 5}
+print(plot_gene_fitness[[3]])
+```
+
+```{r, fig.width = 8, fig.height = 11}
+print(plot_gene_fitness[[4]])
+```
+
+```{r, fig.width = 8, fig.height = 4}
+print(plot_gene_fitness[[5]])
+```
+
+## Summary table of all genes and conditions
+
+Export a summary table of all genes and conditions, so that it's easy for other people to look up single conditions as for example done in [one-by-one fitness comparisons](#fitness-of-all-conditions-vs-each-other). This is best done in wide format (one column per condition).
+
+```{r}
+df_gene %>% ungroup %>%
+  filter(sgRNA_type == "gene") %>%
+  select(locus, sgRNA_target, condition, wmean_fitness, Process, Pathway, Protein) %>% 
+  distinct %>%
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  write_csv("../data/output/fitness_summary.csv")
+```
 
 
 # Gene enrichment analysis
