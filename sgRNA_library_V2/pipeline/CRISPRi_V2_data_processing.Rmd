@@ -743,7 +743,7 @@ gridExtra::grid.arrange(nrow = 3, ncol = 2,
 
 ## Central carbon metabolism
 
-To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. To list the different KEGG databases that can be queried, use `listDatabases()`. Gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
+To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. To list the different **KEGG databases** that can be queried, use `listDatabases()`. Gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
 
 ```{r}
 # get mapping of pathways for each gene
@@ -783,6 +783,7 @@ list_central_met_pathways <- c(
   "Carbon fixation in photosynthetic organisms",
   "Photosynthesis",
   "Photosynthesis - antenna proteins",
+  "Citrate cycle (TCA cycle)",
   "Pyruvate metabolism",
   "Glyoxylate and dicarboxylate metabolism"
 )
@@ -830,6 +831,40 @@ print(plot_gene_fitness[[4]])
 print(plot_gene_fitness[[5]])
 ```
 
+```{r, fig.width = 8, fig.height = 4}
+print(plot_gene_fitness[[6]])
+```
+
+**Custom set of stress related genes**
+
+OCP (`slr1963`), pgr5 (`ssr2016`), Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon), SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`).
+
+```{r, echo = FALSE}
+plot_stress_genes <- df_gene %>%
+  filter(time == 0, locus %in% c("slr1963", "ssr2016", "sll1521",
+    "sll0219", "sll0550", "sll0217", "sll0218", "sll0306", "sll0184",
+    "sll2012", "sll1689")) %>%
+  
+  ggplot(aes(x = condition, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness,
+    fill = condition, color = condition)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    custom_theme(aspect.ratio = 1,
+      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
+    labs(title = "Stress related genes") +
+    theme(axis.text.x = element_blank()) +
+    scale_fill_manual(values = custom_colors) +
+    scale_color_manual(values = custom_colors) +
+    facet_wrap(~ sgRNA_target, ncol = 8)
+```
+
+
+```{r, fig.width = 8, fig.height = 4}
+print(plot_stress_genes)
+```
+
 ## Summary table of all genes and conditions
 
 Export a summary table of all genes and conditions, so that it's easy for other people to look up single conditions as for example done in [one-by-one fitness comparisons](#fitness-of-all-conditions-vs-each-other). This is best done in wide format (one column per condition).
@@ -841,6 +876,10 @@ df_gene %>% ungroup %>%
   distinct %>%
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
   write_csv("../data/output/fitness_summary.csv")
+
+df_gene %>%
+  filter(sgRNA_type == "gene") %>%
+  write_csv("../data/output/fitness_genes.csv")
 ```
 
 
