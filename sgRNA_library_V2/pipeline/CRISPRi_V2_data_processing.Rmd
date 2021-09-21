@@ -31,6 +31,8 @@ suppressPackageStartupMessages({
   library(vegan)
   library(tsne)
   library(KEGGREST)
+  library(limma)
+  library(corrplot)
 })
 ```
 
@@ -865,7 +867,92 @@ plot_stress_genes <- df_gene %>%
 print(plot_stress_genes)
 ```
 
-## Summary table of all genes and conditions
+```{r, include = FALSE, eval = FALSE, fig.width = 7, fig.height = 4}
+df_main %>% filter(grepl("gltA", sgRNA_target)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA)) +
+  geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
+  facet_wrap(~ condition, ncol = 3) +
+  custom_theme() +
+  scale_color_manual(values = rep_along(1:10, custom_colors))
+```
+
+
+# Gene enrichment analysis
+
+Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted, or both at the same time / the same conditions.
+
+Before we test for enrichemnt of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
+
+```{r, fig.width = 10, fig.height = 15}
+df_gene %>% filter(time == 0) %>%
+  inner_join(df_kegg, by = "locus") %>%
+  group_by(kegg_pathway, condition) %>%
+  filter(length(unique(locus)) > 10) %>%
+  
+  ggplot(aes(x = condition, y = wmean_fitness,
+      fill = condition, color = condition)) +
+    geom_abline(intercept = 0, slope = 0, lty = 2, color = grey(0.5)) +
+    geom_violin(color = "white") +
+    stat_summary(fun.data = mean_sdl, geom = "pointrange", size = 0.4) +
+    custom_theme(aspect.ratio = 1,
+      legend.position = "bottom", 
+      legend.key.size = unit(0.4, "cm")) +
+    theme(axis.text.x = element_blank()) +
+    facet_wrap(~ str_sub(kegg_pathway, 1, 16), ncol = 7) +
+    coord_cartesian(ylim = c(-3.5, 3.5)) +
+    scale_fill_manual(values = alpha(custom_colors, 0.5)) +
+    scale_color_manual(values = custom_colors)
+```
+
+## KEGG pathway enrichment
+
+We use the functions `kegga` for KEGG enrichemnt analysis and `goana` for GO term enrichment from the `limma` package. Both functions test for over or under-representation of genes associated with certain pathways or GO terms. The functions don't take the strength of differential fitness into account (DF; the depletion/enrichment over time).
+
+
+```{r}
+# select mean fitness and one condition only
+df_kegg_enrichment <- lapply(unique(df_gene$condition), function(cond) {
+  df_gene %>% filter(
+  sgRNA_type == "gene", time == 0,
+  condition == cond) %>%
+  
+  # filter for differential fitness (DF) genes
+  filter(!between(wmean_fitness, -1.0, 1.0), !is.na(locus)) %>%
+  
+  # perform KEGG enrichment
+  pull(locus) %>% kegga(species.KEGG = "syn") %>%
+  mutate(condition = cond)
+}) %>% bind_rows
+
+head(df_kegg_enrichment)
+```
+
+Now we visualize the pathways that are most enriched for DF genes. It turns out that ribosomal proteins are extremely depleted and therefore score high on the negative log10 p-value for pathway enrichment.
+
+```{r}
+df_kegg_enrichment %>%
+  group_by(Pathway) %>% filter(any(P.DE <= 0.01)) %>%
+  select(Pathway, condition, P.DE) %>%
+  mutate(log10_p_value = -log10(P.DE), .keep = "unused") %>%
+  
+  # format some columns
+  mutate(condition = str_replace(condition, pattern = "0.05% CO2", replacement = "LC") %>%
+    str_replace(pattern = "1% CO2", replacement = "HC") %>%
+    str_replace(pattern = "60uE", replacement = "LL") %>%
+    str_replace(pattern = "1000uE", replacement = "HL")) %>%
+  mutate(Pathway = str_sub(Pathway, 1, 25)) %>%
+  # optionally remove ribosomes
+  # filter(Pathway != "Ribosome") %>%
+  
+  # make correlation plot
+  pivot_wider(names_from = condition, values_from = log10_p_value) %>%
+  column_to_rownames(var = "Pathway") %>% as.matrix %>% t %>%
+  corrplot(is.corr = FALSE, tl.col = grey(0.5), tl.cex = 0.8,
+    col = colorRampPalette(custom_colors[c(1,5,2)])(10), col.lim = c(0, 20))
+```
+
+
+# Export summary table of all genes and conditions
 
 Export a summary table of all genes and conditions, so that it's easy for other people to look up single conditions as for example done in [one-by-one fitness comparisons](#fitness-of-all-conditions-vs-each-other). This is best done in wide format (one column per condition).
 
@@ -882,14 +969,6 @@ df_gene %>%
   write_csv("../data/output/fitness_genes.csv")
 ```
 
-
-# Gene enrichment analysis
-
-Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted, or both at the same time / the same conditions.
-
-## KEGG pathway enrichment
-
-kegga/goana
 
 # Session Info
 
