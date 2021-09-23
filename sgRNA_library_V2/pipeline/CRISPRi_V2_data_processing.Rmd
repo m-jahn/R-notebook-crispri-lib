@@ -72,8 +72,8 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
 
 ## Data annotation
 
-Different annotation columns are added to the main data frame, including a short sgRNA identifier (excluding the position on the gene), an sgRNA index (1 to 5), and genome annotation from Uniprot. Note: The Uniprot data can also be dynamically downloaded for every update of this pipeline using their very simple API:
-`read_tsv("https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab")`.
+Different annotation columns are added to the main data frame, including a short sgRNA identifier (excluding the position on the gene), an sgRNA index (1 to 5), and genome annotation from Uniprot. The Uniprot data is dynamically downloaded for every update of this pipeline using their very simple API (`read_tsv("https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab")`). The full list of columns that can be queried is available [here](https://www.uniprot.org/help/uniprotkb_column_names).
+Pathway annotation from KEGG is later in the pipeline added using the `KEGGREST` package.
 
 ```{r, message = FALSE}
 df_main <- df_main %>%
@@ -95,20 +95,35 @@ df_main <- df_main %>%
     read_tsv("../data/input/mapping_trivial_names.tsv", col_types = cols()),
     by = c("sgRNA_target" = "gene")) %>%
   
-  # remove 1 condition without response ("BG11") and reformat
+  # remove 2 conditions without response
   filter(!condition %in% c("BG11", "air, BG11, 200uE")) %>%
   mutate(condition = str_remove(condition, "BG11, ") %>%
     str_replace("air", "0.05% CO2")) %>%
-  
-  # one more join, this time with the annotation db
-  # containing uniprot and categorial (KEGG Brite) data
-  left_join(read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv")[c(1,4:6,11,20,22,27:32)], 
-    by = c("locus" = "GeneID")) %>% ungroup %>%
   
   # remove some empty rows (NA targets)
   filter(!is.na(sgRNA_target))
 
 head(df_main)
+```
+
+Optionally retrieve gene info from uniprot and merge with main data frame.
+
+```{r}
+df_uniprot <- read_tsv(paste0(
+     "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
+     "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)"),
+     col_types = cols()) %>%
+    rename_with(tolower) %>%
+    rename(locus = `cross-reference (kegg)`, gene_name = `gene names`,
+      gene_name_short = `gene names  (primary )`, ec_number = `ec number`,
+      protein = `protein names`, uniprot_ID = entry
+    ) %>%
+  separate_rows(locus, sep = ";syn:") %>%
+  mutate(locus = str_remove_all(locus, "syn:|;")) %>%
+  filter(!is.na(locus))
+
+df_main <- left_join(df_main, filter(df_uniprot, !duplicated(locus)),
+  by = "locus")
 ```
 
 
@@ -301,9 +316,7 @@ With the correlation and the efficiency per sgRNA, we can compute the **weighted
 df_gene <- df_main %>%
   
   # keep all annotation columns
-  group_by(sgRNA_target, sgRNA_type, locus, condition, time, Process, 
-    Pathway, Protein, Gene.names, Gene.ontology.IDs, Length, MolWeight,
-    location, start_bp, end_bp) %>%
+  group_by(sgRNA_target, sgRNA_type, locus, gene_name, condition, time) %>%
   
   # summarize FC and fitness...
   summarize(.groups = "drop",
@@ -342,7 +355,7 @@ This plot shows a comparison of the 4 methods for the first 36 genes by alphabet
 
 ```{r, fig.width = 9, fig.height = 9}
 df_gene %>% filter(
-    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
+    gene_name %in% unique(.data[["gene_name"]])[1:36],
     condition == "1% CO2, 1000uE"
   ) %>%
   pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
@@ -361,7 +374,7 @@ The same control can be performed for gene fitness, that is, the AUC of log2 FC 
 
 ```{r, fig.width = 9, fig.height = 4.5}
 df_gene %>% filter(
-    Gene.names %in% unique(.data[["Gene.names"]])[1:36],
+    gene_name %in% unique(.data[["gene_name"]])[1:36],
     condition == "1% CO2, 1000uE"
   ) %>%
   pivot_longer(cols = matches("[n12]_fitness"), names_to = "metric", values_to = "fitness") %>%
@@ -599,7 +612,7 @@ df_gene %>% filter(cluster == 4, time == 0) %>%
 
 
 ```{r, fig.width = 6.5, fig.height = 2.5}
-df_gene %>% filter(str_detect(Gene.names, "[ac]pc"), time == 0) %>%
+df_gene %>% filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
@@ -648,10 +661,10 @@ plot_STRING <- function(gene_ID, taxon_ID,
       filter(score >= 0.4) %>%
       ggraph(layout = 'linear', circular = TRUE) +
       geom_edge_arc(colour = grey(0.6, 0.5), aes(width = score)) + 
-      geom_node_point(aes(colour = get(groups)), size = 4) +
+      geom_node_point(aes(colour = .data[[groups]]), size = 4) +
       geom_node_text(nudge_x = nudge_circle(n_nodes)$x, 
-        nudge_y = nudge_circle(n_nodes)$y, 
-        size = 3, aes(label = name, colour = get(groups))) +
+        nudge_y = nudge_circle(n_nodes)$y,
+        size = 3, aes(label = name, colour = .data[[groups]])) +
       scale_edge_width(range = c(0.2, 2)) +
       theme_graph(background = "white", foreground = grey(0.5),
         plot_margin = margin(10, 10, 10, 10))
@@ -660,24 +673,24 @@ plot_STRING <- function(gene_ID, taxon_ID,
 ```
 
 
-```{r, fig.width = 5.5, fig.height = 3.3}
+```{r, fig.width = 5.5, fig.height = 4.0}
 plot_STRING(
   gene_ID = filter(df_gene, cluster == 4) %>% pull(locus) %>% unique,
   taxon_ID = 1148,
-  ref = df_gene %>% select(sgRNA_target, locus, Process, Pathway, Protein, Gene.names) %>% 
+  ref = df_gene %>% select(sgRNA_target, locus, gene_name) %>% 
     distinct %>% rename(name = sgRNA_target),
-  groups = "Process"
+  groups = "name"
 )
 ```
 
 
-```{r, fig.width = 6.8, fig.height = 3.3}
+```{r, fig.width = 6.8, fig.height = 4.7}
 plot_STRING(
   gene_ID = filter(df_gene, cluster == 5) %>% pull(locus) %>% unique,
   taxon_ID = 1148,
-  ref = df_gene %>% select(sgRNA_target, locus, Process, Pathway, Protein, Gene.names) %>% 
+  ref = df_gene %>% select(sgRNA_target, locus, gene_name) %>% 
     distinct %>% rename(name = sgRNA_target),
-  groups = "Process"
+  groups = "locus"
 )
 ```
 
@@ -706,7 +719,7 @@ We can plot selected conditions against each other and add gene labels in order 
 make_fitness_plot <- function(data, vars, title = NULL) {
   data %>% ungroup %>%
     filter(condition %in% vars, sgRNA_type == "gene") %>%
-    select(locus, sgRNA_target, condition, wmean_fitness, Process) %>% distinct %>%
+    select(locus, sgRNA_target, condition, wmean_fitness) %>% distinct %>%
     group_by(sgRNA_target) %>% 
     mutate(significant = abs(wmean_fitness[1]-wmean_fitness[2])>2) %>%
     pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
@@ -817,6 +830,7 @@ plot_gene_fitness <- lapply(list_central_met_pathways, function(pw) {
 ```{r, fig.width = 8, fig.height = 6}
 print(plot_gene_fitness[[1]])
 ```
+
 ```{r, fig.width = 8, fig.height = 5}
 print(plot_gene_fitness[[2]])
 ```
@@ -910,7 +924,6 @@ We use the functions `kegga` for KEGG enrichemnt analysis and `goana` for GO ter
 
 
 ```{r}
-# select mean fitness and one condition only
 df_kegg_enrichment <- lapply(unique(df_gene$condition), function(cond) {
   df_gene %>% filter(
   sgRNA_type == "gene", time == 0,
@@ -959,7 +972,7 @@ Export a summary table of all genes and conditions, so that it's easy for other 
 ```{r}
 df_gene %>% ungroup %>%
   filter(sgRNA_type == "gene") %>%
-  select(locus, sgRNA_target, condition, wmean_fitness, Process, Pathway, Protein) %>% 
+  select(locus, sgRNA_target, gene_name, condition, wmean_fitness) %>% 
   distinct %>%
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
   write_csv("../data/output/fitness_summary.csv")
