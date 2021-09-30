@@ -67,6 +67,19 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
     ...
   )
 }
+
+# function to export an image as svg and png
+save_plot <- function(pl, path = "../figures/", width = 6, height = 6) {
+  pl_name <- deparse(substitute(pl))
+  svg(filename = paste0(path, pl_name, ".svg"),
+    width = width, height = height)
+  print(pl)
+  dev.off()
+  png(filename = paste0(path, pl_name, ".png"),
+    width = width*125, height = height*125, res = 120)
+  print(pl)
+  invisible(capture.output(dev.off()))
+}
 ```
 
 
@@ -86,8 +99,8 @@ df_main <- df_main %>%
   # add sgRNA index number (1 to maximally 5) and type
   group_by(sgRNA_target) %>%
   mutate(
-    sgRNA_index = sgRNA_position %>% as.numeric %>% as.factor %>%
-    as.numeric,
+    sgRNA_position = as.numeric(sgRNA_position),
+    sgRNA_index = sgRNA_position %>% as.factor %>% as.numeric,
     sgRNA_type = if_else(grepl("^nc_", sgRNA), "ncRNA", "gene")) %>%
 
   # map trivial names to LocusTags using a manually curated list
@@ -109,15 +122,26 @@ head(df_main)
 Optionally retrieve gene info from uniprot and merge with main data frame.
 
 ```{r}
-df_uniprot <- read_tsv(paste0(
-     "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
-     "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)"),
-     col_types = cols()) %>%
-    rename_with(tolower) %>%
-    rename(locus = `cross-reference (kegg)`, gene_name = `gene names`,
-      gene_name_short = `gene names  (primary )`, ec_number = `ec number`,
-      protein = `protein names`, uniprot_ID = entry
-    ) %>%
+# if getting a current table from uniprot fails due to faulty connection,
+# obtain a local fallback copy
+uniprot_error <- simpleError("Uniprot server not available")
+df_uniprot <- tryCatch(
+  read_tsv(paste0(
+   "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
+   "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)"),
+    col_types = cols()
+  ), error = function(uniprot_error) {
+    message("Uniprot server not available, falling back on local Uniprot DB copy")
+    read_tsv("../data/input/uniprot_synechocystis.tsv", col_types = cols())
+  }
+)
+
+df_uniprot <- df_uniprot %>%
+  rename_with(tolower) %>%
+  rename(locus = `cross-reference (kegg)`, gene_name = `gene names`,
+    gene_name_short = `gene names  (primary )`, ec_number = `ec number`,
+    protein = `protein names`, uniprot_ID = entry
+  ) %>%
   separate_rows(locus, sep = ";syn:") %>%
   mutate(locus = str_remove_all(locus, "syn:|;")) %>%
   filter(!is.na(locus))
@@ -131,14 +155,14 @@ df_main <- left_join(df_main, filter(df_uniprot, !duplicated(locus)),
 
 Each gene is represented by up to five sgRNAs. We can test if all or only some of the 5 sgRNAs are "behaving" in the same way in the same conditions, more mathematically speaking we can estimate the correlation of every sgRNA with another. First let's summarize how many genes have 5, 4, 3 sgRNAs and so on associated with them.
 
-```{r, , fig.width = 6, fig.height = 3.5, message =FALSE}
+```{r, , fig.width = 6, fig.height = 3.5}
 # N unique sgRNAs in dataset
 paste0("Number of unique sgRNAs: ", unique(df_main$sgRNA) %>% length)
 
 # N genes with 1,2,3,4 or 5 sgRNAs
-df_main %>%
+plot_sgRNAs_per_gene <- df_main %>%
   group_by(sgRNA_type, sgRNA_target) %>%
-  summarize(n_sgRNAs = length(unique(sgRNA_position))) %>%
+  summarize(n_sgRNAs = length(unique(sgRNA_position)), .groups = "drop_last") %>%
   count(n_sgRNAs) %>% filter(n_sgRNAs <= 5) %>%
   ggplot(aes(x = factor(n_sgRNAs), y = n, fill = factor(n_sgRNAs),
     label = n)) +
@@ -147,6 +171,9 @@ df_main %>%
   facet_grid(~sgRNA_type) +
   custom_theme() +
   scale_fill_manual(values = custom_colors)
+
+print(plot_sgRNAs_per_gene)
+save_plot(plot_sgRNAs_per_gene, width = 6, height = 3.5)
 ```
 
 ## Correlation of sgRNAs
@@ -156,22 +183,25 @@ Different methods can be used to estimate similarity between samples (sgRNAs). F
 This is an example of an apparently strictly essential gene, encoding the ribosomal protein `rps10`. Most of the sgRNA repressor strains are depleted, the correlation between sgRNAs is high. The strength of depletion varies though, and the strain with sgRNA 3 is not depleted at all. We want to give higher weights to sgRNAs that correlate well with each other, and/or show stronger effect (depletion/enrichment).
 
 ```{r, fig.width = 7, fig.height = 4.5}
-df_main %>% filter(sgRNA_target == "rps10") %>%
+plot_sgRNA_ribo_example <- df_main %>% filter(sgRNA_target == "rps10") %>%
   mutate(sgRNA_index = factor(sgRNA_index)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
   geom_line(size = 1) + geom_point(size = 2) +
   facet_wrap(~ condition, ncol = 3) +
   custom_theme() +
   scale_color_manual(values = custom_colors)
+
+print(plot_sgRNA_ribo_example)
+save_plot(plot_sgRNA_ribo_example, width = 7, height = 4.5)
 ```
 
-A correlation score can be calculated by computing the correlation coefficient of all sgRNAs to each other. This score is robustly summarized by taking the median, and rescaling it from the respective minima and maxima [-1, 1] to [0, 1]. This score serves as a weight for each sgRNA to calculate the (global) weighted mean of log2 FC over all sgRNAs. The score has the characteristic that it gives a weight of 1 for an sgRNA perfectly correlated with all other sgRNAs of the same gene, and a weight of 0 for sgRNAs perfectly anti-correlated to the other sgRNAs.
+A correlation score can be calculated by computing the correlation coefficient of all sgRNAs to each other. This score is robustly summarized by taking the median, and rescaling it from the respective minima and maxima [-1, 1] to [0, 1]. This score serves as a weight component for each sgRNA to calculate the (global) weighted mean of log2 FC over all sgRNAs. The score has the characteristic that it gives a weight of 1 for an sgRNA perfectly correlated with all other sgRNAs of the same gene, and a weight of 0 for sgRNAs perfectly anti-correlated to the other sgRNAs.
 
 For a matrix of $x = 1 .. m$ sgRNAs and $y = 1 .. n$ observations (measurements), the correlation $R$ of one sgRNA to another is calculated using Pearson's method:
 
 $R_x=cor([log_2FC_{x1,y1} ... log_2FC_{x1,yn}], [log_2FC_{x2,y1} ... log_2FC_{x2,yn}])$
 
-The weight of one sgRNA is then calculated as median of all $R$ rescaled between 0 and 1.
+The correlation weight of one sgRNA is then calculated as median of all $R$ rescaled between 0 and 1.
 
 $w_x = \frac{1 + median(R_1, R_2, ..., R_m)}{2}$
 
@@ -201,7 +231,7 @@ weights
 Now we can create a function that will compute weights for all sgRNAs, and add the weights to the data set.
 
 ```{r, warning = FALSE}
-determine_weight <- function(index, value, group) {
+determine_corr <- function(index, value, group) {
   # make correlation matrix
   df <- data.frame(index = index, value = value, group = group)
   cor_matrix <- pivot_wider(df, names_from = group, values_from = value) %>%
@@ -222,7 +252,7 @@ determine_weight <- function(index, value, group) {
 
 df_main <- df_main %>%
   group_by(sgRNA_target) %>%
-  mutate(sgRNA_weight = determine_weight(sgRNA_index, log2FoldChange, group))
+  mutate(sgRNA_correlation = determine_corr(sgRNA_index, log2FoldChange, group))
 ```
 
 
@@ -258,12 +288,12 @@ df_main %>% filter(sgRNA_target == "rps10") %>% ungroup %>%
 Plot the **weight of each sgRNA** to see if there is a dependency between correlation and sgRNA position. There is no significant trend.
 
 ```{r, fig.width = 5, fig.height = 4}
-df_main %>%
-  select(sgRNA_target, sgRNA_index, sgRNA_weight) %>%
+plot_sgRNA_correlation <- df_main %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
   distinct %>%
   # plot
-  ggplot(aes(x = factor(sgRNA_index), y = sgRNA_weight)) +
+  ggplot(aes(x = factor(sgRNA_index), y = sgRNA_correlation)) +
   geom_boxplot(outlier.shape = "") +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
     label = round(median(x), 2)), geom = "text") +
@@ -271,29 +301,35 @@ df_main %>%
     label = length(x)), geom = "text", color = grey(0.5)) +
   coord_cartesian(ylim = c(-0.25, 1.25)) +
   custom_theme()
+
+save_plot(plot_sgRNA_correlation, width = 5, height = 4)
+print(plot_sgRNA_correlation)
 ```
 
 We can also quantify how many genes have strongly correlated sgRNAs and how many have outliers. In order to do this, the median weight of the (up to) 5 sgRNAs per gene is plotted. Generally, the median weight ranges between 0.5 and 1.0, showing on average good correlation.
 
 ```{r, fig.width = 5, fig.height = 4}
-df_main %>%
-  select(sgRNA_target, sgRNA_index, sgRNA_weight) %>%
+plot_sgRNA_correlation_hist <- df_main %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
   distinct %>% group_by(sgRNA_target) %>%
   summarize(
-    median_sgRNA_weight = median(sgRNA_weight),
-    min_sgRNA_weight = min(sgRNA_weight)
+    median_sgRNA_correlation = median(sgRNA_correlation),
+    min_sgRNA_correlation = min(sgRNA_correlation)
   ) %>%
   # plot
-  ggplot(aes(x = median_sgRNA_weight)) +
+  ggplot(aes(x = median_sgRNA_correlation)) +
   geom_histogram(bins = 40, fill = custom_colors[1], alpha = 0.7) +
   custom_theme()
+
+save_plot(plot_sgRNA_correlation_hist, width = 5, height = 4)
+print(plot_sgRNA_correlation_hist)
 ```
 
 Second, the binding position of the sgRNAs could be correlated to the strength of repression. In other words sgRNAs binding closer to the promoter could have stronger ability to repress a gene, see Figure 1 B in [Wang et al., Nature Comms, 2018](https://www.nature.com/articles/s41467-018-04899-x). We plot **sgRNA efficiency** for genes only, because the absolute majority of those has 5 sgRNAs.
 
 ```{r, fig.width = 5, fig.height = 4}
-df_main %>%
+plot_sgRNA_efficiency <- df_main %>%
   filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
   select(sgRNA_target, sgRNA_index, sgRNA_efficiency) %>% distinct %>%
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_efficiency)) +
@@ -304,6 +340,9 @@ df_main %>%
   stat_summary(fun.data = function(x) c(y = 1.2, 
     label = length(x)), geom = "text", color = grey(0.5)) +
   custom_theme()
+
+save_plot(plot_sgRNA_efficiency, width = 5, height = 4)
+print(plot_sgRNA_efficiency)
 ```
 
 # Gene fitness calculation
@@ -322,13 +361,13 @@ df_gene <- df_main %>%
   summarize(.groups = "drop",
     # log2 FC
     mean_log2FoldChange = mean(log2FoldChange),
-    wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_weight * sgRNA_efficiency),
+    wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_correlation * sgRNA_efficiency),
     top1_log2FoldChange = log2FoldChange[which.max(sgRNA_efficiency)],
     top2_log2FoldChange = mean(log2FoldChange[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
     sd_log2FoldChange = sd(log2FoldChange),
     # fitness
     mean_fitness = mean(fitness),
-    wmean_fitness = weighted.mean(fitness, sgRNA_weight * sgRNA_efficiency),
+    wmean_fitness = weighted.mean(fitness, sgRNA_correlation * sgRNA_efficiency),
     top1_fitness = fitness[which.max(sgRNA_efficiency)],
     top2_fitness = mean(fitness[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
     sd_fitness = sd(fitness)
@@ -349,6 +388,33 @@ df_gene %>% filter(sgRNA_target == "rps10") %>%
   custom_theme(legend.position = "right") +
   coord_cartesian(ylim = c(-3.75, 0.75)) +
   scale_color_manual(values = custom_colors)
+```
+
+The following two plots show single sgRNAs and fitness for a tricky case, `gltA`. The strongest depletion is achieved by sgRNA 1 but in mean fitness quantification, it doesn't show. The reason is ....
+
+```{r, fig.width = 7, fig.height = 4}
+df_main %>% filter(grepl("gltA", sgRNA_target)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA)) +
+  geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
+  facet_wrap(~ condition, ncol = 3) +
+  custom_theme() +
+  scale_color_manual(values = rep_along(1:10, custom_colors))
+
+df_gene %>% filter(sgRNA_target == "gltA") %>%
+  pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
+  mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
+  ggplot(aes(x = time, y = log2FoldChange, 
+    ymin = log2FoldChange-sd_log2FoldChange, 
+    ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
+  geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
+  facet_wrap(~ condition, ncol = 3) +
+  custom_theme(legend.position = "right") +
+  scale_color_manual(values = custom_colors)
+
+df_main %>% filter(grepl("gltA", sgRNA_target)) %>% ungroup %>%
+  select(sgRNA_position, sgRNA_correlation, sgRNA_efficiency) %>% distinct %>%
+  mutate(sgRNA_weight = sgRNA_correlation*sgRNA_efficiency) %>%
+  arrange(sgRNA_position)
 ```
 
 This plot shows a comparison of the 4 methods for the first 36 genes by alphabetical order, for one selected condition only (1% CO2, BG11, 1,000 µmol photons m-1 s-1). Here we can see that the top1 method is often but not always representative for the gene: For apcD or apcF, it does not seem representative compared to the mean, weighted mean, and top2 methods.
@@ -395,13 +461,16 @@ df_gene %>% filter(
 Global distribution of weighted mean fitness for all genes. Effect of ncRNA repression seems to be much lower than effect of gene repression.
 
 ```{r, fig.width = 7, fig.height = 4}
-df_gene %>% filter(time == 0) %>%
+plot_all_fitness_hist <- df_gene %>% filter(time == 0) %>%
   ggplot(aes(x = wmean_fitness, fill = sgRNA_type)) +
   geom_histogram(bins = 100) +
   coord_cartesian(xlim = c(-2, 2), ylim = c(0, 1000)) +
   facet_wrap( ~ condition, ncol = 3) +
   custom_theme() +
   scale_fill_manual(values = custom_colors[3:4])
+
+print(plot_all_fitness_hist)
+save_plot(plot_all_fitness_hist, width = 7, height = 4)
 ```
 
 
@@ -410,12 +479,15 @@ df_gene %>% filter(time == 0) %>%
 Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness, except probably 2 sgRNAs in one specific condition.
 
 ```{r, fig.width = 7, fig.height = 4}
-df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
+plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_target)) +
   geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
   facet_wrap(~ condition, ncol = 3) +
   custom_theme() +
   scale_color_manual(values = rep_along(1:10, custom_colors))
+
+print(plot_controls_sgRNAs)
+save_plot(plot_controls_sgRNAs, width = 7, height = 4)
 ```
 
 # Unsupervised clustering of genes
@@ -453,7 +525,7 @@ mat_heatmap_sig <- df_heatmap2 %>% as.matrix %>%
 Now we can plot _all_ genes, a subset with only significant genes, and a dendrogram for clustering.
  
 ```{r, fig.width = 8, fig.height = 1.6}
-levelplot(mat_heatmap,
+plot_heatmap_all <- levelplot(mat_heatmap,
   par.settings = custom.colorblind(),
   col.regions = colorRampPalette(heat_cols)(20),
   at = seq(-4, 4, 0.5), aspect = "fill",
@@ -464,6 +536,9 @@ levelplot(mat_heatmap,
     panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
   }
 )
+
+print(plot_heatmap_all)
+save_plot(plot_heatmap_all, width = 8, height = 1.6)
 ```
 
 ```{r, fig.width = 8, fig.height = 3}
@@ -493,6 +568,19 @@ gridExtra::grid.arrange(
   nrow = 2
 )
 ```
+
+```{r, include = FALSE}
+png("../figures/plot_heatmap_signif.png", width = 1600, height = 600, res = 120)
+gridExtra::grid.arrange(
+  # coords for unit: top, right, bottom, left
+  plot_cluster_dend + 
+    theme(plot.margin = unit(c(0.1, 0.03, -0.2, 0.146),"npc")),
+  plot_heatmap_sig,
+  nrow = 2
+)
+invisible(capture.output(dev.off()))
+```
+
 
 Clustering shows that the depletion/enrichment patterns in different conditions are quite similar. Different clusters entail genes with:
 
@@ -544,6 +632,8 @@ plot_tsne <- df_tsne %>%
   scale_color_manual(values = custom_colors)
 
 gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
+ggsave("../figures/plot_nmds_tsne.svg", plot = gridExtra::arrangeGrob(plot_nmds, plot_tsne, ncol = 2),
+  device = "svg", width = 8, height = 4)
 ```
 
 
@@ -552,7 +642,7 @@ gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
 **Cluster 1**: Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 7.5, fig.height = 3.5}
-df_gene %>% filter(cluster == 1, time == 0) %>%
+plot_sgRNAs_cl1 <- df_gene %>% filter(cluster == 1, time == 0) %>%
   ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
     ymin = wmean_fitness-sd_fitness, 
     ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
@@ -562,12 +652,15 @@ df_gene %>% filter(cluster == 1, time == 0) %>%
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_manual(values = custom_colors) +
   scale_color_manual(values = custom_colors)
+
+print(plot_sgRNAs_cl1)
+save_plot(plot_sgRNAs_cl1, width = 7.5, height = 3.5)
 ```
 
 More space-efficient representation as a heat map.
 
 ```{r, fig.width = 5.0, fig.height = 2.5}
-df_gene %>% filter(cluster == 1, time == 0) %>%
+plot_sgRNAs_cl1_hm <- df_gene %>% filter(cluster == 1, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
@@ -576,13 +669,15 @@ df_gene %>% filter(cluster == 1, time == 0) %>%
   labs(title = "High light/CO2", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
-  #palettes: BrBG, PiYG, PRGn, PuOr, RdBu, RdGy, RdYlBu, RdYlGn, Spectral
+
+print(plot_sgRNAs_cl1_hm)
+save_plot(plot_sgRNAs_cl1_hm, width = 5.0, height = 2.5)
 ```
 
 **Cluster 5** Genes depleted **on glucose + low light** (0.05 or 1% CO2, glucose (+DCMU), 60 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 10.5, fig.height = 2.5}
-df_gene %>% 
+plot_sgRNAs_cl5_hm <- df_gene %>%
   filter(cluster == 5, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
@@ -592,12 +687,15 @@ df_gene %>%
   labs(title = "Mutants depleted on glucose + low light", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
+
+print(plot_sgRNAs_cl5_hm)
+save_plot(plot_sgRNAs_cl5_hm, width = 10.5, height = 2.5)
 ```
 
 **Cluster 4**: Genes depleted **on low light** (0.05 or 1% CO2, 60 µmol photons m^-2 s^-1)
 
 ```{r, fig.width = 8.5, fig.height = 2.5}
-df_gene %>% filter(cluster == 4, time == 0) %>%
+plot_sgRNAs_cl4_hm <- df_gene %>% filter(cluster == 4, time == 0) %>%
   arrange(cluster_order) %>% 
   mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
@@ -606,19 +704,26 @@ df_gene %>% filter(cluster == 4, time == 0) %>%
   labs(title = "Mutants depleted on low light", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
   scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
+
+print(plot_sgRNAs_cl4_hm)
+save_plot(plot_sgRNAs_cl4_hm, width = 8.5, height = 2.5)
 ```
 
 - **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
 
 ```{r, fig.width = 6.5, fig.height = 2.5}
-df_gene %>% filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
+plot_sgRNAs_phycobil <- df_gene %>%
+  filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 2, 2) %>% replace(., . < -2, -2)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
   labs(title = "Apc/Cpc mutants enriched in high light/CO2", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
+  scale_fill_distiller(palette = "RdBu", limits = c(-2, 2))
+
+print(plot_sgRNAs_phycobil)
+save_plot(plot_sgRNAs_phycobil, width = 6.5, height = 2.5)
 ```
 
 ## Interaction analysis using STRING database
@@ -740,7 +845,7 @@ make_fitness_plot <- function(data, vars, title = NULL) {
 # CONDITIONS:
 # "0.05% CO2, 60uE"   "0.05% CO2, dcmu, glucose, 60uE"
 # "1% CO2, 1000uE"     "1% CO2, 60uE"      "1% CO2, Glucose, 60uE"
-gridExtra::grid.arrange(nrow = 3, ncol = 2,
+plot_one_on_one <- gridExtra::arrangeGrob(nrow = 3, ncol = 2,
   make_fitness_plot(df_gene, c("0.05% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
     title = "low CO2, photo-heterotrophy"),
   make_fitness_plot(df_gene, c("1% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
@@ -752,6 +857,9 @@ gridExtra::grid.arrange(nrow = 3, ncol = 2,
   make_fitness_plot(df_gene, c("1% CO2, 60uE", "0.05% CO2, 60uE"),
     title = "low light, low vs high CO2")
 )
+
+ggsave("../figures/plot_one_on_one.svg", plot_one_on_one, 
+  width = 8, height = 12)
 ```
 
 # Differential fitness of selected gene sets
@@ -829,26 +937,38 @@ plot_gene_fitness <- lapply(list_central_met_pathways, function(pw) {
 
 ```{r, fig.width = 8, fig.height = 6}
 print(plot_gene_fitness[[1]])
+ggsave("../figures/plot_fitness_glycolysis.svg", plot_gene_fitness[[1]],
+  width = 8, height = 6)
 ```
 
 ```{r, fig.width = 8, fig.height = 5}
 print(plot_gene_fitness[[2]])
+ggsave("../figures/plot_fitness_pentose.svg", plot_gene_fitness[[2]],
+  width = 8, height = 5)
 ```
 
 ```{r, fig.width = 8, fig.height = 5}
 print(plot_gene_fitness[[3]])
+ggsave("../figures/plot_fitness_carbonfix.svg", plot_gene_fitness[[3]],
+  width = 8, height = 5)
 ```
 
 ```{r, fig.width = 8, fig.height = 11}
 print(plot_gene_fitness[[4]])
+ggsave("../figures/plot_fitness_photosys.svg", plot_gene_fitness[[4]],
+  width = 8, height = 11)
 ```
 
 ```{r, fig.width = 8, fig.height = 4}
 print(plot_gene_fitness[[5]])
+ggsave("../figures/plot_fitness_antenna.svg", plot_gene_fitness[[5]],
+  width = 8, height = 4)
 ```
 
 ```{r, fig.width = 8, fig.height = 4}
 print(plot_gene_fitness[[6]])
+ggsave("../figures/plot_fitness_citrate.svg", plot_gene_fitness[[6]],
+  width = 8, height = 4)
 ```
 
 **Custom set of stress related genes**
@@ -879,17 +999,44 @@ plot_stress_genes <- df_gene %>%
 
 ```{r, fig.width = 8, fig.height = 4}
 print(plot_stress_genes)
+ggsave("../figures/plot_fitness_stress.svg", plot_stress_genes,
+  width = 8, height = 4)
 ```
 
-```{r, include = FALSE, eval = FALSE, fig.width = 7, fig.height = 4}
-df_main %>% filter(grepl("gltA", sgRNA_target)) %>%
-  ggplot(aes(x = time, y = log2FoldChange, color = sgRNA)) +
-  geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
-  facet_wrap(~ condition, ncol = 3) +
-  custom_theme() +
-  scale_color_manual(values = rep_along(1:10, custom_colors))
+**Fitness plot for carbon transports and carboxysome shell**
+
+`slr1512` sbtA, `slr1513` sbtB, `sll1734` cupA, `slr1302` cupB, `sll0359` cyabrB1, `sll0822` cyabrB2,
+`sll1594` ccmR, `sll1031` ccmM, `sll1028` ccmK2, `sll1029` ccmK1, `sll1032` ccmN, `slr0436` ccmO,
+`sll1030` ccmL.
+
+```{r, echo = FALsE}
+plot_carboxysome <- df_gene %>%
+  filter(time == 0, locus %in% c(
+    "slr1512", "slr1513", "sll1734", "slr1302", "sll0359", "sll0822", "sll1594",
+    "sll1031", "sll1028", "sll1029", "sll1032", "slr0436", "sll1030"
+  )) %>%
+  
+  ggplot(aes(x = condition, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness,
+    fill = condition, color = condition)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    custom_theme(aspect.ratio = 1,
+      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
+    labs(title = "Carboxysome and carbon transporters") +
+    theme(axis.text.x = element_blank()) +
+    scale_fill_manual(values = custom_colors) +
+    scale_color_manual(values = custom_colors) +
+    facet_wrap(~ sgRNA_target, ncol = 8)
 ```
 
+
+```{r, fig.width = 8, fig.height = 4}
+print(plot_carboxysome)
+ggsave("../figures/plot_fitness_carboxysome.svg", plot_carboxysome,
+  width = 8, height = 4)
+```
 
 # Gene enrichment analysis
 
@@ -980,6 +1127,11 @@ df_gene %>% ungroup %>%
 df_gene %>%
   filter(sgRNA_type == "gene") %>%
   write_csv("../data/output/fitness_genes.csv")
+
+df_main %>% filter(sgRNA_type == "gene") %>%
+  write_csv("../data/output/fitness_all.csv")
+
+df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
 ```
 
 
