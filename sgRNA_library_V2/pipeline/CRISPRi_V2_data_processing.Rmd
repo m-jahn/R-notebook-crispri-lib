@@ -39,8 +39,16 @@ suppressPackageStartupMessages({
 Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
 
 ```{r}
-load("../data/input/DESeq2_result.Rdata", )
-df_main <- DESeq_result_table; rm(DESeq_result_table)
+# load first seq run
+load("../data/input/DESeq2_result.Rdata")
+df_main <- DESeq_result_table
+
+# load second seq run
+load("../data/input/DESeq2_result_2.Rdata")
+df_main <- bind_rows(df_main, DESeq_result_table)
+
+# remove single results table
+rm(DESeq_result_table)
 ```
 
 
@@ -102,41 +110,64 @@ df_main <- df_main %>%
     sgRNA_position = as.numeric(sgRNA_position),
     sgRNA_index = sgRNA_position %>% as.factor %>% as.numeric,
     sgRNA_type = if_else(grepl("^nc_", sgRNA), "ncRNA", "gene")) %>%
+  ungroup %>%
 
   # map trivial names to LocusTags using a manually curated list
   left_join(
     read_tsv("../data/input/mapping_trivial_names.tsv", col_types = cols()),
     by = c("sgRNA_target" = "gene")) %>%
   
-  # remove 2 conditions without response
-  filter(!condition %in% c("BG11", "air, BG11, 200uE")) %>%
-  mutate(condition = str_remove(condition, "BG11, ") %>%
-    str_replace("air", "0.05% CO2")) %>%
-  
   # remove some empty rows (NA targets)
-  filter(!is.na(sgRNA_target))
-
-head(df_main)
+  filter(!is.na(sgRNA_target)) %>%
+  
+  # remove 2 conditions without response
+  filter(!condition %in% c("BG11", "LC, 200uE")) %>%
+  
+  # split condition into separate cols
+  separate(condition, into = c("carbon", "light", "treatment_1", "treatment_2"),
+    sep = ", ", remove = FALSE, fill = "right") %>%
+  unite("treatment", treatment_1, treatment_2, sep = ", ")
 ```
 
-Optionally retrieve gene info from uniprot and merge with main data frame.
+Overview about the different conditions.
 
 ```{r}
-# if getting a current table from uniprot fails due to faulty connection,
-# obtain a local fallback copy
-uniprot_error <- simpleError("Uniprot server not available")
-df_uniprot <- tryCatch(
-  read_tsv(paste0(
-   "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
-   "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)"),
-    col_types = cols()
-  ), error = function(uniprot_error) {
-    message("Uniprot server not available, falling back on local Uniprot DB copy")
-    read_tsv("../data/input/uniprot_synechocystis.tsv", col_types = cols())
-  }
-)
+df_main %>% group_by(condition) %>%
+  summarize(
+    time_points = paste(unique(time), collapse = ", "),
+    carbon = unique(carbon),
+    light = unique(light),
+    treatment = unique(treatment),
+    min_fit = min(fitness),
+    med_fit = median(fitness),
+    max_fit = max(fitness))
+```
 
-df_uniprot <- df_uniprot %>%
+Retrieve gene info from uniprot and merge with main data frame. We need to make a custom function to retrieve and parse the data from uniprot, because of a bug in the security level on Ubuntu 20.04. The fallback option is to load a local copy of uniprot annotation for this organism.
+
+```{r}
+library(httr)
+uniprot_url <- paste0(
+   "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
+   "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)")
+
+get_uniprot <- function(url) {
+  # reset security level, caused by a faulty SSL certificate on server side,
+  # see this thread: https://github.com/Ensembl/ensembl-rest/issues/427
+  httr_config <- config(ssl_cipher_list = "DEFAULT@SECLEVEL=1")
+  res <- with_config(config = httr_config, GET(url))
+  server_error = simpleError("")
+  df_uniprot <- tryCatch(
+    read_tsv(content(res), col_types = cols()),
+    error = function(server_error) {
+      message("Uniprot server not available, falling back on local Uniprot DB copy")
+      read_tsv("../data/input/uniprot_synechocystis.tsv", col_types = cols())
+    }
+  )
+}
+
+
+df_uniprot <- get_uniprot(uniprot_url) %>%
   rename_with(tolower) %>%
   rename(locus = `cross-reference (kegg)`, gene_name = `gene names`,
     gene_name_short = `gene names  (primary )`, ec_number = `ec number`,
@@ -182,17 +213,17 @@ Different methods can be used to estimate similarity between samples (sgRNAs). F
 
 This is an example of an apparently strictly essential gene, encoding the ribosomal protein `rps10`. Most of the sgRNA repressor strains are depleted, the correlation between sgRNAs is high. The strength of depletion varies though, and the strain with sgRNA 3 is not depleted at all. We want to give higher weights to sgRNAs that correlate well with each other, and/or show stronger effect (depletion/enrichment).
 
-```{r, fig.width = 7, fig.height = 4.5}
+```{r, fig.width = 7, fig.height = 5.5}
 plot_sgRNA_ribo_example <- df_main %>% filter(sgRNA_target == "rps10") %>%
   mutate(sgRNA_index = factor(sgRNA_index)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_index)) +
   geom_line(size = 1) + geom_point(size = 2) +
-  facet_wrap(~ condition, ncol = 3) +
+  facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = custom_colors)
 
 print(plot_sgRNA_ribo_example)
-save_plot(plot_sgRNA_ribo_example, width = 7, height = 4.5)
+save_plot(plot_sgRNA_ribo_example, width = 7, height = 5.5)
 ```
 
 A correlation score can be calculated by computing the correlation coefficient of all sgRNAs to each other. This score is robustly summarized by taking the median, and rescaling it from the respective minima and maxima [-1, 1] to [0, 1]. This score serves as a weight component for each sgRNA to calculate the (global) weighted mean of log2 FC over all sgRNAs. The score has the characteristic that it gives a weight of 1 for an sgRNA perfectly correlated with all other sgRNAs of the same gene, and a weight of 0 for sgRNAs perfectly anti-correlated to the other sgRNAs.
@@ -209,8 +240,8 @@ The following example shows the correlation matrix for the 5 `rps10` sgRNAs, and
 
 ```{r, fig.width = 4, fig.height = 4}
 cor_matrix <- df_main %>% filter(sgRNA_target == "rps10") %>% ungroup %>%
-  select(sgRNA_index, log2FoldChange, group) %>%
-  pivot_wider(names_from = group, values_from = log2FoldChange) %>%
+  select(sgRNA_index, log2FoldChange, condition, time) %>%
+  pivot_wider(names_from = c("condition", "time"), values_from = log2FoldChange) %>%
   arrange(sgRNA_index) %>% column_to_rownames("sgRNA_index") %>%
   as.matrix %>% t %>% cor(method = "pearson")
 
@@ -231,10 +262,10 @@ weights
 Now we can create a function that will compute weights for all sgRNAs, and add the weights to the data set.
 
 ```{r, warning = FALSE}
-determine_corr <- function(index, value, group) {
+determine_corr <- function(index, value, condition, time) {
   # make correlation matrix
-  df <- data.frame(index = index, value = value, group = group)
-  cor_matrix <- pivot_wider(df, names_from = group, values_from = value) %>%
+  df <- data.frame(index = index, value = value, condition = condition, time = time)
+  cor_matrix <- pivot_wider(df, names_from = c("condition", "time"), values_from = value) %>%
     arrange(index) %>% column_to_rownames("index") %>%
     as.matrix %>% t %>% cor(method = "pearson")
   
@@ -252,7 +283,8 @@ determine_corr <- function(index, value, group) {
 
 df_main <- df_main %>%
   group_by(sgRNA_target) %>%
-  mutate(sgRNA_correlation = determine_corr(sgRNA_index, log2FoldChange, group))
+  mutate(sgRNA_correlation = determine_corr(sgRNA_index,
+    log2FoldChange, condition, time))
 ```
 
 
@@ -376,7 +408,7 @@ df_gene <- df_main %>%
 
 A comparison of log2 FC aggregated by the different method shows clear differences. For the example gene `rps10` the weighted mean and the top method give similar results, representative of the stronger influence from highly depleted sgRNA repression strains. The regular mean is robust, but "shallow", probably underestimating the real effect n fitness. The top 1 method simply picks the most depleted/enriched sgRNA (over all conditions) as representative.
 
-```{r, fig.width = 7, fig.height = 4}
+```{r, fig.width = 7, fig.height = 5.5}
 df_gene %>% filter(sgRNA_target == "rps10") %>%
   pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
   mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
@@ -384,7 +416,7 @@ df_gene %>% filter(sgRNA_target == "rps10") %>%
     ymin = log2FoldChange-sd_log2FoldChange, 
     ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
   geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
-  facet_wrap(~ condition, ncol = 3) +
+  facet_wrap(~ condition, ncol = 4) +
   custom_theme(legend.position = "right") +
   coord_cartesian(ylim = c(-3.75, 0.75)) +
   scale_color_manual(values = custom_colors)
@@ -392,11 +424,11 @@ df_gene %>% filter(sgRNA_target == "rps10") %>%
 
 The following two plots show single sgRNAs and fitness for a tricky case, `gltA`. The strongest depletion is achieved by sgRNA 1 but in mean fitness quantification, it doesn't show. The reason is ....
 
-```{r, fig.width = 7, fig.height = 4}
+```{r, fig.width = 7, fig.height = 5}
 df_main %>% filter(grepl("gltA", sgRNA_target)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA)) +
   geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
-  facet_wrap(~ condition, ncol = 3) +
+  facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = rep_along(1:10, custom_colors))
 
@@ -407,7 +439,7 @@ df_gene %>% filter(sgRNA_target == "gltA") %>%
     ymin = log2FoldChange-sd_log2FoldChange, 
     ymax = log2FoldChange+sd_log2FoldChange, color = fct_inorder(metric))) +
   geom_line(size = 1) + geom_point(size = 2) + geom_linerange(size = 1) +
-  facet_wrap(~ condition, ncol = 3) +
+  facet_wrap(~ condition, ncol = 4) +
   custom_theme(legend.position = "right") +
   scale_color_manual(values = custom_colors)
 
@@ -422,7 +454,7 @@ This plot shows a comparison of the 4 methods for the first 36 genes by alphabet
 ```{r, fig.width = 9, fig.height = 9}
 df_gene %>% filter(
     gene_name %in% unique(.data[["gene_name"]])[1:36],
-    condition == "1% CO2, 1000uE"
+    condition == "HC, HL"
   ) %>%
   pivot_longer(cols = matches("[n12]_log2FoldChange"), names_to = "metric", values_to = "log2FoldChange") %>%
   mutate(metric = str_remove(metric, "_log2FoldChange")) %>%
@@ -436,41 +468,21 @@ df_gene %>% filter(
   scale_color_manual(values = custom_colors)
 ```
 
-The same control can be performed for gene fitness, that is, the AUC of log2 FC over all time points, for each individual sgRNA. Fitness was also summarized using the mean, weighted mean, or a top1 and top2 method for each of the 36 first genes by alphabetical order and one selected condition only. We can conclude from the plot below that mean and weighted mean only result in marginal difference in estimation of fitness, and continue with the weighted versions for all following analyses.
-
-```{r, fig.width = 9, fig.height = 4.5}
-df_gene %>% filter(
-    gene_name %in% unique(.data[["gene_name"]])[1:36],
-    condition == "1% CO2, 1000uE"
-  ) %>%
-  pivot_longer(cols = matches("[n12]_fitness"), names_to = "metric", values_to = "fitness") %>%
-  mutate(metric = str_remove(metric, "_fitness")) %>% distinct %>%
-  ggplot(aes(x = sgRNA_target, y = fitness, 
-    ymin = fitness-sd_fitness, 
-    ymax = fitness+sd_fitness, fill = fct_inorder(metric), color = fct_inorder(metric))) +
-  geom_col(position = "dodge") +
-  geom_errorbar(position = "dodge", size = 1) +
-  custom_theme(legend.position = "top") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_manual(values = custom_colors[1:4]) +
-  scale_color_manual(values = custom_colors[1:4])
-```
-
 ## Global distribution of gene fitness
 
 Global distribution of weighted mean fitness for all genes. Effect of ncRNA repression seems to be much lower than effect of gene repression.
 
-```{r, fig.width = 7, fig.height = 4}
+```{r, fig.width = 7, fig.height = 5}
 plot_all_fitness_hist <- df_gene %>% filter(time == 0) %>%
   ggplot(aes(x = wmean_fitness, fill = sgRNA_type)) +
   geom_histogram(bins = 100) +
   coord_cartesian(xlim = c(-2, 2), ylim = c(0, 1000)) +
-  facet_wrap( ~ condition, ncol = 3) +
+  facet_wrap( ~ condition, ncol = 4) +
   custom_theme() +
   scale_fill_manual(values = custom_colors[3:4])
 
 print(plot_all_fitness_hist)
-save_plot(plot_all_fitness_hist, width = 7, height = 4)
+save_plot(plot_all_fitness_hist, width = 7, height = 5)
 ```
 
 
@@ -478,16 +490,16 @@ save_plot(plot_all_fitness_hist, width = 7, height = 4)
 
 Ten sgRNAs were included in the library that have no gene-specific/random (?) targets. The following plot shows that these negative controls do not have an effect on strain fitness, except probably 2 sgRNAs in one specific condition.
 
-```{r, fig.width = 7, fig.height = 4}
+```{r, fig.width = 7, fig.height = 5.5}
 plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = sgRNA_target)) +
   geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
-  facet_wrap(~ condition, ncol = 3) +
+  facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
   scale_color_manual(values = rep_along(1:10, custom_colors))
 
 print(plot_controls_sgRNAs)
-save_plot(plot_controls_sgRNAs, width = 7, height = 4)
+save_plot(plot_controls_sgRNAs, width = 7, height = 5.5)
 ```
 
 # Unsupervised clustering of genes
@@ -508,7 +520,7 @@ df_heatmap <- df_gene %>%
 
 # subset of df with *significantly changed* genes
 df_heatmap2 <- df_heatmap %>%
-  filter(if_any(.cols = matches("uE$"), ~ !between(., -2, 2)))
+  filter(if_any(.cols = matches("[HL]C, "), ~ !between(., -2, 2)))
 
 # create cluster for reordering
 mat_cluster <- df_heatmap %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
@@ -524,7 +536,7 @@ mat_heatmap_sig <- df_heatmap2 %>% as.matrix %>%
 
 Now we can plot _all_ genes, a subset with only significant genes, and a dendrogram for clustering.
  
-```{r, fig.width = 8, fig.height = 1.6}
+```{r, fig.width = 8, fig.height = 2.5}
 plot_heatmap_all <- levelplot(mat_heatmap,
   par.settings = custom.colorblind(),
   col.regions = colorRampPalette(heat_cols)(20),
@@ -538,10 +550,10 @@ plot_heatmap_all <- levelplot(mat_heatmap,
 )
 
 print(plot_heatmap_all)
-save_plot(plot_heatmap_all, width = 8, height = 1.6)
+save_plot(plot_heatmap_all, width = 8, height = 2.5)
 ```
 
-```{r, fig.width = 8, fig.height = 3}
+```{r, fig.width = 8, fig.height = 4}
 plot_heatmap_sig <- levelplot(mat_heatmap_sig,
   par.settings = custom.colorblind(),
   col.regions = colorRampPalette(heat_cols)(20),
@@ -550,7 +562,7 @@ plot_heatmap_sig <- levelplot(mat_heatmap_sig,
   ylab = "", scales = list(x = list(draw = FALSE)),
   panel = function(x, y, z, ...) {
     panel.levelplot(x, y, z, ...)
-    panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
+    panel.abline(h = 1:ncol(mat_heatmap_sig)+0.5, col = "white", lwd = 1.5)
   }
 )
 
@@ -563,18 +575,18 @@ plot_cluster_dend <- mat_cluster_sig %>% as.dendrogram %>%
 gridExtra::grid.arrange(
   # coords for unit: top, right, bottom, left
   plot_cluster_dend + 
-    theme(plot.margin = unit(c(0.1, 0.08, -0.35, 0.28),"npc")),
+    theme(plot.margin = unit(c(0.1, 0.08, -0.25, 0.14),"npc")),
   plot_heatmap_sig,
   nrow = 2
 )
 ```
 
 ```{r, include = FALSE}
-png("../figures/plot_heatmap_signif.png", width = 1600, height = 600, res = 120)
+png("../figures/plot_heatmap_signif.png", width = 1600, height = 800, res = 200)
 gridExtra::grid.arrange(
   # coords for unit: top, right, bottom, left
   plot_cluster_dend + 
-    theme(plot.margin = unit(c(0.1, 0.03, -0.2, 0.146),"npc")),
+    theme(plot.margin = unit(c(0.1, 0.08, -0.25, 0.14),"npc")),
   plot_heatmap_sig,
   nrow = 2
 )
