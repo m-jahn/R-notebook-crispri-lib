@@ -1,10 +1,13 @@
 ---
 title: "CRISPRi library V2, data processing pipeline"
 output:
-  html_notebook: 
+  html_notebook:
     theme: cosmo
     toc: yes
-    number_sections: true
+    number_sections: yes
+  html_document:
+    toc: yes
+    df_print: paged
 ---
 
 ----------
@@ -700,12 +703,13 @@ Here, `fitness` is the response variable, the different conditions are the predi
 # fixed model with 6 predictor variables -- dynamic layout would 
 # be better in future
 fit_linreg <- function(y, x1, x2, x3, x4, x5, x6){
-  lm(y ~ x1 + x2 + x3 + x4 + x5 + x6) %>% coefficients
+  fit <- lm(y ~ x1 + x2 + x3 + x4 + x5 + x6)
+  c(coefficients(fit), summary(fit)$coefficients[, 4],
+    summary(fit)$r.squared)
 }
 
 # recode categorical to numerical (dummy) variables
 df_linreg <- df_gene %>%
-  #filter(sgRNA_target %in% c("apcA", "apcB", "apcC")) %>%
   filter(!is.na(locus)) %>%
   select(locus, carbon, light, treatment, wmean_fitness) %>% distinct %>%
   mutate(
@@ -717,8 +721,9 @@ df_linreg <- df_gene %>%
   # fit model
   group_by(locus) %>%
   summarize(coefficient = fit_linreg(wmean_fitness, carbon, light, `-N`, `+FL`, `+G`, `+D`),
-    .groups = "keep") %>% unnest(coefficient) %>%
-  mutate(treatment = c("intercept", "carbon", "light", "-N", "+FL", "+G", "+D"))
+    .groups = "keep") %>% #unnest(coefficient) %>%
+  mutate(treatment = c(rep(c("intercept", "carbon", "light", "-N", "+FL", "+G", "+D"), 2) %>% 
+    paste0(rep(c("", "pval_"), each = 7), .), "r_squared"))
 ```
 
 Now we can overlay the information of the best predictor variable on the cluster map produced by tSNE, for example, and this way identify groups of genes regulated in a similar degree, by similar variables.
@@ -727,14 +732,14 @@ Now we can overlay the information of the best predictor variable on the cluster
 plot_tsne_linreg <- df_tsne %>%
   inner_join(df_linreg, by = "locus") %>%
   left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
-  filter(treatment != "intercept") %>%
+  filter(!str_detect(treatment, "intercept|pval|r_squared")) %>%
   mutate(sgRNA_target = if_else(abs(coefficient) > 2, sgRNA_target, "")) %>%
   mutate(point_size = abs(coefficient),
     coefficient = coefficient %>% replace(., . > 5, 5) %>% replace(., . < -5, -5)) %>%
   
   ggplot(aes(x = V1, y = V2, size = point_size,
     color = coefficient, label = sgRNA_target)) +
-  geom_point() + 
+  geom_point() +
   labs(title = "t-SNE clustering of DF genes", 
     subtitle = paste0("dot color/size encodes effect of variable, n = ", nrow(df_tsne))) +
   custom_theme(aspect = 1) +
@@ -767,6 +772,58 @@ This strategy reveals a list of interesting condition-specific genes:
   - `sll0217` Putative diflavin flavoprotein A2 (dfa2), KO negatively correlated with fitness with C, positive with +FL
   - `sll0218` same behavior as dfa2, interacts with dfa2,4, contributes to PSII stabilization, 
      [Bersanini et al., 2017](https://pubmed.ncbi.nlm.nih.gov/27928824/)
+
+## List of genes with strong fitness correlation
+
+The table with linear regression coefficients and p-values is reshaped to long format for better readability. The `kableExtra` package is used to color cells for easier recognition. Then we subset the table for each treatment in order to spot the most interesting genes.
+
+```{r}
+library(kableExtra)
+
+df_linreg_wide <- df_linreg %>%
+  pivot_wider(names_from = treatment, values_from = coefficient) %>%
+  left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
+  select(-matches("intercept")) %>%
+  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) > 2)) %>%
+  mutate(across(matches("carb|light|\\-|\\+"), ~ round(., 3))) %>% 
+  ungroup %>% select(sgRNA_target, locus, matches("."))
+
+color_table <- function(df, variable) {
+  filter(df, abs(.data[[variable]]) > 2) %>% 
+  select(matches("^(sg|loc|r_s|carb|light|\\-|\\+)") | all_of(paste0("pval_", variable))) %>%
+  arrange(desc(.data[[variable]])) %>%
+  mutate(across(3:8, ~ cell_spec(., "html", color = "white",
+      background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
+      bold = TRUE))) %>%
+  kbl(format = "html", escape = F) %>%
+  kable_paper("striped", full_width = F)
+}
+```
+
+
+```{r}
+df_linreg_wide %>% color_table("carbon")
+```
+
+```{r}
+df_linreg_wide %>% color_table("light")
+```
+
+```{r}
+df_linreg_wide %>% color_table("-N")
+```
+
+```{r}
+df_linreg_wide %>% color_table("+FL")
+```
+
+```{r}
+df_linreg_wide %>% color_table("+G")
+```
+
+```{r}
+df_linreg_wide %>% color_table("+D")
+```
 
 ## Extract and analyze interesting gene clusters
 
