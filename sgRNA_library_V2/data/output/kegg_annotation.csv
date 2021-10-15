@@ -548,9 +548,11 @@ sll0784,syn00460,Cyanoamino acid metabolism,merR; nitrilase,merR
 sll1538,syn00460,Cyanoamino acid metabolism,bgl; beta-glucosidase,bgl
 sll1931,syn00460,Cyanoamino acid metabolism,gylA; serine hydroxymethyltransferase,gylA
 slr1269,syn00460,Cyanoamino acid metabolism,ggt; gamma-glutamyltranspeptidase,ggt
+sll0504,syn00470,D-Amino acid metabolism,lysA; diaminopimelate decarboxylase,lysA
 sll2010,syn00470,D-Amino acid metabolism,murD; UDP-N-acetylmuramoylalanine--D-glutamate ligase,murD
 slr0520,syn00470,D-Amino acid metabolism,purL; phosphoribosyl formylglycinamidine synthase,purL
 slr0827,syn00470,D-Amino acid metabolism,alr; alanine racemase,alr
+slr1665,syn00470,D-Amino acid metabolism,dapF; diaminopimelate epimerase,dapF
 slr1746,syn00470,D-Amino acid metabolism,murI; glutamate racemase,murI
 slr1874,syn00470,D-Amino acid metabolism,ddlA; D-alanine:D-alanine ligase-related protein,ddlA
 slr2079,syn00470,D-Amino acid metabolism,unknown protein,NA
@@ -1135,6 +1137,7 @@ sll0045,syn01100,Metabolic pathways,sps; sucrose phosphate synthase,sps
 sll0053,syn01100,Metabolic pathways,accC; biotin carboxylase,accC
 sll0065,syn01100,Metabolic pathways,ilvN; acetolactate synthase,ilvN
 sll0067,syn01100,Metabolic pathways,gst; glutathione S-transferase,gst
+sll0070,syn01100,Metabolic pathways,purU; phosphoribosylglycinamide formyltransferase,purU
 sll0080,syn01100,Metabolic pathways,argC; N-acetyl-gamma-glutamyl-phosphate reductase,argC
 sll0083,syn01100,Metabolic pathways,gmhA; phosphoheptose isomerase,gmhA
 sll0084,syn01100,Metabolic pathways,hisB; imidazoleglycerol-phosphate dehydratase; histidinol-phosphatase,hisB
@@ -1148,12 +1151,14 @@ sll0158,syn01100,Metabolic pathways,"glgB; 1,4-alpha-glucan branching enzyme",gl
 sll0166,syn01100,Metabolic pathways,hemD; uroporphyrin-III synthase,hemD
 sll0171,syn01100,Metabolic pathways,gcvT; aminomethyltransferase,gcvT
 sll0179,syn01100,Metabolic pathways,gltX; glutamyl-tRNA synthetase,gltX
+sll0199,syn01100,Metabolic pathways,petE; plastocyanin,petE
 sll0207,syn01100,Metabolic pathways,rfbA; glucose-1-phosphate thymidylyltransferase,rfbA
 sll0220,syn01100,Metabolic pathways,glmS; L-glutamine:D-fructose-6-P amidotransferase,glmS
 sll0223,syn01100,Metabolic pathways,ndhB; NADH dehydrogenase subunit 2,ndhB
 sll0228,syn01100,Metabolic pathways,arginase,NA
 sll0244,syn01100,Metabolic pathways,galE; UDP-glucose 4-epimerase,galE
 sll0250,syn01100,Metabolic pathways,dfp; pantothenate metabolism flavoprotein,dfp
+sll0258,syn01100,Metabolic pathways,psbV; cytochrome c550,psbV
 sll0262,syn01100,Metabolic pathways,desD(des6); delta-6 desaturase,NA
 sll0300,syn01100,Metabolic pathways,ribC; riboflavin synthase alpha chain,ribC
 sll0329,syn01100,Metabolic pathways,gnd; 6-phosphogluconate dehydrogenase,gnd
@@ -1173,6 +1178,7 @@ sll0418,syn01100,Metabolic pathways,sterol-C-methyltransferase,NA
 sll0420,syn01100,Metabolic pathways,ureB; urease beta subunit,ureB
 sll0421,syn01100,Metabolic pathways,purB; adenylosuccinate lyase,purB
 sll0422,syn01100,Metabolic pathways,asparaginase,NA
+sll0427,syn01100,Metabolic pathways,psbO; photosystem II manganese-stabilizing polypeptide,psbO
 sll0450,syn01100,Metabolic pathways,norB; cytochrome b subunit of nitric oxide reductase,norB
 sll0455,syn01100,Metabolic pathways,thrA; homoserine dehydrogenase,thrA
 sll0461,syn01100,Metabolic pathways,proA; gamma-glutamyl phosphate reductase,proA
@@ -1193,6 +1199,7 @@ sll0587,syn01100,Metabolic pathways,pykF; pyruvate kinase,pykF
 sll0593,syn01100,Metabolic pathways,glk; glucokinase,glk
 sll0603,syn01100,Metabolic pathways,"menD; 2-succinyl-6-hydroxy-2,4-cyclohexadiene-1-carboxylate synthase",menD
 sll0622,syn01100,Metabolic pathways,nadA; quinolinate synthetase,nadA
+sll0629,syn01100,Metabolic pathways,psaK; photosystem I subunit X,psaK
 sll0631,syn01100,Metabolic pathways,nadB; L-aspartate oxidase,nadB
 sll0635,syn01100,Metabolic pathways,thiE; thiamin biosynthetic bifunctional enzyme,thiE
 sll0646,syn01100,Metabolic pathways,cyaA; adenylate cyclase,cyaA
@@ -1268,6 +1275,7 @@ sll1182,syn01100,Metabolic pathways,petC; cytochrome b6/f complex iron-sulfur su
 sll1184,syn01100,Metabolic pathways,ho1; heme oxygenase,ho1
 sll1185,syn01100,Metabolic pathways,hemF; coproporphyrinogen III oxidase,hemF
 sll1189,syn01100,Metabolic pathways,glcE; glycolate oxidase subunit; GlcE,glcE
+sll1194,syn01100,Metabolic pathways,psbU; photosystem II 12 kD extrinsic protein,psbU
 sll1196,syn01100,Metabolic pathways,pfkA; phosphofructokinase,pfkA
 sll1212,syn01100,Metabolic pathways,rfbD; GDP-D-mannose dehydratase,rfbD
 sll1213,syn01100,Metabolic pathways,hypothetical protein,NA
@@ -1280,6 +1288,7 @@ sll1249,syn01100,Metabolic pathways,panC_kcy; pantothenate synthetase/cytidylate
 sll1258,syn01100,Metabolic pathways,unknown protein,NA
 sll1262,syn01100,Metabolic pathways,hypothetical protein,NA
 sll1275,syn01100,Metabolic pathways,pykF; pyruvate kinase,pykF
+sll1281,syn01100,Metabolic pathways,ycf9; ycf9 gene product,ycf9
 sll1282,syn01100,Metabolic pathways,ribH; riboflavin synthase beta subunit,ribH
 sll1285,syn01100,Metabolic pathways,hypothetical protein,NA
 sll1298,syn01100,Metabolic pathways,clcD; dienelactone hydrolase,clcD
@@ -1300,11 +1309,15 @@ sll1356,syn01100,Metabolic pathways,glgP; glycogen phosphorylase,glgP
 sll1358,syn01100,Metabolic pathways,unknown protein,NA
 sll1363,syn01100,Metabolic pathways,ilvC; ketol-acid reductoisomerase,ilvC
 sll1370,syn01100,Metabolic pathways,rfbM; GDP-mannose pyrophosphorylase,rfbM
+sll1376,syn01100,Metabolic pathways,unknown protein,NA
 sll1377,syn01100,Metabolic pathways,hypothetical protein,NA
+sll1382,syn01100,Metabolic pathways,petF; ferredoxin,petF
 sll1383,syn01100,Metabolic pathways,suhB; extragenic suppressor; SuhB,suhB
 sll1393,syn01100,Metabolic pathways,glgA; glycogen (starch) synthase,glgA
 sll1395,syn01100,Metabolic pathways,rfbD; dTDP-6-deoxy-L-mannose-dehydrogenase,rfbD
+sll1398,syn01100,Metabolic pathways,psb13; photosystem II 13 kD protein,psb13
 sll1415,syn01100,Metabolic pathways,hypothetical protein,NA
+sll1418,syn01100,Metabolic pathways,unknown protein,NA
 sll1430,syn01100,Metabolic pathways,apt; adenine phosphoribosyltransferase,apt
 sll1435,syn01100,Metabolic pathways,pet112; PET112 protein,pet112
 sll1440,syn01100,Metabolic pathways,pdxH; pyridoxamine 5'-phosphate oxidase,pdxH
@@ -1316,6 +1329,7 @@ sll1468,syn01100,Metabolic pathways,bhy; b-carotene hydroxylase,bhy
 sll1470,syn01100,Metabolic pathways,leuC; 3-isopropylmalate dehydratase,leuC
 sll1471,syn01100,Metabolic pathways,cpcG; phycobilisome rod-core linker polypeptide; CpcG,cpcG
 sll1479,syn01100,Metabolic pathways,devB; glucose-6-P-dehydrogenase,devB
+sll1484,syn01100,Metabolic pathways,ndh; NADH dehydrogenase,ndh
 sll1495,syn01100,Metabolic pathways,hypothetical protein,NA
 sll1496,syn01100,Metabolic pathways,mannose-1-phosphate guanyltransferase,NA
 sll1498,syn01100,Metabolic pathways,carA; carbamoyl-phosphate synthetase subunit A,carA
@@ -1360,10 +1374,12 @@ sll1758,syn01100,Metabolic pathways,hypothetical protein,NA
 sll1760,syn01100,Metabolic pathways,thrB; homoserine kinase,thrB
 sll1775,syn01100,Metabolic pathways,hypothetical protein,NA
 sll1776,syn01100,Metabolic pathways,deoC; deoxyribose-phosphate aldolase,deoC
+sll1796,syn01100,Metabolic pathways,petJ; cytochrome c553,petJ
 sll1797,syn01100,Metabolic pathways,ycf21; ycf21 gene product,ycf21
 sll1815,syn01100,Metabolic pathways,adk; adenylate kinase,adk
 sll1823,syn01100,Metabolic pathways,purA; adenylosuccinate synthetase,purA
 sll1831,syn01100,Metabolic pathways,glcF; glycolate oxidase subunit (Fe-S) protein,glcF
+sll1833,syn01100,Metabolic pathways,ftsI; penicillin-binding protein,ftsI
 sll1841,syn01100,Metabolic pathways,odhB; dihydrolipoamide acetyltransferase component (E2) of pyruvate dehydrogenase complex,odhB
 sll1848,syn01100,Metabolic pathways,unknown protein,NA
 sll1852,syn01100,Metabolic pathways,ndkR; nucleoside diphosphate kinase,ndkR
@@ -1405,6 +1421,7 @@ slr0054,syn01100,Metabolic pathways,dgkA; diacylglycerol kinase,dgkA
 slr0055,syn01100,Metabolic pathways,trpG; anthranilate synthase component II,trpG
 slr0056,syn01100,Metabolic pathways,chlG; chlorophyll a synthase,chlG
 slr0066,syn01100,Metabolic pathways,ribG; riboflavin biosynthesis protein,ribG
+slr0070,syn01100,Metabolic pathways,fmt; methionyl-tRNA formyltransferase,fmt
 slr0077,syn01100,Metabolic pathways,nifS; NifS protein,nifS
 slr0078,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0084,syn01100,Metabolic pathways,hisH; N-acetyl-glutamate-gamma-semialdehyde dehydrogenase,hisH
@@ -1412,6 +1429,7 @@ slr0089,syn01100,Metabolic pathways,erg6; delta(24)-sterol C-methyltransferase,e
 slr0090,syn01100,Metabolic pathways,ppd; 4-hydroxyphenylpyruvic acid dioxgenase,ppd
 slr0091,syn01100,Metabolic pathways,aldehyde dehydrogenase,NA
 slr0118,syn01100,Metabolic pathways,thiC; ThiC protein,thiC
+slr0150,syn01100,Metabolic pathways,petF; ferredoxin,petF
 slr0185,syn01100,Metabolic pathways,umpS; uridine 5'-monophosphate synthase,umpS
 slr0186,syn01100,Metabolic pathways,leuA; 2-isopropylmalate synthase,leuA
 slr0194,syn01100,Metabolic pathways,rpiA; ribose 5-phosphate isomerase,rpiA
@@ -1446,6 +1464,7 @@ slr0400,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0402,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0406,syn01100,Metabolic pathways,pyrC; dihydroorotase,pyrC
 slr0426,syn01100,Metabolic pathways,folE; GTP cyclohydrolase I,folE
+slr0427,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0435,syn01100,Metabolic pathways,accB; biotin carboxyl carrier protein of acetyl-CoA carboxylase,accB
 slr0444,syn01100,Metabolic pathways,aroA; 3-phosphoshikimate 1-carboxyvinyltransferase,aroA
 slr0452,syn01100,Metabolic pathways,ilvD; dihydroxyacid dehydratase,ilvD
@@ -1454,6 +1473,7 @@ slr0458,syn01100,Metabolic pathways,unknown protein,NA
 slr0477,syn01100,Metabolic pathways,purN; phosphoribosylglycinamide formyltransferase,purN
 slr0492,syn01100,Metabolic pathways,menE; O-succinylbenzoic acid--CoA ligase,menE
 slr0493,syn01100,Metabolic pathways,rfbM; phosphomannose isomerase,rfbM
+slr0495,syn01100,Metabolic pathways,lipopeptide antibiotics iturin a biosynthesis protein,NA
 slr0500,syn01100,Metabolic pathways,hisB; imidazoleglycerol-phosphate dehydratase,hisB
 slr0506,syn01100,Metabolic pathways,pcr; protochlorophyllide oxido-reductase,pcr
 slr0519,syn01100,Metabolic pathways,hypothetical protein,NA
@@ -1478,6 +1498,7 @@ slr0618,syn01100,Metabolic pathways,cbiP; cobyric acid synthase,cbiP
 slr0624,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0633,syn01100,Metabolic pathways,thiG; ThiG protein,thiG
 slr0636,syn01100,Metabolic pathways,hypothetical protein,NA
+slr0646,syn01100,Metabolic pathways,dacB; penicillin-binding protein 4,dacB
 slr0649,syn01100,Metabolic pathways,metS; methionyl-tRNA synthetase,metS
 slr0652,syn01100,Metabolic pathways,hisA; phosphorybosilformimino-5-amino-phosphorybosil-4-imidazolecarboxamideisomerase,hisA
 slr0657,syn01100,Metabolic pathways,lysC; aspartate kinase,lysC
@@ -1501,6 +1522,7 @@ slr0776,syn01100,Metabolic pathways,lpxD; UDP-3-o-[3-hydroxymyristoyl] glucosami
 slr0783,syn01100,Metabolic pathways,tpi; triosephosphate isomerase,tpi
 slr0787,syn01100,Metabolic pathways,unknown protein,NA
 slr0788,syn01100,Metabolic pathways,pre-B cell enhancing factor,NA
+slr0804,syn01100,Metabolic pathways,dacB; D-alanyl-D-alanine carboxypeptidase,dacB
 slr0809,syn01100,Metabolic pathways,rfbB; dTDP-glucose 4-6-dehydratase,rfbB
 slr0812,syn01100,Metabolic pathways,unknown protein,NA
 slr0813,syn01100,Metabolic pathways,ceramide glucosyltransferase,NA
@@ -1511,7 +1533,9 @@ slr0838,syn01100,Metabolic pathways,purM; phosphoribosyl formylglycinamidine cyc
 slr0839,syn01100,Metabolic pathways,hemH; ferrochelatase,hemH
 slr0844,syn01100,Metabolic pathways,ndhF; NADH dehydrogenase subunit 5,ndhF
 slr0847,syn01100,Metabolic pathways,kdtB; KdtB protein,kdtB
+slr0851,syn01100,Metabolic pathways,ndh; NADH dehydrogenase,ndh
 slr0861,syn01100,Metabolic pathways,purT; glycinamide ribonucleotide transformylase,purT
+slr0862,syn01100,Metabolic pathways,lmbP; LmbP protein,lmbP
 slr0877,syn01100,Metabolic pathways,amidase,NA
 slr0879,syn01100,Metabolic pathways,gcvH; glycine decarboxylase complex H-protein,gcvH
 slr0884,syn01100,Metabolic pathways,gap1; glyceraldehyde 3-phosphate dehydrogenase,gap1
@@ -1566,6 +1590,7 @@ slr1159,syn01100,Metabolic pathways,purD; glycinamide ribonucleotide synthetase,
 slr1164,syn01100,Metabolic pathways,nrdA; ribonucleotide reductase subunit alpha,nrdA
 slr1165,syn01100,Metabolic pathways,met3; sulfate adenylyltransferase,met3
 slr1176,syn01100,Metabolic pathways,agp; ADP-glucose pyrophosphorylase,agp
+slr1179,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1181,syn01100,Metabolic pathways,psbA1; photosystem II D1 protein,psbA1
 slr1185,syn01100,Metabolic pathways,petC; cytochrome b6/f-complex iron-sulfur protein,petC
 slr1192,syn01100,Metabolic pathways,zinc-containing alcohol dehydrogenase family,NA
@@ -1626,6 +1651,8 @@ slr1616,syn01100,Metabolic pathways,unknown protein,NA
 slr1623,syn01100,Metabolic pathways,unknown protein,NA
 slr1626,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1643,syn01100,Metabolic pathways,petH; ferredoxin-NADP oxidoreductase,petH
+slr1645,syn01100,Metabolic pathways,psbZ; photosystem II 11 kD protein,psbZ
+slr1655,syn01100,Metabolic pathways,psaL; photosystem I subunit XI,psaL
 slr1656,syn01100,Metabolic pathways,murG; UDP-N-acetylglucosamine-N-acetylmuramyl-(pentapeptide)pyrophosphoryl-undecaprenol N-acetylglucosamine transferase,murG
 slr1665,syn01100,Metabolic pathways,dapF; diaminopimelate epimerase,dapF
 slr1672,syn01100,Metabolic pathways,glpK; glycerol kinase,glpK
@@ -1635,6 +1662,7 @@ slr1718,syn01100,Metabolic pathways,unknown protein,NA
 slr1722,syn01100,Metabolic pathways,guaB; IMP dehydrogenase subunit,guaB
 slr1736,syn01100,Metabolic pathways,unknown protein,NA
 slr1737,syn01100,Metabolic pathways,unknown protein,NA
+slr1739,syn01100,Metabolic pathways,photosystem II 13kD protein (PsbW) homologue,NA
 slr1742,syn01100,Metabolic pathways,unknown protein,NA
 slr1743,syn01100,Metabolic pathways,ndh; NADH dehydrogenase,ndh
 slr1746,syn01100,Metabolic pathways,murI; glutamate racemase,murI
@@ -1649,6 +1677,7 @@ slr1790,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1791,syn01100,Metabolic pathways,cysH; 3'-phosphoadenosine-5'-phosphosulfate sulfotransferase,cysH
 slr1793,syn01100,Metabolic pathways,talB; transaldolase,talB
 slr1808,syn01100,Metabolic pathways,hemA; transfer RNA-Gln reductase,hemA
+slr1828,syn01100,Metabolic pathways,petF; ferredoxin,petF
 slr1829,syn01100,Metabolic pathways,unknown protein,NA
 slr1830,syn01100,Metabolic pathways,phbC; poly(3-hydroxyalkanoate) synthase,phbC
 slr1834,syn01100,Metabolic pathways,psaA; P700 apoprotein subunit Ia,psaA
@@ -1697,16 +1726,30 @@ slr2130,syn01100,Metabolic pathways,aroB; 3-dehydroquinate synthase,aroB
 slr2132,syn01100,Metabolic pathways,pta; phosphotransacetylase,pta
 slr2136,syn01100,Metabolic pathways,gcpE; GcpE protein,gcpE
 slr2141,syn01100,Metabolic pathways,unknown protein,NA
+sml0001,syn01100,Metabolic pathways,psbI; photosystem II PsbI protein,psbI
+sml0002,syn01100,Metabolic pathways,psbX; photosystem II PsbX protein,psbX
+sml0003,syn01100,Metabolic pathways,psbM; photosystem II PsbM protein,psbM
 sml0004,syn01100,Metabolic pathways,ycf6; hypothetical protein,ycf6
+sml0005,syn01100,Metabolic pathways,psbK; photosystem II PsbK protein,psbK
+sml0007,syn01100,Metabolic pathways,ycf32; ycf32 gene product,ycf32
+sml0008,syn01100,Metabolic pathways,psaJ; photosystem I subunit IX,psaJ
+smr0001,syn01100,Metabolic pathways,psbT; photosystem II PsbT protein,psbT
 smr0003,syn01100,Metabolic pathways,petM; cytochrome b6-f complex subunit; PetM,petM
+smr0004,syn01100,Metabolic pathways,psaI; photosystem I subunit VIII,psaI
+smr0005,syn01100,Metabolic pathways,psaM; photosystem I PsaM subunit,psaM
 smr0006,syn01100,Metabolic pathways,psbF; cytochrome b559 b subunit,psbF
+smr0007,syn01100,Metabolic pathways,psbL; photosystem II PsbL protein,psbL
+smr0008,syn01100,Metabolic pathways,psbJ; photosystem II PsbJ protein,psbJ
 smr0010,syn01100,Metabolic pathways,petG; PetG subunit of the cytochrome b6f complex,petG
+ssl0020,syn01100,Metabolic pathways,petF; ferredoxin,petF
 ssl0563,syn01100,Metabolic pathways,psaC; photosystem I subunit VII,psaC
 ssl2084,syn01100,Metabolic pathways,acp; acyl carrier protein,acp
 ssl2153,syn01100,Metabolic pathways,rpiB; ribose phosphate isomerase B,rpiB
 ssl2296,syn01100,Metabolic pathways,dcoH; pterin-4a-carbinolamine dehydratase,dcoH
+ssl2598,syn01100,Metabolic pathways,psbH; photosystem II PsbH protein,psbH
 ssl2615,syn01100,Metabolic pathways,atpH; ATP synthase subunit c,atpH
 ssl3093,syn01100,Metabolic pathways,cpcD; phycocyanin associated linker protein,cpcD
+ssr0390,syn01100,Metabolic pathways,psaK; photosystem I subunit X,psaK
 ssr1386,syn01100,Metabolic pathways,ndhL; NADH dehydrogenase subunit; NdhL,ndhL
 ssr2831,syn01100,Metabolic pathways,psaE; photosystem I subunit IV,psaE
 ssr3383,syn01100,Metabolic pathways,apcC; phycobilisome LC linker polypeptide,apcC
@@ -2474,6 +2517,44 @@ slr1925,syn01240,Biosynthesis of cofactors,cbiB; CbiB protein,cbiB
 slr1979,syn01240,Biosynthesis of cofactors,trpE; anthranilate synthase component I,trpE
 slr2026,syn01240,Biosynthesis of cofactors,folP; dihydropteroate pyrophosphorylase,folP
 slr2121,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
+sll0083,syn01250,Biosynthesis of nucleotide sugars,gmhA; phosphoheptose isomerase,gmhA
+sll0084,syn01250,Biosynthesis of nucleotide sugars,hisB; imidazoleglycerol-phosphate dehydratase; histidinol-phosphatase,hisB
+sll0207,syn01250,Biosynthesis of nucleotide sugars,rfbA; glucose-1-phosphate thymidylyltransferase,rfbA
+sll0220,syn01250,Biosynthesis of nucleotide sugars,glmS; L-glutamine:D-fructose-6-P amidotransferase,glmS
+sll0244,syn01250,Biosynthesis of nucleotide sugars,galE; UDP-glucose 4-epimerase,galE
+sll0593,syn01250,Biosynthesis of nucleotide sugars,glk; glucokinase,glk
+sll0726,syn01250,Biosynthesis of nucleotide sugars,pgm; phosphoglucomutase,pgm
+sll0899,syn01250,Biosynthesis of nucleotide sugars,glmU; UDP-N-acetylglucosamine pyrophosphorylase,glmU
+sll1212,syn01250,Biosynthesis of nucleotide sugars,rfbD; GDP-D-mannose dehydratase,rfbD
+sll1213,syn01250,Biosynthesis of nucleotide sugars,hypothetical protein,NA
+sll1370,syn01250,Biosynthesis of nucleotide sugars,rfbM; GDP-mannose pyrophosphorylase,rfbM
+sll1395,syn01250,Biosynthesis of nucleotide sugars,rfbD; dTDP-6-deoxy-L-mannose-dehydrogenase,rfbD
+sll1558,syn01250,Biosynthesis of nucleotide sugars,mannose-1-phosphate guanyltransferase,NA
+sll1758,syn01250,Biosynthesis of nucleotide sugars,hypothetical protein,NA
+slr0017,syn01250,Biosynthesis of nucleotide sugars,murZ; UDP-N-acetylglucosamine 1-carboxyvinyltransferase,murZ
+slr0329,syn01250,Biosynthesis of nucleotide sugars,xylR; xylose repressor,xylR
+slr0493,syn01250,Biosynthesis of nucleotide sugars,rfbM; phosphomannose isomerase,rfbM
+slr0624,syn01250,Biosynthesis of nucleotide sugars,hypothetical protein,NA
+slr0809,syn01250,Biosynthesis of nucleotide sugars,rfbB; dTDP-glucose 4-6-dehydratase,rfbB
+slr0836,syn01250,Biosynthesis of nucleotide sugars,"rfbB; dTDP-glucose 4,6-dehydratase",rfbB
+slr0862,syn01250,Biosynthesis of nucleotide sugars,lmbP; LmbP protein,lmbP
+slr0983,syn01250,Biosynthesis of nucleotide sugars,rfbF; alpha-D-glucose-1-phosphate cytidylyltransferase,rfbF
+slr0984,syn01250,Biosynthesis of nucleotide sugars,"rfbG; CDP-glucose-4,6-dehydratase",rfbG
+slr0985,syn01250,Biosynthesis of nucleotide sugars,rfbC; dTDP-6-deoxy-L-mannose-dehydrogenase,rfbC
+slr1020,syn01250,Biosynthesis of nucleotide sugars,sqdB; sulfolipid biosynthesis protein; SqdB,sqdB
+slr1067,syn01250,Biosynthesis of nucleotide sugars,galE; UDP-glucose-4-epimerase,galE
+slr1072,syn01250,Biosynthesis of nucleotide sugars,yefA; GDP-D-mannose dehydratase,yefA
+slr1078,syn01250,Biosynthesis of nucleotide sugars,galE; UDP-glucose-4-epimerase,galE
+slr1176,syn01250,Biosynthesis of nucleotide sugars,agp; ADP-glucose pyrophosphorylase,agp
+slr1179,syn01250,Biosynthesis of nucleotide sugars,hypothetical protein,NA
+slr1299,syn01250,Biosynthesis of nucleotide sugars,UDP-glucose dehydrogenase,NA
+slr1349,syn01250,Biosynthesis of nucleotide sugars,pgi; glucose-6-phosphate isomerase,pgi
+slr1424,syn01250,Biosynthesis of nucleotide sugars,hypothetical protein,NA
+slr1448,syn01250,Biosynthesis of nucleotide sugars,cscK; fructokinase,cscK
+slr1615,syn01250,Biosynthesis of nucleotide sugars,rfbE; perosamine synthetase,rfbE
+slr1933,syn01250,Biosynthesis of nucleotide sugars,"rfbC; dTDP-4-dehydrorhamnose 3,5-epimerase",rfbC
+slr2074,syn01250,Biosynthesis of nucleotide sugars,manA; mannose-6-phosphate isomerase,manA
+slr2114,syn01250,Biosynthesis of nucleotide sugars,spsC; spore coat polysaccharide biosynthesis protein; SpsC,spsC
 sll0002,syn01501,beta-Lactam resistance,ponA; penicillin-binding protein 1A,ponA
 sll1833,syn01501,beta-Lactam resistance,ftsI; penicillin-binding protein,ftsI
 slr0121,syn01501,beta-Lactam resistance,unknown protein,NA

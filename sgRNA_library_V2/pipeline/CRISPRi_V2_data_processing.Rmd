@@ -825,60 +825,73 @@ df_linreg_wide %>% color_table("+G")
 df_linreg_wide %>% color_table("+D")
 ```
 
+```{r}
+df_linreg_wide %>%
+  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
+  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 )) %>%
+  arrange(desc(r_squared)) %>%
+  #arrange(across(matches("^pval_"), ~ sum(abs(.)))) %>%
+  mutate(across(3:8, ~ cell_spec(., "html", color = "white",
+      background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
+      bold = TRUE))) %>%
+  kbl(format = "html", escape = F) %>%
+  kable_paper("striped", full_width = F)
+```
+
+
 ## Extract and analyze interesting gene clusters
 
-**Cluster 1**: Genes strongly enriched **during high light exposure** (1% CO2, 1000 µmol photons m^-2 s^-1)
+The list above shows the genes whose fitness is most significantly correlated with one of the treatments.
+This list of genes is extracted and then simply fitness per condition is plotted as a heatmap, in order to confirm the trends from fitting the multiple liner regression models.
 
-```{r, fig.width = 7.5, fig.height = 3.5}
-left_join(enframe(cutreeord(mat_cluster_sig, k = 5), "locus", "cluster"))
 
-plot_sgRNAs_cl1 <- df_gene %>% filter(cluster == 1, time == 0) %>%
-  ggplot(aes(x = sgRNA_target, y = wmean_fitness, 
-    ymin = wmean_fitness-sd_fitness, 
-    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
-  geom_col(position = "dodge") +
-  geom_errorbar(position = "dodge", size = 1) +
-  custom_theme() + labs(title = "Mutants enriched in high light/CO2") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  scale_fill_manual(values = custom_colors) +
-  scale_color_manual(values = custom_colors)
 
-print(plot_sgRNAs_cl1)
-save_plot(plot_sgRNAs_cl1, width = 7.5, height = 3.5)
+```{r, fig.width = 8.0, fig.height = 3.5}
+library(ggheatmap)
+
+plot_sgRNAs_light <- df_linreg_wide %>%
+  
+  # make df with list of strongest correlated genes
+  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
+  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 ))  %>% select(locus) %>%
+  inner_join(df_gene, by = "locus") %>%
+  
+  # reshape to wide format
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3.5, 3.5) %>% replace(., . < -3.5, -3.5)) %>%
+  filter(time == 0) %>% select(sgRNA_target, condition, wmean_fitness) %>%
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  column_to_rownames("sgRNA_target") %>% t %>%
+  
+  # plot heatmap
+  ggheatmap(cluster_rows = TRUE, cluster_cols = TRUE,
+    color = brewer_pal(direction = -1, palette = "RdBu")(5),
+    show_cluster_rows	= FALSE, cluster_num = c(1,1),
+    tree_color_cols = grey(0.5),
+  ) %>% ggheatmap_theme(plotlist = 1, theme = list(
+    custom_theme() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5), 
+      axis.title.x = element_blank(), axis.title.y = element_blank())
+  ))
+
+  
+print(plot_sgRNAs_light)
+save_plot(plot_sgRNAs_light, width = 8.0, height = 3.5)
 ```
 
-More space-efficient representation as a heat map.
-
-```{r, fig.width = 5.0, fig.height = 2.5}
-plot_sgRNAs_cl1_hm <- df_gene %>% filter(cluster == 1, time == 0) %>%
-  arrange(cluster_order) %>% 
-  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3, 3) %>% replace(., . < -3, -3)) %>%
-  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
-  geom_tile() + custom_theme() +
-  labs(title = "High light/CO2", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-3, 3))
-
-print(plot_sgRNAs_cl1_hm)
-save_plot(plot_sgRNAs_cl1_hm, width = 5.0, height = 2.5)
-```
-
-- **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
+**Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
 
-```{r, fig.width = 6.5, fig.height = 3.0}
+```{r, fig.width = 6.5, fig.height = 3.5}
 plot_sgRNAs_phycobil <- df_gene %>%
   filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 2, 2) %>% replace(., . < -2, -2)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
   labs(title = "Apc/Cpc mutants enriched in high light/CO2", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-2, 2))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_distiller(palette = "RdBu", limits = c(-4, 4))
 
 print(plot_sgRNAs_phycobil)
-save_plot(plot_sgRNAs_phycobil, width = 6.5, height = 2.5)
+save_plot(plot_sgRNAs_phycobil, width = 6.5, height = 3.5)
 ```
 
 ## Interaction analysis using STRING database
@@ -934,8 +947,12 @@ plot_STRING <- function(gene_ID, taxon_ID,
 
 
 ```{r, fig.width = 5.5, fig.height = 4.0}
+list_corr_genes <- df_linreg_wide %>%
+  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
+  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 )) %>% pull(locus)
+  
 plot_STRING(
-  gene_ID = filter(df_gene, cluster == 4) %>% pull(locus) %>% unique,
+  gene_ID = list_corr_genes,
   taxon_ID = 1148,
   ref = df_gene %>% select(sgRNA_target, locus, gene_name) %>% 
     distinct %>% rename(name = sgRNA_target),
@@ -943,45 +960,19 @@ plot_STRING(
 )
 ```
 
-
-```{r, fig.width = 6.8, fig.height = 4.7}
-plot_STRING(
-  gene_ID = filter(df_gene, cluster == 5) %>% pull(locus) %>% unique,
-  taxon_ID = 1148,
-  ref = df_gene %>% select(sgRNA_target, locus, gene_name) %>% 
-    distinct %>% rename(name = sgRNA_target),
-  groups = "locus"
-)
-```
-
 # Direct comparison of gene fitness
 
 ## Fitness of all conditions vs each other
 
-The scatterplot matrix shows that correlation between conditions is high; this is expected as a similar set of genes is essential in most conditions. It also shows that one condition, `0.05% CO2, 200 µE` sticks out as more shallow, that means on average lower response in fitness. This is most likely an artifact of differing number of generations leading to slower depletion compared to other samples.
+We can plot selected conditions against each other and add gene labels in order to find or confirm particular patterns.
 
-```{r, fig.width = 8, fig.height = 8}
-custom_splom(df_heatmap,
-  prepanel.limits = function(x) {c(-4, 1)},
-  col_palette = rainbow(4),
-  ylim = c(-4, 1), xlim = c(-4, 1),
-  xlab = "data points", ylab = "regression",
-  pch = 19, col = grey(0, 0.3), cex = 0.2
-)
-```
-
-
-----------
-
-We can plot selected conditions against each other and add gene labels in order to find patterns.
-
-```{r, fig.width = 8, fig.height = 12}
+```{r, fig.width = 5, fig.height = 5}
 make_fitness_plot <- function(data, vars, title = NULL) {
   data %>% ungroup %>%
     filter(condition %in% vars, sgRNA_type == "gene") %>%
     select(locus, sgRNA_target, condition, wmean_fitness) %>% distinct %>%
     group_by(sgRNA_target) %>% 
-    mutate(significant = abs(wmean_fitness[1]-wmean_fitness[2])>2) %>%
+    mutate(significant = abs(wmean_fitness[1]-wmean_fitness[2])>4) %>%
     pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
     mutate(sgRNA_target = if_else(significant, sgRNA_target, "")) %>%
     # ggplot
@@ -989,32 +980,29 @@ make_fitness_plot <- function(data, vars, title = NULL) {
       color = significant, label = sgRNA_target)) +
     geom_point(size = 1) + custom_theme(legend.position = 0) +
     geom_abline(intercept = 0, slope = 1, col = grey(0.5), lty = 2, size = 0.8) +
-    geom_abline(intercept = 2, slope = 1, col = grey(0.5), lty = 2, size = 0.8) +
-    geom_abline(intercept = -2, slope = 1, col = grey(0.5), lty = 2, size = 0.8) +
+    geom_abline(intercept = 4, slope = 1, col = grey(0.5), lty = 2, size = 0.8) +
+    geom_abline(intercept = -4, slope = 1, col = grey(0.5), lty = 2, size = 0.8) +
     geom_text_repel(size = 3, max.overlaps = 50) +
     labs(title = title, x = vars[1], y = vars[2]) +
-    coord_cartesian(xlim = c(-4.5, 2.5), ylim = c(-4.5, 2.5)) +
+    coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
     scale_color_manual(values = c(grey(0.5), custom_colors[2]))
 }
 
-# CONDITIONS:
-# "0.05% CO2, 60uE"   "0.05% CO2, dcmu, glucose, 60uE"
-# "1% CO2, 1000uE"     "1% CO2, 60uE"      "1% CO2, Glucose, 60uE"
-plot_one_on_one <- gridExtra::arrangeGrob(nrow = 3, ncol = 2,
-  make_fitness_plot(df_gene, c("0.05% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
-    title = "low CO2, photo-heterotrophy"),
-  make_fitness_plot(df_gene, c("1% CO2, 60uE", "0.05% CO2, dcmu, glucose, 60uE"),
-    title = "high CO2, photo-heterotrophy"),
-  make_fitness_plot(df_gene, c("1% CO2, 60uE", "1% CO2, 1000uE"),
-    title = "high CO2, low vs high light"),
-  make_fitness_plot(df_gene, c("1% CO2, 60uE", "1% CO2, Glucose, 60uE"),
-    title = "high CO2, mixotrophy"),
-  make_fitness_plot(df_gene, c("1% CO2, 60uE", "0.05% CO2, 60uE"),
-    title = "low light, low vs high CO2")
+# browse through all possible condition combinations;
+# this part is a bit problematic because many combinations appear twice,
+# only in reverse order. 
+# TODO: Need to fix that later
+list_condition_pairs <- lapply(
+  unique(df_gene$condition) %>% expand_grid(x = ., y = .) %>%
+    filter(x != y) %>% t %>% as.data.frame %>% as.list,
+  function(var) {
+    make_fitness_plot(df_gene, vars = var,
+      title = paste(var, collapse = "  -  "))
+  }
 )
 
-ggsave("../figures/plot_one_on_one.svg", plot_one_on_one, 
-  width = 8, height = 12)
+# example of first 4 combinations
+list_condition_pairs[1:4]
 ```
 
 # Differential fitness of selected gene sets
@@ -1083,8 +1071,8 @@ plot_gene_fitness <- lapply(list_central_met_pathways, function(pw) {
         legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
       labs(title = pw) +
       theme(axis.text.x = element_blank()) +
-      scale_fill_manual(values = custom_colors) +
-      scale_color_manual(values = custom_colors) +
+      scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
+      scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
       facet_wrap(~ sgRNA_target, ncol = 8)
 })
 ```
@@ -1146,8 +1134,8 @@ plot_stress_genes <- df_gene %>%
       legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
     labs(title = "Stress related genes") +
     theme(axis.text.x = element_blank()) +
-    scale_fill_manual(values = custom_colors) +
-    scale_color_manual(values = custom_colors) +
+    scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
+    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
     facet_wrap(~ sgRNA_target, ncol = 8)
 ```
 
@@ -1181,8 +1169,8 @@ plot_carboxysome <- df_gene %>%
       legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
     labs(title = "Carboxysome and carbon transporters") +
     theme(axis.text.x = element_blank()) +
-    scale_fill_manual(values = custom_colors) +
-    scale_color_manual(values = custom_colors) +
+    scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
+    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
     facet_wrap(~ sgRNA_target, ncol = 8)
 ```
 
@@ -1197,7 +1185,7 @@ ggsave("../figures/plot_fitness_carboxysome.svg", plot_carboxysome,
 
 Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted, or both at the same time / the same conditions.
 
-Before we test for enrichemnt of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
+Before we test for enrichment of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
 
 ```{r, fig.width = 10, fig.height = 15}
 df_gene %>% filter(time == 0) %>%
@@ -1216,8 +1204,8 @@ df_gene %>% filter(time == 0) %>%
     theme(axis.text.x = element_blank()) +
     facet_wrap(~ str_sub(kegg_pathway, 1, 16), ncol = 7) +
     coord_cartesian(ylim = c(-3.5, 3.5)) +
-    scale_fill_manual(values = alpha(custom_colors, 0.5)) +
-    scale_color_manual(values = custom_colors)
+    scale_fill_manual(values = alpha(colorRampPalette(custom_colors[1:5])(11), 0.5)) +
+    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11))
 ```
 
 ## KEGG pathway enrichment
@@ -1282,9 +1270,6 @@ df_gene %>% ungroup %>%
 df_gene %>%
   filter(sgRNA_type == "gene") %>%
   write_csv("../data/output/fitness_genes.csv")
-
-df_main %>% filter(sgRNA_type == "gene") %>%
-  write_csv("../data/output/fitness_all.csv")
 
 df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
 ```
