@@ -966,7 +966,7 @@ plot_STRING(
 
 We can plot selected conditions against each other and add gene labels in order to find or confirm particular patterns.
 
-```{r, fig.width = 5, fig.height = 5}
+```{r}
 make_fitness_plot <- function(data, vars, title = NULL) {
   data %>% ungroup %>%
     filter(condition %in% vars, sgRNA_type == "gene") %>%
@@ -989,18 +989,36 @@ make_fitness_plot <- function(data, vars, title = NULL) {
 }
 
 # browse through all possible condition combinations;
-# this part is a bit problematic because many combinations appear twice,
-# only in reverse order. 
-# TODO: Need to fix that later
+# we need a helper function that detects duplicated combinations
+duplicated_2vec <- function(x, y) {
+  xy = paste(x, y); yx = paste(y, x)
+  sapply(xy, function(xval) {
+    which(xval == yx) <= which(xval == xy)
+  })
+}
+
 list_condition_pairs <- lapply(
   unique(df_gene$condition) %>% expand_grid(x = ., y = .) %>%
-    filter(x != y) %>% t %>% as.data.frame %>% as.list,
+    filter(!duplicated_2vec(x, y)) %>% t %>% as.data.frame %>% as.list,
   function(var) {
     make_fitness_plot(df_gene, vars = var,
       title = paste(var, collapse = "  -  "))
   }
 )
 
+# export images
+invisible(capture.output(
+  lapply(list_condition_pairs, function(pl) {
+    pl_name <- paste0("../figures/pairwise_comparisons/plot_", pl$labels$x, "_", pl$labels$y, ".png")
+    png(filename = pl_name, width = 800, height = 800, res = 120)
+    print(pl)
+    dev.off()
+  })
+))
+```
+
+
+```{r, fig.width = 5, fig.height = 5}
 # example of first 4 combinations
 list_condition_pairs[1:4]
 ```
