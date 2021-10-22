@@ -12,5 +12,4 @@ sgRNA_library/processed_data/CRISPRi_library_df_annotated.Rdata
 sgRNA_library/processed_data/data_source*
 sgRNA_library/pipeline/CRISPRi_library_pre_depletion.R
 sgRNA_library_V2/data/input/preconditions.csv
-sgRNA_library_V2/pipeline/CRISPRi_V2_machine_learning.Rmd
-sgRNA_library_V2/pipeline/CRISPRi_V2_machine_learning.nb.html
+sgRNA_library_V2/data/input/conditions.csv

@@ -1,5 +1,7 @@
 # R-notebook-crispri-lib
 
+<!-- header image -->
+![Principle of a CRISPRi repression library](CRISPRi_lib_principle.svg)
 
 ### News
 
@@ -21,6 +23,13 @@ A new pipeline for automated analysis of NGS data of PCR amplified sgRNAs is [av
 Our paper was published as [Pooled CRISPRi screening of the cyanobacterium Synechocystis sp PCC 6803 for enhanced industrial phenotypes](https://www.nature.com/articles/s41467-020-15491-7) in Nature Communications!
 The preprint is available at [BioRxiv.org](https://www.biorxiv.org/content/10.1101/823534v2).
 
+### Related publications
+
+1. The second, new CRISPRi library in cyanobacteria with more sgRNAs per target is currently prepared for publication.
+2. The first CRISPRi library in cyanobacteria was published in [Yao et al., Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7). 
+The preprint is available at [BioRxiv.org](https://www.biorxiv.org/content/10.1101/823534v2).
+
+
 ### Overview
 
 This repository contains data processing pipelines for the analysis of **CRISPRi repression library** data. The experiments were primarily carried out in the model cyanobacterium *Synechocystis sp.* PCC 6803. The repository contains raw data, processed data and R notebooks (`*.Rmd`) for:
@@ -33,7 +42,7 @@ All care was taken to guarantee scientific accuracy and adhere to good scientifi
 
 ### How to run the pipelines
 
-The pipelines collected in this repository are self-contained and executable. The code _and_ the documentation are part of one and the same R markdown document for each pipeline. The pipelines themselves can be downloaded and executed from the `pipeline` sub-folders. To simply view the rendered pipelines follow the links to the `*.html` reports under [Contents](#Contents).
+The pipelines collected in this repository are self-contained and executable. The code _and_ the documentation are part of one and the same R markdown document for each pipeline. Pipelines can be downloaded and executed from the `pipeline` sub-folders. To simply view the rendered pipelines follow the links to the `*.html` reports at [Contents](#Contents).
 
 To download the repository on your local drive use `git clone` in a (linux) terminal:
 
@@ -56,6 +65,7 @@ rmarkdown::render("pipeline.Rmd")
 #### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 2
 
 - [_Synechocystis_ CRISPRi library V2 data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html)
+- [_Synechocystis_ CRISPRi library V2 machine learning](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html)
 
 #### CRISPRi library in _Synechocystis_ sp. PCC6803 (published in Yao *et al*., Nature Communications, 2020)
 

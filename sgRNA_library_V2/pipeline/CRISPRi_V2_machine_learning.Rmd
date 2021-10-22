@@ -1,0 +1,547 @@
+---
+title: "CRISPRi library V2, machine learning pipeline"
+output:
+  html_notebook: 
+    theme: cosmo
+    toc: yes
+    number_sections: true
+---
+
+----------
+
+# Description
+
+## Problem definition
+
+This R notebook applies a machine learning approach to the gene fitness data obtained from CRISPRi library repression and competition experiments. There are two principal strategies how the available data could be applied in a machine learning work flow:
+
+1. Functional classification of unknown genes based on fitness pattern of known/annotated genes. *Response variable*: functional category, such as KEGG pathway, *Predictor(s)*: fitness in different conditions, other external features.
+2. Prediction of fitness contribution of unknown genes based on functional annotation of known genes. *Response variable*: fitness for one gene in one condition, *Predictor(s)*: functional categories, other external features.
+
+The first objective, classification or at least association of genes with certain functions, seems the more rewarding task as it allows to gain new biological insights into unknown genes. Generally, the number of features per gene (fitness measured in different conditions) is relatively low, around 10 conditions. It might be necessary to include more features based on information deposited in databases. Such information could include for example:
+
+1. single sgRNA fitness over time, instead of summarized fitness score
+2. pathway or functional annotation, e.g. in the form of GO terms
+3. sequence motifs, functional prediction (PFAM, DeepEC EC number)
+4. interaction with other genes (STRING DB)
+
+The input data has several important characteristics:
+
+- target variable for the classifier are KEGG pathways. There can be multiple classes (--> **labels**) per gene
+- target variable is very diverse (more than 100 labels). It might be good to use a simpler classification target
+- features contain a **mixture of continuous variables** (e.g. fitness) **and categorical variables** (e.g. GO terms)
+- features contain **multiple labels per data unit/gene** (e.g. GO terms)
+- contains **different coverage** of labels per gene (unbalanced classification)
+- categorical input data is of **varying quality**, annotations can be wrong
+- continuous input data **(fitness) is noisy**, quantification can be biased by experimental setup (sampling time and strategy, sgRNA binding efficiency, sequencing noise)
+
+## Appropriate ML algorithms for the problem
+
+According to different reviews dealing with ML application to biological problems ([Greener et al., Nat Rev Mol Cell Bio, 2021](https://www.nature.com/articles/s41580-021-00407-0) and [Mahood et al., Appl Plant Science, 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7394712/)), some types of models/frameworks are more appropriate for this type of data than others. We have a **classification** and not a regression problem, which makes the following ML approaches most suitable:
+
+1. Gradient boosting
+2. Support vector machine
+3. Random forest
+4. multi-layer perceptron (neural network)
+
+# Data import and preprocessing
+
+Load required packages.
+
+```{r, message = FALSE }
+suppressPackageStartupMessages({
+  library(tidyverse)
+  library(ggrepel)
+  library(caret)
+  library(httr)
+})
+```
+
+Load raw data with calculated fitness contribution of all genes and all tested conditions.
+Load also KEGG pathways that were downloaded in the preceding pipeline.
+
+```{r}
+df_gene <- read_csv("../data/output/fitness_genes.csv", col_types = cols())
+df_kegg <- read_csv("../data/output/kegg_annotation.csv", col_types = cols())
+```
+
+
+```{r, echo = FALSE}
+# custom ggplot2 theme that is reused for all later plots
+custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
+custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
+  theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
+    title = element_text(colour = grey(0.4), size = 10),
+    plot.margin = unit(c(12,12,12,12), "points"),
+    axis.ticks.length = unit(0.2, "cm"),
+    axis.ticks = element_line(colour = grey(0.4), linetype = "solid", lineend = "round"),
+    axis.text.x = element_text(colour = grey(0.4), size = 10),
+    axis.text.y = element_text(colour = grey(0.4), size = 10),
+    panel.grid.major = element_line(size = 0.6, linetype = "solid", colour = grey(0.9)),
+    panel.grid.minor = element_blank(),
+    panel.border = element_rect(linetype = "solid", colour = grey(0.4), fill = NA, size = 1.0),
+    panel.background = element_blank(),
+    strip.background = element_blank(),
+    strip.text = element_text(colour = grey(0.4), size = 10, margin = unit(rep(3,4), "points")),
+    legend.text = element_text(colour = grey(0.4), size = 10),
+    legend.title = element_blank(),
+    legend.background = element_blank(),
+    ...
+  )
+}
+```
+
+## Mine data bases
+
+Every protein is annotated by a wealth of different features that can be used to categorize proteins further. We can download a selection of the most interesting functional, biochemical, and phylogenetic annotations from [Uniprot](https://www.uniprot.org). For an efficient download, we use their REST API. The list of available columns/database entries is available [here](https://www.uniprot.org/help/uniprotkb_column_names).
+
+```{r}
+# List of Uniprot features
+uniprot_features <- c(
+  "database(KEGG)",
+  "id",
+  "genes",
+  "genes(PREFERRED)",
+  "protein_names",
+  "length",
+  "mass",
+  "ec",
+  "chebi-id",
+  "rhea-id",
+  "go-id",
+  "database(Pfam)",
+  "feature(ACTIVE_SITE)",
+  "feature(BINDING_SITE)",
+  "feature(DNA_BINDING)",
+  "comment(SUBUNIT)",
+  "comment(SUBCELLULAR_LOCATION)",
+  "feature(DISULFIDE_BOND)",
+  "feature(MODIFIED_RESIDUE)",
+  "feature(SIGNAL)",
+  "feature(COILED_COIL)",
+  "feature(REPEAT)",
+  "feature(ZINC_FINGER)"
+)
+
+
+uniprot_url <- paste0(
+  "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&columns=",
+  paste(uniprot_features, collapse = ",")
+)
+
+get_uniprot <- function(url) {
+  # reset security level, caused by a faulty SSL certificate on server side,
+  # see this thread: https://github.com/Ensembl/ensembl-rest/issues/427
+  httr_config <- config(ssl_cipher_list = "DEFAULT@SECLEVEL=1")
+  res <- with_config(config = httr_config, GET(url))
+  server_error = simpleError("")
+  df_uniprot <- tryCatch(
+    read_tsv(content(res), col_types = cols()),
+    error = function(server_error) {
+      message("Uniprot server not available, check internet connection")
+    }
+  )
+}
+
+df_uniprot <- get_uniprot(uniprot_url)
+```
+
+Many of the columns come in a long, list-like string format, which is not ideal to work with. These columns have to be reduced to lists of IDs or factors with fewer levels in order to be usable as features. For example, a list-like string of binding sites like this is not useful:
+
+```
+BINDING 56;  /note="Glycine";  /evidence="ECO:0000250"; BINDING 169;  /note="FAD; 
+via amide nitrogen and carbonyl oxygen";  /evidence="ECO:0000250"; BINDING 298;  
+/note="Glycine";  /evidence="ECO:0000250"; BINDING 324;  /note="Glycine";  /evidence=
+"ECO:0000250"; BINDING 559;  /note="DXP; via amide nitrogen";  /evidence="ECO:0000250"
+```
+
+It can be reduce to either the position `56, 169, 298, 324, 559` or to the binding molecules `glycine, fad, dxp`.
+
+```{r}
+df_uniprot <- df_uniprot %>%
+  
+  # reformat col names
+  rename_with(tolower) %>%
+  rename(locus = `cross-reference (kegg)`) %>%
+  rename(pfam = `cross-reference (pfam)`) %>%
+  rename_with( ~ str_replace_all(., " \\[cc\\]", "")) %>%
+  rename_with( ~ str_replace_all(., " ", "_")) %>%
+  
+  # reformat locus tag
+  separate_rows(locus, sep = ";syn:") %>%
+  mutate(locus = str_remove_all(locus, "syn:|;")) %>%
+  filter(!is.na(locus)) %>%
+  
+  # reformat annotation cols
+  # drop alternative EC numbers, they are sparse
+  mutate(ec_number = str_extract(ec_number, "[0-9\\-]+\\.[0-9\\-]+\\.[0-9\\-]+\\.[0-9\\-]+")) %>%
+  mutate(
+    ec_level_1 = str_extract(ec_number, "[0-9\\-]+"),
+    ec_level_2 = str_extract(ec_number, "[0-9\\-]+\\.[0-9\\-]+"),
+    ec_level_3 = str_extract(ec_number, "[0-9\\-]+\\.[0-9\\-]+\\.[0-9\\-]+")
+  ) %>%
+  
+  # condense string like annotation cols to simple factor or logical
+  mutate(active_site = str_count(active_site, "ACT_SITE") %>% replace_na(0)) %>%
+  mutate(binding_site = str_count(binding_site, "BINDING") %>% replace_na(0)) %>%
+  mutate(dna_binding = str_count(dna_binding, "DNA_BIND") %>% replace_na(0)) %>%
+  mutate(subunit_structure = str_extract(subunit_structure, "[a-zA-Z]+mer") %>%
+    tolower) %>%
+  mutate(subcellular_location = str_remove_all(
+    subcellular_location, "SUBCELLULAR LOCATION: | \\{.*|[\\.;].*") %>%
+    tolower) %>%
+  mutate(across(matches("disulfide|modified|signal|coiled|repeat|zinc"),
+    ~ as.numeric(!is.na(.))))
+```
+
+The next step is to spread list-like columns to wide format. For example, `gene_ontology_ids` contains a concatenated list of GO term IDs, with differing number of terms for each gene, and often very little overlap between genes. To be able to do this efficiently for different list-like columns (GO terms, CHEBI IDs, Pfam IDs, ...), a function is created that can do this automatically for each selected column. The function has a minimum requirement of e.g. at least 5 genes/observations annotated with a (GO) term. This was done in order to reduce the number of sparse mostly-zeroes columns.
+
+```{r}
+spread_list_col <- function(
+  df, target_col, id_col, sep = "; ", n_min = 5
+) {
+  select(df, all_of(c(target_col, id_col))) %>%
+  mutate(dummy = 1) %>%
+  separate_rows({{target_col}}, sep = sep) %>%
+  group_by(across(target_col)) %>% filter(n() >= n_min) %>%
+  pivot_wider(id_cols = {{id_col}}, names_from = {{target_col}},
+    values_from = dummy, values_fill = 0) %>%
+  right_join(df, by = {{id_col}}) %>%
+  select(-{{target_col}})
+}
+
+# spread GO terms
+#df_uniprot <- spread_list_col(df_uniprot, "gene_ontology_ids", "locus")
+
+# select final list of features for classification
+df_uniprot <- select(df_uniprot, 
+  !c(entry, gene_names, `gene_names__(primary_)`, gene_ontology_ids, #`NA`,
+  protein_names, ec_number, ec_level_2, ec_level_3, chebi_ids, rhea_id, pfam))
+```
+
+
+## Inspect data properties
+
+According to objective 1, we can try to classify genes into different KEGG pathways. Many genes do not fall into one of these categories, because they are not enzymes, i.e. do not have an enzymatic activity in the strict sense of a metabolic pathway, but have a structural or regulatory function. Let's first get an overview about the annotation of the data set.
+
+How many genes do have KEGG annotation? How many pathways are annotated per gene?
+
+```{r, fig.width = 6, fig.height = 3.5}
+paste("total number of genes:", unique(df_gene$locus) %>% length)
+paste("total number of gene-KEGG pathway annotations:", nrow(df_kegg))
+paste("number of genes annotated with KEGG pathway:",
+  inner_join(filter(df_kegg, !duplicated(locus)),
+    filter(df_gene, !duplicated(locus)), by = "locus") %>% nrow)
+
+df_gene %>% select(locus) %>% distinct %>%
+  left_join(df_kegg, by = "locus") %>%
+  group_by(locus) %>%
+  summarize(pw_per_gene = sum(!is.na(kegg_pathway))) %>%
+  count(pw_per_gene) %>%
+  
+  ggplot(aes(x = pw_per_gene, y = n, label = n)) +
+    geom_col() + labs(title = "KEGG annoations per gene") +
+    geom_text(nudge_y = 80, color = grey(0.4), size = 3) +
+    custom_theme()
+```
+
+How many genes are annotated per pathway? We can see that many associations are related to very general, hence non-informative "pathways" such as `Metabolic pathways`.
+
+```{r, fig.width = 6, fig.height = 3.5}
+df_gene %>% select(locus) %>% distinct %>%
+  inner_join(df_kegg, by = "locus") %>%
+  group_by(kegg_pathway) %>% count(sort = TRUE) %>% ungroup %>%
+  mutate(rank = 1:n()) %>%
+  mutate(kegg_pathway = if_else(rank <= 10, kegg_pathway, "")) %>%
+
+  ggplot(aes(x = rank, y = n, label = kegg_pathway)) +
+    geom_point(color = grey(0.4)) + labs(title = "Genes per KEGG pathway") +
+    geom_text_repel(size = 3, color = grey(0.6), max.overlaps = 50) +
+    custom_theme()
+```
+
+## Preparing the response variable
+
+The response variable is the list of classes that we want to predict. For the initial test, KEGG pathways are used. Not all pathways are equally informative, some contain too many members and some too few to be distinctive for a set of genes. Many genes are annotated with more than one class, making the prediction even more difficult as we have overlapping predictor sets for different responses. For a start, the most generic pathways are removed. Then we can also identify largely overlapping classes by similarity clustering.
+
+```{r, fig.width = 10, fig.height = 6}
+df_kegg <- df_kegg %>% 
+  group_by(kegg_pathway_id) %>%
+  filter(between(n(), 3, 100)) %>% ungroup
+
+hclust_kegg <- df_kegg %>%
+  select(kegg_pathway, locus) %>%
+  mutate(dummy = 1) %>%
+  pivot_wider(kegg_pathway, names_from = locus,
+    values_from = dummy, values_fill = 0) %>%
+  column_to_rownames("kegg_pathway") %>% as.matrix %>%
+  dist(method = "binary") %>% hclust(method = "complete")
+
+# plot dendrogramm showing group similarity
+plot(hclust_kegg, cex = 0.6, main = NA)
+```
+
+Extract labels that are highly similar to each other, here by clustering pathways that have more than 50% of genes in common (in other words, a binary distance metric <= 0.5).
+
+```{r}
+list_kegg_overlap <- cutree(hclust_kegg, h = 0.5) %>%
+  duplicated %>% which %>% hclust_kegg$labels[.]
+df_kegg <- filter(df_kegg, !kegg_pathway %in% list_kegg_overlap)
+paste("removed highly similar pathways: ", paste(list_kegg_overlap, collapse = ", "))
+
+# check genes with more than one pathway (label) annotated
+df_kegg %>% group_by(locus) %>%
+  summarize(pw_per_gene = sum(!is.na(kegg_pathway))) %>%
+  count(pw_per_gene)
+
+# number of unique pathways (labels)
+df_kegg %>% pull(kegg_pathway_id) %>% unique %>% length
+
+# number of unique genes/observations
+df_kegg$locus %>% unique %>% length
+```
+
+
+## Transforming input data
+
+Factors or character values are non-informative for the ML models. Regardless of the algorithm, it is highly advisable to transform all variables to numeric type (in fact, `logical`). The `dummyVars` function re-arranges the data to a full-factorial matrix, that means all combinations of factor and levels are spelled out explicitly in separate columns, encoded by `0` and `1`. The binary encoding is favorable over a simple conversion of factor to numeric, which might indicate a continuous relationship between levels that does not exist (e.g. think about `13` and `14` closer related to each other than `1` and `14`). This is also called **One Hot Encoding**.
+
+First we generate a test data set containing the *response variable* `kegg_pathway`, and the *predictors*, for example weighted mean fitness (`wmean_fitness`) measurements in all conditions. Additional predictors can be added later. The genes that don't map to any KEGG pathway are removed as they have no value in the training/validation set. They can be used to make predictions and hence are assigned to the prediction set.
+
+```{r}
+# generate training data set
+df_training <- df_gene %>%
+  filter(time == 0, !is.na(locus)) %>%
+  select(locus, condition, wmean_fitness) %>%
+  
+  # spread condition-fitness combinations to wide format
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  # merge with uniprot feature table
+  left_join(df_uniprot, by = "locus") %>%
+  # add response variable
+  left_join(select(df_kegg, locus, kegg_pathway_id), by = "locus")
+
+# split dataset in training and prediction set. For the latter,
+# no classes are available
+df_prediction <- df_training %>% filter(is.na(kegg_pathway_id))
+df_training <- df_training %>% filter(!is.na(kegg_pathway_id))
+```
+
+Convert factors to dummy variables. The formula interface is similar to R's standard `response variable ~ predictor variables`, predictors can be separated by `+`, or all variables are used (`.`). If the data supplied to `dummy_vars` is the original data.frame, the predictions are identical to the input data. Otherwise new data can be used as predictor. The response variable should be in the first column, and all other columns should contain predictors.
+
+```{r}
+dummy_vars <- df_training %>%
+  select(kegg_pathway_id, matches("."), -locus) %>%
+  dummyVars(kegg_pathway_id ~ ., data = df_training)
+
+df_train_dummy <- predict(object = dummy_vars, newdata = df_training) %>%
+  as_tibble %>%
+  mutate(across(everything(), ~ replace_na(., replace = 0)))
+
+dim(df_train_dummy); dim(df_training)
+```
+
+## Eliminate zero variance predictors
+
+Variables with very low diversity are problematic (very few non-zero or non NA values) because they do not add predictive power to the model and bring some algorithms to crash. From the caret package vignette: 
+"The concern is here that these predictors may become zero-variance predictors when the data are split into cross-validation/bootstrap sub-samples or that a few samples may have an undue influence on the model. These 'near-zero-variance' predictors may need to be identified and eliminated prior to modeling." We check the input data for such variables using `caret`s `nearZeroVar` function.
+
+```{r}
+# many columns have low variance
+nearZeroVar(df_train_dummy, freqCut = 99/1, uniqueCut = 1)
+```
+
+Another quality control step is to check which variables in the data are linearly correlated, and potentially remove them. This is done using `findLinearCombos`.
+
+```{r}
+list_invalid_cols <- df_train_dummy %>% findLinearCombos %>% {.$remove}
+print(list_invalid_cols)
+df_train_dummy <- df_train_dummy %>% select(-all_of(list_invalid_cols))
+```
+
+## Centering, scaling, range transformations
+
+To give equal weights to different variables, values can be (optionally) centered, automatically re-scaled, or re-scaled to e.g. a range between 0 and 1.
+
+```{r}
+df_train_dummy <- df_train_dummy %>%
+  preProcess(method = "range") %>%
+  predict(df_train_dummy)
+```
+
+Note that all pre-processing can also be done with a single call to `preProcess` and `predict`, like this:
+
+```{r, eval = FALSE, include = FALSE}
+df_training <- preProcess(df_training,
+  method = c("range", "nzv", "corr")) %>%
+  predict(df_training)
+```
+
+## Split data into training and test set
+
+The next step is to split the processed data set into different chunks for training and validation. Here it is important to get a balanced proportion of target values (classes), in this case `kegg_pathway`s. We use a typical size distribution of 80% training and 20% test data. The test data set is not touched by the model fitting procedure. It serves as independent benchmark when model training is concluded.
+
+```{r}
+set.seed(123)
+
+train_index <- createDataPartition(df_training$kegg_pathway_id, 1, p = 0.75)[[1]]
+
+# split into training and test/validation set
+df_train_tra <- df_train_dummy[train_index, ]
+df_train_val <- df_train_dummy[-train_index, ]
+
+# likewise split target variable into training and test set
+classes_tra <- factor(df_training$kegg_pathway_id[train_index])
+classes_val <- factor(df_training$kegg_pathway_id[-train_index])
+```
+
+
+# Model training and tuning
+
+## Gradient boosting machine
+
+The caret package makes it easy to automate the model testing and training steps. The model training procedure tests different parameter sets, and for each parameter set a certain number of iterations. It re-samples the data the indicated `number` of times, and for each parameter set a defined number of `repeats` (does not apply for all models).
+
+```{r}
+train_options <- trainControl(
+  method = "repeatedcv",
+  number = 10,
+  repeats = 2,
+  p = 0.8)
+```
+
+The initial model that is tried is a gradient boosting machine (`gbm`). The tuning parameters can be specified by the user, otherwise default values are used. The argument `tuneGrid` can take a data frame with columns for each tuning parameter.
+
+```{r}
+# look up model's tuning parameters
+modelLookup('gbm')
+
+# redefine these parameters manually
+tune_options <- expand.grid(interaction.depth = c(1,3,5), 
+  n.trees = c(1:5, 10, 20, 30, 40, 50),
+  shrinkage = 0.1,
+  n.minobsinnode = 20)
+```
+
+To train the model, `caret`s `train()` function is used with the following standardized input:
+  
+  - `x`: for the default method, a data.frame or matrix where samples are in rows and features are in columns
+  - `y`: a numeric or factor vector containing the outcome for each sample
+  - `method`: string specifying which classification or regression model to use
+  - `trControl`: list of training options defined by `trainControl` (optional)
+  - `tuneGrid`: table of combinations with desired tuning options (optional)
+
+```{r, warning = FALSE}
+invisible(capture.output(
+  fit_gbm <- train(
+    x = df_train_tra,
+    y = classes_tra,
+    method = "gbm",
+    trControl = train_options,
+    tuneGrid = tune_options)
+))
+```
+
+
+## Evaluate results
+
+After training, we can valuate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
+
+```{r, fig.width = 6, fig.height = 4}
+# define custom set of graphical parameters for lattice
+trellis.par.set(caretTheme())
+
+# Training summary
+print(fit_gbm)
+
+# Accuracy per tuning parameter
+plot(fit_gbm)
+
+# plot accuracy (or other metrics) as heat map
+plot(fit_gbm, metric = "Accuracy", plotType = "level",
+  scales = list(x = list(rot = 90)))
+
+# plot variable contribution
+fit_summary <- summary(fit_gbm, plot = FALSE)
+fit_summary %>% arrange(desc(rel.inf)) %>% slice(1:20) %>%
+  ggplot(aes(x = rel.inf, y = reorder(var, rel.inf))) +
+    geom_col() +
+    labs(title = "variable contribution (%)") +
+    custom_theme()
+```
+
+Evaluating the quality of the model in terms of its predictions. The **confusion matrix** shows the correlation of predicted classes and actual classes for the test dataset.
+
+```{r, fig.width = 8, fig.height = 8}
+classes_pred <- predict(fit_gbm, newdata = df_train_val)
+confusionMatrix(
+    data = factor(classes_pred, unique(classes_val)),
+    reference = factor(classes_val, unique(classes_val))
+  ) %>% as.matrix %>% t %>% 
+  # optionally divide by pathway gene_number for relative accuracy
+  #apply(2, function(x) x/sum(x)) %>%
+  
+  levelplot(par.settings = caretTheme(),
+    xlab = "reference", ylab = "prediction",
+    scales = list(cex = 0.5, col = grey(0.5), x = list(rot = 90)),
+    panel = function(x, y, z, ...) {
+      panel.levelplot(x, y, z, ...)
+      #panel.text(x, y, labels = round(z, 3), cex = 0.7,
+      #  col = if_else(z > 0.6*max(z), grey(0.95), grey(0.5)))
+      panel.xyplot(seq_along(unique(x)), seq_along(unique(y)),
+        pch = 19, cex = 0.2, col = grey(0.7), ...)
+    }
+  )
+
+# we can also predict the probablity of a gene belong to each class
+predict(fit_gbm, newdata = df_train_val, type = "prob") %>%
+  head
+```
+We can look at best predictions in more detail. This table summarizes the classes/labels where the model showed the best predictive performance.
+
+```{r}
+df_test_result <- df_training %>%
+  left_join(by = "kegg_pathway_id",
+    select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
+  slice(-train_index) %>%
+  mutate(
+    prediction = classes_pred, 
+    correct = prediction == kegg_pathway_id)
+
+df_test_result %>% group_by(kegg_pathway_id) %>%
+  summarize(
+    kegg_pathway = kegg_pathway[1],
+    n_genes = n(),
+    n_true_pos = sum(correct),
+    n_false_neg = sum(!correct),
+    accuracy = n_true_pos/n_genes
+  ) %>%
+
+  # add FDR per pathway (false positives)
+  left_join(by = "kegg_pathway_id",
+    df_test_result %>%
+    group_by(prediction) %>%
+    summarize(
+      n_false_pos = sum(!correct),
+      FDR = n_false_pos/n()
+    ) %>% rename(kegg_pathway_id = prediction)
+  ) %>%
+  
+  arrange(desc(accuracy), desc(n_genes)) %>%
+  filter(accuracy > 0)
+```
+
+We can also look at the probability of each gene to be associated with each label.
+
+```{r}
+predict(fit_gbm, newdata = df_train_val, type = "prob") %>%
+  head
+```
+
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
