@@ -50,6 +50,7 @@ Load required packages.
 
 ```{r, message = FALSE }
 suppressPackageStartupMessages({
+  library(doParallel)
   library(tidyverse)
   library(ggrepel)
   library(caret)
@@ -198,12 +199,13 @@ The next step is to spread list-like columns to wide format. For example, `gene_
 
 ```{r}
 spread_list_col <- function(
-  df, target_col, id_col, sep = "; ", n_min = 5
+  df, target_col, id_col, sep = "; ", n_min = 5, n_max = 100
 ) {
   select(df, all_of(c(target_col, id_col))) %>%
   mutate(dummy = 1) %>%
   separate_rows({{target_col}}, sep = sep) %>%
-  group_by(across(target_col)) %>% filter(n() >= n_min) %>%
+  group_by(across(all_of(target_col))) %>%
+  filter(between(n(), n_min, n_max)) %>%
   pivot_wider(id_cols = {{id_col}}, names_from = {{target_col}},
     values_from = dummy, values_fill = 0) %>%
   right_join(df, by = {{id_col}}) %>%
@@ -211,12 +213,13 @@ spread_list_col <- function(
 }
 
 # spread GO terms
-#df_uniprot <- spread_list_col(df_uniprot, "gene_ontology_ids", "locus")
+df_uniprot <- spread_list_col(df_uniprot, "chebi_ids",
+  "locus", n_min = 10, n_max = 200)
 
 # select final list of features for classification
-df_uniprot <- select(df_uniprot, 
-  !c(entry, gene_names, `gene_names__(primary_)`, gene_ontology_ids, #`NA`,
-  protein_names, ec_number, ec_level_2, ec_level_3, chebi_ids, rhea_id, pfam))
+df_uniprot <- select(df_uniprot,
+  !c(entry, gene_names, `gene_names__(primary_)`, gene_ontology_ids, #chebi_ids,
+  protein_names, ec_number, ec_level_2, ec_level_3, rhea_id, pfam))
 ```
 
 
@@ -281,13 +284,14 @@ hclust_kegg <- df_kegg %>%
 plot(hclust_kegg, cex = 0.6, main = NA)
 ```
 
-Extract labels that are highly similar to each other, here by clustering pathways that have more than 50% of genes in common (in other words, a binary distance metric <= 0.5).
+Extract labels that are highly similar to each other, that means that have many observations (genes) in common. We can do this by hierarchical clustering of labels (pathways) using a binary distance metric. For example, a distance of two labels of 0.5 means that these groups have 50% of their genes in common. Labels with strong overlap are removed.
 
 ```{r}
 list_kegg_overlap <- cutree(hclust_kegg, h = 0.5) %>%
   duplicated %>% which %>% hclust_kegg$labels[.]
 df_kegg <- filter(df_kegg, !kegg_pathway %in% list_kegg_overlap)
-paste("removed highly similar pathways: ", paste(list_kegg_overlap, collapse = ", "))
+paste("removed", length(list_kegg_overlap), "highly similar pathways: ",
+  paste(list_kegg_overlap, collapse = ", "))
 
 # check genes with more than one pathway (label) annotated
 df_kegg %>% group_by(locus) %>%
@@ -347,7 +351,7 @@ Variables with very low diversity are problematic (very few non-zero or non NA v
 "The concern is here that these predictors may become zero-variance predictors when the data are split into cross-validation/bootstrap sub-samples or that a few samples may have an undue influence on the model. These 'near-zero-variance' predictors may need to be identified and eliminated prior to modeling." We check the input data for such variables using `caret`s `nearZeroVar` function.
 
 ```{r}
-# many columns have low variance
+# the columns with low variance
 nearZeroVar(df_train_dummy, freqCut = 99/1, uniqueCut = 1)
 ```
 
@@ -355,8 +359,8 @@ Another quality control step is to check which variables in the data are linearl
 
 ```{r}
 list_invalid_cols <- df_train_dummy %>% findLinearCombos %>% {.$remove}
-print(list_invalid_cols)
 df_train_dummy <- df_train_dummy %>% select(-all_of(list_invalid_cols))
+paste("Removed the following invalid columns:", paste(list_invalid_cols, collapse = ", "))
 ```
 
 ## Centering, scaling, range transformations
@@ -406,7 +410,7 @@ The caret package makes it easy to automate the model testing and training steps
 train_options <- trainControl(
   method = "repeatedcv",
   number = 10,
-  repeats = 2,
+  repeats = 1,
   p = 0.8)
 ```
 
@@ -431,15 +435,26 @@ To train the model, `caret`s `train()` function is used with the following stand
   - `trControl`: list of training options defined by `trainControl` (optional)
   - `tuneGrid`: table of combinations with desired tuning options (optional)
 
+We register a certain number of cores to run the model training in parallel.
+
 ```{r, warning = FALSE}
-invisible(capture.output(
-  fit_gbm <- train(
-    x = df_train_tra,
-    y = classes_tra,
-    method = "gbm",
-    trControl = train_options,
-    tuneGrid = tune_options)
-))
+system.time({
+  # start parallel processing
+  cl <- makePSOCKcluster(4)
+  registerDoParallel(cl)
+  # train model, supress messages
+  invisible(capture.output(
+    fit_gbm <- train(
+      x = df_train_tra,
+      y = classes_tra,
+      method = "gbm",
+      trControl = train_options,
+      tuneGrid = tune_options
+      )
+    ))
+  # stop parallel processing
+  stopCluster(cl)
+})
 ```
 
 
@@ -447,7 +462,7 @@ invisible(capture.output(
 
 After training, we can valuate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
 
-```{r, fig.width = 6, fig.height = 4}
+```{r, fig.width = 6, fig.height = 4, warning = FALSE}
 # define custom set of graphical parameters for lattice
 trellis.par.set(caretTheme())
 
@@ -462,8 +477,8 @@ plot(fit_gbm, metric = "Accuracy", plotType = "level",
   scales = list(x = list(rot = 90)))
 
 # plot variable contribution
-fit_summary <- summary(fit_gbm, plot = FALSE)
-fit_summary %>% arrange(desc(rel.inf)) %>% slice(1:20) %>%
+summary(fit_gbm, plot = FALSE) %>% 
+  arrange(desc(rel.inf)) %>% slice(1:20) %>%
   ggplot(aes(x = rel.inf, y = reorder(var, rel.inf))) +
     geom_col() +
     labs(title = "variable contribution (%)") +
@@ -474,13 +489,15 @@ Evaluating the quality of the model in terms of its predictions. The **confusion
 
 ```{r, fig.width = 8, fig.height = 8}
 classes_pred <- predict(fit_gbm, newdata = df_train_val)
-confusionMatrix(
-    data = factor(classes_pred, unique(classes_val)),
-    reference = factor(classes_val, unique(classes_val))
+classes_prob <- predict(fit_gbm, newdata = df_train_val, type = "prob")
+
+make_confusion_matrix <- function(prediction, reference) {
+  confusionMatrix(
+    data = factor(prediction, unique(reference)),
+    reference = factor(reference, unique(reference))
   ) %>% as.matrix %>% t %>% 
   # optionally divide by pathway gene_number for relative accuracy
   #apply(2, function(x) x/sum(x)) %>%
-  
   levelplot(par.settings = caretTheme(),
     xlab = "reference", ylab = "prediction",
     scales = list(cex = 0.5, col = grey(0.5), x = list(rot = 90)),
@@ -492,51 +509,176 @@ confusionMatrix(
         pch = 19, cex = 0.2, col = grey(0.7), ...)
     }
   )
+}
 
-# we can also predict the probablity of a gene belong to each class
-predict(fit_gbm, newdata = df_train_val, type = "prob") %>%
-  head
+make_confusion_matrix(classes_pred, classes_val)
 ```
-We can look at best predictions in more detail. This table summarizes the classes/labels where the model showed the best predictive performance.
+We can look at best predictions in more detail. This table contains all detailed statistics for the validation data set.
+The validation data set may contain the same observation/gene multiple times with different (related) labels. The final result table is therefore trimmed down to contain each gene only once together with the best matching prediction.
 
 ```{r}
 df_test_result <- df_training %>%
+  select(locus, kegg_pathway_id) %>%
   left_join(by = "kegg_pathway_id",
     select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
   slice(-train_index) %>%
   mutate(
-    prediction = classes_pred, 
-    correct = prediction == kegg_pathway_id)
+    prediction = classes_pred,
+    probability = classes_prob %>% apply(1, max),
+    correct = prediction == kegg_pathway_id
+  ) %>% group_by(locus) %>%
+  arrange(desc(correct)) %>% slice(1) %>% ungroup
+```
+
+
+This table summarizes the classes/labels where the model showed the best predictive performance. Among other metrics we determine:
+
+- **sensitivity** - fraction of relevant instances that were retrieved (also called recall)
+- **precision** - fraction of relevant instances among the retrieved instances
+
+```{r}
+paste("Number of correct predictions:", sum(df_test_result$correct),
+  "out of", nrow(df_test_result), "observations (",
+  round(100*sum(df_test_result$correct)/nrow(df_test_result), 2),"%)")
 
 df_test_result %>% group_by(kegg_pathway_id) %>%
   summarize(
     kegg_pathway = kegg_pathway[1],
     n_genes = n(),
     n_true_pos = sum(correct),
-    n_false_neg = sum(!correct),
-    accuracy = n_true_pos/n_genes
+    n_false_neg = sum(!correct)
   ) %>%
 
   # add FDR per pathway (false positives)
   left_join(by = "kegg_pathway_id",
     df_test_result %>%
     group_by(prediction) %>%
-    summarize(
-      n_false_pos = sum(!correct),
-      FDR = n_false_pos/n()
-    ) %>% rename(kegg_pathway_id = prediction)
+    summarize(n_false_pos = sum(!correct)) %>% 
+    rename(kegg_pathway_id = prediction)
   ) %>%
-  
-  arrange(desc(accuracy), desc(n_genes)) %>%
-  filter(accuracy > 0)
+  mutate(
+    sensitivity = n_true_pos/n_genes,
+    precision = n_true_pos/(n_true_pos + n_false_pos)
+  ) %>%
+  arrange(desc(sensitivity), desc(n_genes)) %>%
+  filter(sensitivity > 0)
 ```
 
-We can also look at the probability of each gene to be associated with each label.
+We can also look at the probability of all predicted genes to belong to the predicted label. We can plot the probability of a label versus the cumulative sum of correctly predicted labels. This could show a probability cutoff at which more correct than incorrect predictions are made. The second plot shows a histogram of the model-estimated probability to determine a class versus the actual turnout, % correct labels per bin.
+
+
+```{r, fig.width = 6, fig.height = 7}
+plot_prob_correct <- df_test_result %>%
+  arrange((probability)) %>%
+  mutate(correct = cumsum(correct)) %>%
+  ggplot(aes(x = probability, y = correct)) +
+    geom_step() +
+    labs(title = "cumulative sum of correct predictions") +
+    custom_theme()
+
+plot_hist_correct <- df_test_result %>%
+  arrange((probability)) %>%
+  mutate(bin = cut_width(probability, 0.1, center = 0.05)) %>%
+  group_by(bin) %>% summarize(percent_correct = sum(correct)/n()) %>%
+  ggplot(aes(x = bin, y = percent_correct)) +
+    geom_col() +
+    labs(title = "% correct predictions per probability") +
+    custom_theme()
+
+gridExtra::grid.arrange(
+  plot_prob_correct,
+  plot_hist_correct
+)
+```
+
+
+## Random forest
+
+A second decision based approach that can be tested is a Random forest. It is conceptually similar to gradient boosting, only that the ensemble of trees is made by bootstrap aggregation ('bagging', all trees sampled independently) while for gradient boosting, tree selection is iteratively refined ('boosting').
+
 
 ```{r}
-predict(fit_gbm, newdata = df_train_val, type = "prob") %>%
-  head
+# look up model's tuning parameters
+modelLookup('parRF')
+
+tune_options <- expand.grid(
+  mtry = c(3:10,20,50,100)
+)
 ```
+
+Run random forest analysis in parallel. In this case multicore support is built-in and the training does not need to be wrapped in a `DoParallel` command.
+
+```{r, warning = FALSE}
+system.time({
+  # start parallel processing
+  cl <- makePSOCKcluster(4)
+  registerDoParallel(cl)
+  # train model
+  fit_raf <- train(
+    x = df_train_tra,
+    y = classes_tra,
+    method = "parRF",
+    trControl = train_options,
+    tuneGrid = tune_options
+  )
+  # stop parallel processing
+  stopCluster(cl)
+})
+```
+
+## Evaluate results
+
+After training, we can valuate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
+
+```{r, fig.width = 6, fig.height = 4, warning = FALSE}
+# Training summary
+print(fit_raf)
+
+# Accuracy per tuning parameter
+plot(fit_raf)
+
+# plot variable contribution
+varImp(fit_raf, scale = TRUE)[["importance"]] %>% 
+  as_tibble(rownames = "var") %>% rename(rel.inf = Overall) %>%
+  arrange(desc(rel.inf))  %>% slice(1:20) %>%
+  ggplot(aes(x = rel.inf, y = reorder(var, rel.inf))) +
+    geom_col() +
+    labs(title = "variable contribution (%)") +
+    custom_theme()
+```
+
+Evaluating the quality of the model in terms of its predictions. The **confusion matrix** shows the correlation of predicted classes and actual classes for the test dataset.
+
+```{r, fig.width = 8, fig.height = 8}
+classes_pred <- predict(fit_raf, newdata = df_train_val)
+classes_prob <- predict(fit_raf, newdata = df_train_val, type = "prob")
+
+make_confusion_matrix(classes_pred, classes_val)
+```
+
+We can already see that, in comparison to the GBM model, the random forest has a lower ability to predict many different often non-abundant labels/classes, although the accuracy is comparable.
+
+
+```{r}
+df_training %>%
+  select(locus, kegg_pathway_id) %>%
+  left_join(by = "kegg_pathway_id",
+    select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
+  slice(-train_index) %>%
+  mutate(
+    prediction = classes_pred,
+    probability = classes_prob %>% apply(1, max),
+    correct = prediction == kegg_pathway_id
+  ) %>% group_by(locus) %>%
+  arrange(desc(correct)) %>% slice(1) %>% ungroup %>%
+  {paste("Number of correct predictions:", sum(.[["correct"]]),
+  "out of", nrow(.), "observations (",
+  round(100*sum(.[["correct"]])/nrow(.), 2),"%)")}
+```
+
+
+# Function prediction of unknown proteins
+
 
 
 # Session Info
