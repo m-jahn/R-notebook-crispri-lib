@@ -402,19 +402,21 @@ classes_val <- factor(df_training$kegg_pathway_id[-train_index])
 
 # Model training and tuning
 
-## Gradient boosting machine
-
-The caret package makes it easy to automate the model testing and training steps. The model training procedure tests different parameter sets, and for each parameter set a certain number of iterations. It re-samples the data the indicated `number` of times, and for each parameter set a defined number of `repeats` (does not apply for all models).
+The caret package makes it easy to automate the model testing and training steps. The model training procedure tests different parameter sets, and for each parameter set a certain number of iterations. It re-samples the data the indicated `number` of times, and for each parameter set a defined number of `repeats` (does not apply for all models). These options are global for all trainings.
 
 ```{r}
 train_options <- trainControl(
   method = "repeatedcv",
-  number = 10,
+  number = 5,
   repeats = 1,
   p = 0.8)
 ```
 
-The initial model that is tried is a gradient boosting machine (`gbm`). The tuning parameters can be specified by the user, otherwise default values are used. The argument `tuneGrid` can take a data frame with columns for each tuning parameter.
+## Gradient boosting machine
+
+The initial model that is tried is a gradient boosting machine (`gbm`). A gradient boosting machine is conceptually similar to a random forest. It is also based on decision trees, with the difference that random forests are an ensemble of decision trees based on bootstrap aggregation (random sub-sampling of trees), while gradient boosting relies on iterative refinement of sub-sampled trees (called 'boosting').
+
+The tuning parameters can be specified by the user, otherwise default values are used. The argument `tuneGrid` can take a data frame with columns for each tuning parameter.
 
 ```{r}
 # look up model's tuning parameters
@@ -440,7 +442,7 @@ We register a certain number of cores to run the model training in parallel.
 ```{r, warning = FALSE}
 system.time({
   # start parallel processing
-  cl <- makePSOCKcluster(4)
+  cl <- makePSOCKcluster(detectCores())
   registerDoParallel(cl)
   # train model, supress messages
   invisible(capture.output(
@@ -457,40 +459,122 @@ system.time({
 })
 ```
 
+## Random forest
 
-## Evaluate results
+A second decision based approach that can be tested is a Random forest. As mentioned before it is conceptually similar to gradient boosting, only that the ensemble of trees is made by bootstrap aggregation ('bagging', all trees sampled independently).
 
-After training, we can valuate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
+
+```{r, warning = FALSE}
+modelLookup('parRF')
+
+tune_options <- expand.grid(
+  mtry = c(3:10,20,50,100)
+)
+
+system.time({
+  # start parallel processing
+  cl <- makePSOCKcluster(detectCores())
+  registerDoParallel(cl)
+  # train model
+  fit_raf <- train(
+    x = df_train_tra,
+    y = classes_tra,
+    method = "parRF",
+    trControl = train_options,
+    tuneGrid = tune_options
+  )
+  # stop parallel processing
+  stopCluster(cl)
+})
+```
+
+
+## Multi-layer perceptron
+
+A multi-layer perceptron is a (simple) neural network with a limited number of hidden layers. It is useful for regression and classification tasks that have a lower degree of complexity. For example, object recognition in images is done with more complex convolutional neural networks (CNNs). All neural netowrks rely on a fixed number of 'neurons' or nodes that take feature values as input, transform them by applying a function, and pass on the output value to the next layer of neurons. The general form for the transformation function of a single node is the following (with $x_i$ being a feature value, $w_i$ a weight factor, $b$ a learnable bias, and $\sigma$ an activation/cost function):
+
+$y = \sigma \times (\sum(w_i \times x_i) + b)$
+
+Training a neural network usually means to vary (optimize) the weight parameter $w$ for each node such that the cost (difference between expected output and obtained output) is minimized. Here we use the `mlpKerasDropout` function from package `keras`, with default tuning parameters.
+
+```{r, warning = FALSE}
+# look up model's tuning parameters
+modelLookup('mlpKerasDropout')
+
+system.time({
+  # start parallel processing
+  cl <- makePSOCKcluster(detectCores())
+  registerDoParallel(cl)
+  # train model
+  invisible(capture.output(
+    fit_mlp <- train(
+      x = df_train_tra,
+      y = classes_tra,
+      method = "mlpKerasDropout",
+      trControl = train_options
+    )
+  ))
+  # stop parallel processing
+  stopCluster(cl)
+})
+```
+
+
+# Compare performance of different models
+
+## Evaluating the training process
+
+After training, we can evaluate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
 
 ```{r, fig.width = 6, fig.height = 4, warning = FALSE}
-# define custom set of graphical parameters for lattice
-trellis.par.set(caretTheme())
-
 # Training summary
 print(fit_gbm)
 
+# define custom set of graphical parameters for lattice
+trellis.par.set(caretTheme())
+
 # Accuracy per tuning parameter
 plot(fit_gbm)
+plot(fit_raf)
+plot(fit_mlp)
+```
 
+
+```{r, fig.width = 6, fig.height = 4, warning = FALSE}
 # plot accuracy (or other metrics) as heat map
 plot(fit_gbm, metric = "Accuracy", plotType = "level",
-  scales = list(x = list(rot = 90)))
-
-# plot variable contribution
-summary(fit_gbm, plot = FALSE) %>% 
-  arrange(desc(rel.inf)) %>% slice(1:20) %>%
-  ggplot(aes(x = rel.inf, y = reorder(var, rel.inf))) +
-    geom_col() +
-    labs(title = "variable contribution (%)") +
-    custom_theme()
+  scales = list(x = list(rot = 90)), par.settings = caretTheme()
+)
 ```
+
+A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final model and plot it. For the MLP model, the variable importance is not readily available.
+
+```{r, fig.width = 7, fig.height = 6, warning = FALSE}
+# make df of variable contribution for each model
+bind_rows(.id = "model",
+    GBM = summary(fit_gbm, plot = FALSE) %>% as_tibble(rownames = NULL),
+    RAF = varImp(fit_raf, scale = FALSE)[["importance"]] %>% 
+    as_tibble(rownames = "var") %>%
+    rename(rel.inf = Overall) %>% 
+    mutate(rel.inf = 100*rel.inf/sum(rel.inf))
+  ) %>%
+  
+  # plot as barchart
+  group_by(model) %>%
+  arrange(desc(rel.inf)) %>% slice(1:30) %>%
+  mutate(var = str_remove(var, "subcellular_location")) %>%
+  ggplot(aes(x = rel.inf, y = reorder(var, rel.inf), fill = model)) +
+  geom_col() +
+  labs(x = "variable contribution (%)", y = "") +
+  custom_theme() +
+  scale_fill_manual(values = custom_colors[1:2])
+```
+
+## Predictive power
 
 Evaluating the quality of the model in terms of its predictions. The **confusion matrix** shows the correlation of predicted classes and actual classes for the test dataset.
 
 ```{r, fig.width = 8, fig.height = 8}
-classes_pred <- predict(fit_gbm, newdata = df_train_val)
-classes_prob <- predict(fit_gbm, newdata = df_train_val, type = "prob")
-
 make_confusion_matrix <- function(prediction, reference) {
   confusionMatrix(
     data = factor(prediction, unique(reference)),
@@ -511,169 +595,123 @@ make_confusion_matrix <- function(prediction, reference) {
   )
 }
 
-make_confusion_matrix(classes_pred, classes_val)
+classes_pred_gbm <- predict(fit_gbm, newdata = df_train_val)
+classes_prob_gbm <- predict(fit_gbm, newdata = df_train_val, type = "prob")
+make_confusion_matrix(classes_pred_gbm, classes_val)
+
+classes_pred_raf <- predict(fit_raf, newdata = df_train_val)
+classes_prob_raf <- predict(fit_raf, newdata = df_train_val, type = "prob")
+make_confusion_matrix(classes_pred_raf, classes_val)
+
+classes_pred_mlp <- predict(fit_mlp, newdata = df_train_val)
+classes_prob_mlp <- predict(fit_mlp, newdata = df_train_val, type = "prob")
+make_confusion_matrix(classes_pred_mlp, classes_val)
 ```
+
 We can look at best predictions in more detail. This table contains all detailed statistics for the validation data set.
 The validation data set may contain the same observation/gene multiple times with different (related) labels. The final result table is therefore trimmed down to contain each gene only once together with the best matching prediction.
 
 ```{r}
-df_test_result <- df_training %>%
+df_validation <- df_training %>%
   select(locus, kegg_pathway_id) %>%
   left_join(by = "kegg_pathway_id",
     select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
   slice(-train_index) %>%
+  
+  # add results
   mutate(
-    prediction = classes_pred,
-    probability = classes_prob %>% apply(1, max),
-    correct = prediction == kegg_pathway_id
-  ) %>% group_by(locus) %>%
-  arrange(desc(correct)) %>% slice(1) %>% ungroup
+    GBM = classes_pred_gbm,
+    RAF = classes_pred_raf,
+    MLP = classes_pred_mlp
+  ) %>%
+  pivot_longer(cols = c("GBM", "RAF", "MLP"),
+    names_to = "model", values_to = "prediction") %>%
+  arrange(factor(model, c("GBM", "RAF", "MLP"))) %>%
+  mutate(probability = lapply(
+    list(classes_prob_gbm, classes_prob_raf, classes_prob_mlp),
+    function(x) apply(x, 1, max)) %>% unlist) %>%
+  mutate(correct = prediction == kegg_pathway_id) %>%
+  
+  # trim duplicated genes/observations
+  group_by(model, locus) %>%
+  arrange(desc(correct)) %>% slice(1) %>%
+  ungroup %>% mutate(model = factor(model, c("GBM", "RAF", "MLP")))
+```
+
+Now with all results for the validation set in one data frame, it is easy to make performance comparisons.
+
+```{r}
+df_validation %>% group_by(model) %>%
+  summarize(total = n(), 
+    correct = sum(correct),
+    correct_percent = 100*correct/total)
 ```
 
 
 This table summarizes the classes/labels where the model showed the best predictive performance. Among other metrics we determine:
 
-- **sensitivity** - fraction of relevant instances that were retrieved (also called recall)
-- **precision** - fraction of relevant instances among the retrieved instances
+- **sensitivity** - fraction of relevant instances that were retrieved (also called recall, TP/(TP+FN))
+- **specificity** - fraction of non-relevant instances that were retrieved (TN/(TN+FP))
+- **precision** - fraction of relevant instances among the retrieved instances (TP/(TP+FP))
 
 ```{r}
-paste("Number of correct predictions:", sum(df_test_result$correct),
-  "out of", nrow(df_test_result), "observations (",
-  round(100*sum(df_test_result$correct)/nrow(df_test_result), 2),"%)")
-
-df_test_result %>% group_by(kegg_pathway_id) %>%
-  summarize(
+df_summary <- df_validation %>%
+  group_by(model, kegg_pathway_id) %>%
+  summarize(.groups = "drop_last",
     kegg_pathway = kegg_pathway[1],
     n_genes = n(),
     n_true_pos = sum(correct),
     n_false_neg = sum(!correct)
   ) %>%
-
-  # add FDR per pathway (false positives)
-  left_join(by = "kegg_pathway_id",
-    df_test_result %>%
-    group_by(prediction) %>%
-    summarize(n_false_pos = sum(!correct)) %>% 
+  left_join(by = c("model", "kegg_pathway_id"),
+    df_validation %>%
+    group_by(model, prediction) %>%
+    summarize(.groups = "drop_last",
+      n_false_pos = sum(!correct)) %>% 
     rename(kegg_pathway_id = prediction)
   ) %>%
   mutate(
+    n_true_neg = sum(n_genes)-(n_genes+n_false_pos),
     sensitivity = n_true_pos/n_genes,
+    specificity = n_true_neg/(n_true_neg + n_false_pos),
     precision = n_true_pos/(n_true_pos + n_false_pos)
   ) %>%
-  arrange(desc(sensitivity), desc(n_genes)) %>%
+  arrange(model, desc(sensitivity)) %>%
   filter(sensitivity > 0)
+
+print(df_summary)
 ```
 
 We can also look at the probability of all predicted genes to belong to the predicted label. We can plot the probability of a label versus the cumulative sum of correctly predicted labels. This could show a probability cutoff at which more correct than incorrect predictions are made. The second plot shows a histogram of the model-estimated probability to determine a class versus the actual turnout, % correct labels per bin.
 
 
 ```{r, fig.width = 6, fig.height = 7}
-plot_prob_correct <- df_test_result %>%
-  arrange((probability)) %>%
-  mutate(correct = cumsum(correct)) %>%
-  ggplot(aes(x = probability, y = correct)) +
-    geom_step() +
-    labs(title = "cumulative sum of correct predictions") +
-    custom_theme()
+plot_prob_correct <- df_summary %>%
+  pivot_longer(sensitivity:precision, names_to = "metric", values_to = "value") %>%
+  mutate(kegg_pathway_id = factor(kegg_pathway_id, unique(kegg_pathway_id))) %>%
+  ggplot(aes(x = as.numeric(kegg_pathway_id), y = value, fill = model)) +
+    geom_col(width = 1) +
+    labs(title = "performance metrics for classes with corrrect predictions", x = "", y = "") +
+    facet_grid(model ~ factor(metric, unique(metric))) +
+    scale_fill_manual(values = custom_colors[1:3]) +
+    custom_theme(legend.position = "")
 
-plot_hist_correct <- df_test_result %>%
-  arrange((probability)) %>%
+plot_hist_correct <- df_validation %>%
   mutate(bin = cut_width(probability, 0.1, center = 0.05)) %>%
-  group_by(bin) %>% summarize(percent_correct = sum(correct)/n()) %>%
-  ggplot(aes(x = bin, y = percent_correct)) +
+  group_by(model, bin) %>% summarize(.groups = "drop", percent_correct = sum(correct)/n()) %>%
+  ggplot(aes(x = bin, y = percent_correct, fill = model)) +
     geom_col() +
-    labs(title = "% correct predictions per probability") +
-    custom_theme()
+    labs(title = "% correct predictions per probability bin", x = "", y = "") +
+    facet_grid( ~ model) +
+    scale_fill_manual(values = custom_colors[1:3]) +
+    #theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
+    custom_theme(legend.position = "bottom") +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
 
-gridExtra::grid.arrange(
+gridExtra::grid.arrange(nrow = 2,
   plot_prob_correct,
   plot_hist_correct
 )
-```
-
-
-## Random forest
-
-A second decision based approach that can be tested is a Random forest. It is conceptually similar to gradient boosting, only that the ensemble of trees is made by bootstrap aggregation ('bagging', all trees sampled independently) while for gradient boosting, tree selection is iteratively refined ('boosting').
-
-
-```{r}
-# look up model's tuning parameters
-modelLookup('parRF')
-
-tune_options <- expand.grid(
-  mtry = c(3:10,20,50,100)
-)
-```
-
-Run random forest analysis in parallel. In this case multicore support is built-in and the training does not need to be wrapped in a `DoParallel` command.
-
-```{r, warning = FALSE}
-system.time({
-  # start parallel processing
-  cl <- makePSOCKcluster(4)
-  registerDoParallel(cl)
-  # train model
-  fit_raf <- train(
-    x = df_train_tra,
-    y = classes_tra,
-    method = "parRF",
-    trControl = train_options,
-    tuneGrid = tune_options
-  )
-  # stop parallel processing
-  stopCluster(cl)
-})
-```
-
-## Evaluate results
-
-After training, we can valuate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
-
-```{r, fig.width = 6, fig.height = 4, warning = FALSE}
-# Training summary
-print(fit_raf)
-
-# Accuracy per tuning parameter
-plot(fit_raf)
-
-# plot variable contribution
-varImp(fit_raf, scale = TRUE)[["importance"]] %>% 
-  as_tibble(rownames = "var") %>% rename(rel.inf = Overall) %>%
-  arrange(desc(rel.inf))  %>% slice(1:20) %>%
-  ggplot(aes(x = rel.inf, y = reorder(var, rel.inf))) +
-    geom_col() +
-    labs(title = "variable contribution (%)") +
-    custom_theme()
-```
-
-Evaluating the quality of the model in terms of its predictions. The **confusion matrix** shows the correlation of predicted classes and actual classes for the test dataset.
-
-```{r, fig.width = 8, fig.height = 8}
-classes_pred <- predict(fit_raf, newdata = df_train_val)
-classes_prob <- predict(fit_raf, newdata = df_train_val, type = "prob")
-
-make_confusion_matrix(classes_pred, classes_val)
-```
-
-We can already see that, in comparison to the GBM model, the random forest has a lower ability to predict many different often non-abundant labels/classes, although the accuracy is comparable.
-
-
-```{r}
-df_training %>%
-  select(locus, kegg_pathway_id) %>%
-  left_join(by = "kegg_pathway_id",
-    select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
-  slice(-train_index) %>%
-  mutate(
-    prediction = classes_pred,
-    probability = classes_prob %>% apply(1, max),
-    correct = prediction == kegg_pathway_id
-  ) %>% group_by(locus) %>%
-  arrange(desc(correct)) %>% slice(1) %>% ungroup %>%
-  {paste("Number of correct predictions:", sum(.[["correct"]]),
-  "out of", nrow(.), "observations (",
-  round(100*sum(.[["correct"]])/nrow(.), 2),"%)")}
 ```
 
 
