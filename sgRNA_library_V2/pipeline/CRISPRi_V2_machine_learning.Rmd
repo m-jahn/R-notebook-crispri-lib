@@ -53,6 +53,7 @@ suppressPackageStartupMessages({
   library(doParallel)
   library(tidyverse)
   library(ggrepel)
+  library(ggpubr)
   library(caret)
   library(httr)
 })
@@ -67,7 +68,7 @@ df_kegg <- read_csv("../data/output/kegg_annotation.csv", col_types = cols())
 ```
 
 
-```{r, echo = FALSE}
+```{r, echo = FALSE, warning = FALSE}
 # custom ggplot2 theme that is reused for all later plots
 custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
 custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
@@ -90,6 +91,9 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
     ...
   )
 }
+
+# define custom set of graphical parameters for lattice
+trellis.par.set(caretTheme())
 ```
 
 ## Mine data bases
@@ -498,25 +502,23 @@ A multi-layer perceptron is a (simple) neural network with a limited number of h
 
 $y = \sigma \times (\sum(w_i \times x_i) + b)$
 
-Training a neural network usually means to vary (optimize) the weight parameter $w$ for each node such that the cost (difference between expected output and obtained output) is minimized. Here we use the `mlpKerasDropout` function from package `keras`, with default tuning parameters.
+Training a neural network usually means to vary (optimize) the weight parameter $w$ for each node such that the cost (difference between expected output and obtained output) is minimized. Here we use the `mlp` function from package `RSNNS`, with default tuning parameters.
 
 ```{r, warning = FALSE, results = 'hide'}
 # look up model's tuning parameters
-modelLookup('mlpKerasDropout')
+modelLookup('mlp')
 
 system.time({
   # start parallel processing
   cl <- makePSOCKcluster(detectCores())
   registerDoParallel(cl)
   # train model
-  invisible(capture.output(
-    fit_mlp <- train(
-      x = df_train_tra,
-      y = classes_tra,
-      method = "mlpKerasDropout",
-      trControl = train_options
-    )
-  ))
+  fit_mlp <- train(
+    x = df_train_tra,
+    y = classes_tra,
+    method = "mlp",
+    trControl = train_options
+  )
   # stop parallel processing
   stopCluster(cl)
 })
@@ -524,7 +526,7 @@ system.time({
 
 ## Support vector machine
 
-Another type of ML algorithm is a support vector machine, that is quite different to tree-based or neural network based algorithms. A SVM is a supervised machine learning algorithm for classification and regression problems. The SVM algorithm tries to reduce the number of dimensions of the data and finds boundaries between different 'clusters' of data points. The shape of these boundaries is determined by the **kernel function**. It can be linear in the most simple case, or a radial, polynomial, or other type of (non-linear) function. In the simples case, a a classification problem with 2 classes, characterized by two different variables, the boundary between the observations is a line. For three feature variables it is a plane, for n variables it is an **n-dimensional hyperplane**. The boundary between classes is characterized by having the **maximum margin towards the support vectors**, that is, the set of points representing the edge/boundary of a point cluster belonging to a class.
+Another type of ML algorithm is a support vector machine, that is quite different from tree-based or neural network based algorithms. A SVM is a supervised machine learning algorithm for classification and regression problems. The SVM algorithm tries to reduce the number of dimensions of the data and finds boundaries between different 'clusters' of data points. The shape of these boundaries is determined by the **kernel function**. It can be linear in the most simple case, or a radial, polynomial, or other type of (non-linear) function. In the simples case, a a classification problem with 2 classes, characterized by two different variables, the boundary between the observations is a line. For three feature variables it is a plane, for n variables it is an **n-dimensional hyperplane**. The boundary between classes is characterized by having the **maximum margin towards the support vectors**, that is, the set of points representing the edge/boundary of a point cluster belonging to a class.
 
 ```{r, warning = FALSE, results = 'hide'}
 # look up model's tuning parameters
@@ -546,33 +548,39 @@ system.time({
 })
 ```
 
+## Export current models
+
+This optional step saves the current best fit models to disk in order to prevent re-fitting the same model for each change of the pipeline.
+
+```{r, eval = FALSE}
+save(list = c("fit_gbm", "fit_raf", "fit_mlp", "fit_svm"), file = "../data/output/ML_models.Rdata")
+```
+
+```{r, eval = FALSE, include = FALSE}
+load(file = "../data/output/ML_models.Rdata")
+```
+
+
 # Compare performance of different models
 
 ## Evaluating the training process
 
 After training, we can evaluate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
 
-```{r, fig.width = 6, fig.height = 4, warning = FALSE}
+```{r, fig.width = 8, fig.height = 7, warning = FALSE}
 # Training summary
 print(fit_gbm)
 
-# define custom set of graphical parameters for lattice
-trellis.par.set(caretTheme())
-
 # Accuracy per tuning parameter
-plot(fit_gbm)
-plot(fit_raf)
-plot(fit_mlp)
-plot(fit_svm)
-```
-
-
-```{r, fig.width = 6, fig.height = 4, warning = FALSE}
-# plot accuracy (or other metrics) as heat map
-plot(fit_gbm, metric = "Accuracy", plotType = "level",
-  scales = list(x = list(rot = 90)), par.settings = caretTheme()
+ggarrange(ncol = 2, nrow = 2, align = "hv",
+  ggplot(fit_gbm) + custom_theme() +
+    custom_theme(legend.position = c(0.85,0.17)),
+  ggplot(fit_raf) + custom_theme(),
+  ggplot(fit_mlp) + custom_theme(),
+  ggplot(fit_svm) + custom_theme()
 )
 ```
+
 
 A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final models and plot it. For the MLP and SVM models, the variable importance is not readily available.
 
@@ -635,7 +643,7 @@ classes_prob_mlp <- predict(fit_mlp, newdata = df_train_val, type = "prob")
 make_confusion_matrix(classes_pred_mlp, classes_val)
 
 classes_pred_svm <- predict(fit_svm, newdata = df_train_val)
-#classes_prob_svm <- predict(fit_svm, newdata = df_train_val, type = "prob")
+classes_prob_svm <- predict(fit_svm, newdata = df_train_val, type = "prob")
 make_confusion_matrix(classes_pred_svm, classes_val)
 ```
 
@@ -656,6 +664,7 @@ df_validation <- df_training %>%
     MLP = classes_pred_mlp,
     SVM = classes_pred_svm
   ) %>%
+  
   pivot_longer(cols = c("GBM", "RAF", "MLP", "SVM"),
     names_to = "model", values_to = "prediction") %>%
   arrange(factor(model, c("GBM", "RAF", "MLP", "SVM"))) %>%
@@ -732,15 +741,14 @@ plot_hist_correct <- df_validation %>%
   mutate(bin = cut_width(probability, 0.1, center = 0.05)) %>%
   group_by(model, bin) %>% summarize(.groups = "drop", percent_correct = sum(correct)/n()) %>%
   ggplot(aes(x = bin, y = percent_correct, fill = model)) +
-    geom_col() +
+    geom_col(width = 1) +
     labs(title = "% correct predictions per probability bin", x = "", y = "") +
     facet_grid( ~ model) +
     scale_fill_manual(values = custom_colors[1:4]) +
-    #theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
     custom_theme(legend.position = "bottom") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
 
-gridExtra::grid.arrange(nrow = 2,
+ggarrange(nrow = 2, ncol = 1, heights = c(0.6, 0.4),
   plot_prob_correct,
   plot_hist_correct
 )
