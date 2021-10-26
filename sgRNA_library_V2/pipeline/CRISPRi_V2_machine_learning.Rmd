@@ -352,7 +352,9 @@ Variables with very low diversity are problematic (very few non-zero or non NA v
 
 ```{r}
 # the columns with low variance
-nearZeroVar(df_train_dummy, freqCut = 99/1, uniqueCut = 1)
+list_zerovar_cols <- nearZeroVar(df_train_dummy, freqCut = 99/1, uniqueCut = 1)
+df_train_dummy <- df_train_dummy %>% select(-all_of(list_zerovar_cols))
+paste("Removed the following invalid columns:", paste(list_zerovar_cols, collapse = ", "))
 ```
 
 Another quality control step is to check which variables in the data are linearly correlated, and potentially remove them. This is done using `findLinearCombos`.
@@ -409,7 +411,8 @@ train_options <- trainControl(
   method = "repeatedcv",
   number = 5,
   repeats = 1,
-  p = 0.8)
+  p = 0.8
+)
 ```
 
 ## Gradient boosting machine
@@ -497,7 +500,7 @@ $y = \sigma \times (\sum(w_i \times x_i) + b)$
 
 Training a neural network usually means to vary (optimize) the weight parameter $w$ for each node such that the cost (difference between expected output and obtained output) is minimized. Here we use the `mlpKerasDropout` function from package `keras`, with default tuning parameters.
 
-```{r, warning = FALSE}
+```{r, warning = FALSE, results = 'hide'}
 # look up model's tuning parameters
 modelLookup('mlpKerasDropout')
 
@@ -519,6 +522,29 @@ system.time({
 })
 ```
 
+## Support vector machine
+
+Another type of ML algorithm is a support vector machine, that is quite different to tree-based or neural network based algorithms. A SVM is a supervised machine learning algorithm for classification and regression problems. The SVM algorithm tries to reduce the number of dimensions of the data and finds boundaries between different 'clusters' of data points. The shape of these boundaries is determined by the **kernel function**. It can be linear in the most simple case, or a radial, polynomial, or other type of (non-linear) function. In the simples case, a a classification problem with 2 classes, characterized by two different variables, the boundary between the observations is a line. For three feature variables it is a plane, for n variables it is an **n-dimensional hyperplane**. The boundary between classes is characterized by having the **maximum margin towards the support vectors**, that is, the set of points representing the edge/boundary of a point cluster belonging to a class.
+
+```{r, warning = FALSE, results = 'hide'}
+# look up model's tuning parameters
+modelLookup('svmRadial')
+
+system.time({
+  # start parallel processing
+  cl <- makePSOCKcluster(detectCores())
+  registerDoParallel(cl)
+  # train model
+  fit_svm <- train(
+    x = df_train_tra,
+    y = classes_tra,
+    method = "svmRadial",
+    trControl = train_options
+  )
+  # stop parallel processing
+  stopCluster(cl)
+})
+```
 
 # Compare performance of different models
 
@@ -537,6 +563,7 @@ trellis.par.set(caretTheme())
 plot(fit_gbm)
 plot(fit_raf)
 plot(fit_mlp)
+plot(fit_svm)
 ```
 
 
@@ -547,7 +574,7 @@ plot(fit_gbm, metric = "Accuracy", plotType = "level",
 )
 ```
 
-A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final model and plot it. For the MLP model, the variable importance is not readily available.
+A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final models and plot it. For the MLP and SVM models, the variable importance is not readily available.
 
 ```{r, fig.width = 7, fig.height = 6, warning = FALSE}
 # make df of variable contribution for each model
@@ -574,7 +601,7 @@ bind_rows(.id = "model",
 
 Evaluating the quality of the model in terms of its predictions. The **confusion matrix** shows the correlation of predicted classes and actual classes for the test dataset.
 
-```{r, fig.width = 8, fig.height = 8}
+```{r, fig.width = 8, fig.height = 8, warning = FALSE}
 make_confusion_matrix <- function(prediction, reference) {
   confusionMatrix(
     data = factor(prediction, unique(reference)),
@@ -606,6 +633,10 @@ make_confusion_matrix(classes_pred_raf, classes_val)
 classes_pred_mlp <- predict(fit_mlp, newdata = df_train_val)
 classes_prob_mlp <- predict(fit_mlp, newdata = df_train_val, type = "prob")
 make_confusion_matrix(classes_pred_mlp, classes_val)
+
+classes_pred_svm <- predict(fit_svm, newdata = df_train_val)
+#classes_prob_svm <- predict(fit_svm, newdata = df_train_val, type = "prob")
+make_confusion_matrix(classes_pred_svm, classes_val)
 ```
 
 We can look at best predictions in more detail. This table contains all detailed statistics for the validation data set.
@@ -622,20 +653,21 @@ df_validation <- df_training %>%
   mutate(
     GBM = classes_pred_gbm,
     RAF = classes_pred_raf,
-    MLP = classes_pred_mlp
+    MLP = classes_pred_mlp,
+    SVM = classes_pred_svm
   ) %>%
-  pivot_longer(cols = c("GBM", "RAF", "MLP"),
+  pivot_longer(cols = c("GBM", "RAF", "MLP", "SVM"),
     names_to = "model", values_to = "prediction") %>%
-  arrange(factor(model, c("GBM", "RAF", "MLP"))) %>%
+  arrange(factor(model, c("GBM", "RAF", "MLP", "SVM"))) %>%
   mutate(probability = lapply(
-    list(classes_prob_gbm, classes_prob_raf, classes_prob_mlp),
+    list(classes_prob_gbm, classes_prob_raf, classes_prob_mlp, classes_prob_mlp),
     function(x) apply(x, 1, max)) %>% unlist) %>%
   mutate(correct = prediction == kegg_pathway_id) %>%
   
   # trim duplicated genes/observations
   group_by(model, locus) %>%
   arrange(desc(correct)) %>% slice(1) %>%
-  ungroup %>% mutate(model = factor(model, c("GBM", "RAF", "MLP")))
+  ungroup %>% mutate(model = factor(model, c("GBM", "RAF", "MLP", "SVM")))
 ```
 
 Now with all results for the validation set in one data frame, it is easy to make performance comparisons.
@@ -693,7 +725,7 @@ plot_prob_correct <- df_summary %>%
     geom_col(width = 1) +
     labs(title = "performance metrics for classes with corrrect predictions", x = "", y = "") +
     facet_grid(model ~ factor(metric, unique(metric))) +
-    scale_fill_manual(values = custom_colors[1:3]) +
+    scale_fill_manual(values = custom_colors[1:4]) +
     custom_theme(legend.position = "")
 
 plot_hist_correct <- df_validation %>%
@@ -703,7 +735,7 @@ plot_hist_correct <- df_validation %>%
     geom_col() +
     labs(title = "% correct predictions per probability bin", x = "", y = "") +
     facet_grid( ~ model) +
-    scale_fill_manual(values = custom_colors[1:3]) +
+    scale_fill_manual(values = custom_colors[1:4]) +
     #theme(axis.text.x = element_text(angle = 90, vjust = 0.5)) +
     custom_theme(legend.position = "bottom") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
