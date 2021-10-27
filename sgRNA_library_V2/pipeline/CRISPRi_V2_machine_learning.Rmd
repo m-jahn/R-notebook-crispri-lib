@@ -217,11 +217,11 @@ spread_list_col <- function(
 }
 
 # spread GO terms
-df_uniprot <- spread_list_col(df_uniprot, "chebi_ids",
+df_uniprot_train <- spread_list_col(df_uniprot, "chebi_ids",
   "locus", n_min = 10, n_max = 200)
 
 # select final list of features for classification
-df_uniprot <- select(df_uniprot,
+df_uniprot_train <- select(df_uniprot_train,
   !c(entry, gene_names, `gene_names__(primary_)`, gene_ontology_ids, #chebi_ids,
   protein_names, ec_number, ec_level_2, ec_level_3, rhea_id, pfam))
 ```
@@ -317,36 +317,37 @@ Factors or character values are non-informative for the ML models. Regardless of
 First we generate a test data set containing the *response variable* `kegg_pathway`, and the *predictors*, for example weighted mean fitness (`wmean_fitness`) measurements in all conditions. Additional predictors can be added later. The genes that don't map to any KEGG pathway are removed as they have no value in the training/validation set. They can be used to make predictions and hence are assigned to the prediction set.
 
 ```{r}
-# generate training data set
-df_training <- df_gene %>%
+# prepare data for training
+df_all <- df_gene %>%
   filter(time == 0, !is.na(locus)) %>%
   select(locus, condition, wmean_fitness) %>%
   
   # spread condition-fitness combinations to wide format
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
   # merge with uniprot feature table
-  left_join(df_uniprot, by = "locus") %>%
+  left_join(df_uniprot_train, by = "locus") %>%
   # add response variable
   left_join(select(df_kegg, locus, kegg_pathway_id), by = "locus")
-
-# split dataset in training and prediction set. For the latter,
-# no classes are available
-df_prediction <- df_training %>% filter(is.na(kegg_pathway_id))
-df_training <- df_training %>% filter(!is.na(kegg_pathway_id))
 ```
 
 Convert factors to dummy variables. The formula interface is similar to R's standard `response variable ~ predictor variables`, predictors can be separated by `+`, or all variables are used (`.`). If the data supplied to `dummy_vars` is the original data.frame, the predictions are identical to the input data. Otherwise new data can be used as predictor. The response variable should be in the first column, and all other columns should contain predictors.
 
 ```{r}
-dummy_vars <- df_training %>%
+dummy_vars <- df_all %>%
   select(kegg_pathway_id, matches("."), -locus) %>%
-  dummyVars(kegg_pathway_id ~ ., data = df_training)
+  dummyVars(kegg_pathway_id ~ ., data = df_all)
 
-df_train_dummy <- predict(object = dummy_vars, newdata = df_training) %>%
+df_all_dummy <- predict(object = dummy_vars, newdata = df_all) %>%
   as_tibble %>%
   mutate(across(everything(), ~ replace_na(., replace = 0)))
 
-dim(df_train_dummy); dim(df_training)
+# split dataset in training and prediction set. For the latter,
+# no classes are available
+df_prediction <- df_all_dummy %>% filter(is.na(df_all$kegg_pathway_id))
+df_training <- df_all_dummy %>% filter(!is.na(df_all$kegg_pathway_id))
+classes <- filter(df_all, !is.na(kegg_pathway_id)) %>% pull(kegg_pathway_id)
+
+dim(df_training); dim(df_prediction)
 ```
 
 ## Eliminate zero variance predictors
@@ -356,16 +357,16 @@ Variables with very low diversity are problematic (very few non-zero or non NA v
 
 ```{r}
 # the columns with low variance
-list_zerovar_cols <- nearZeroVar(df_train_dummy, freqCut = 99/1, uniqueCut = 1)
-df_train_dummy <- df_train_dummy %>% select(-all_of(list_zerovar_cols))
+list_zerovar_cols <- nearZeroVar(df_training, freqCut = 99/1, uniqueCut = 1)
+df_training <- df_training %>% select(-all_of(list_zerovar_cols))
 paste("Removed the following invalid columns:", paste(list_zerovar_cols, collapse = ", "))
 ```
 
 Another quality control step is to check which variables in the data are linearly correlated, and potentially remove them. This is done using `findLinearCombos`.
 
 ```{r}
-list_invalid_cols <- df_train_dummy %>% findLinearCombos %>% {.$remove}
-df_train_dummy <- df_train_dummy %>% select(-all_of(list_invalid_cols))
+list_invalid_cols <- df_training %>% findLinearCombos %>% {.$remove}
+df_training <- df_training %>% select(-all_of(list_invalid_cols))
 paste("Removed the following invalid columns:", paste(list_invalid_cols, collapse = ", "))
 ```
 
@@ -374,9 +375,9 @@ paste("Removed the following invalid columns:", paste(list_invalid_cols, collaps
 To give equal weights to different variables, values can be (optionally) centered, automatically re-scaled, or re-scaled to e.g. a range between 0 and 1.
 
 ```{r}
-df_train_dummy <- df_train_dummy %>%
+df_training <- df_training %>%
   preProcess(method = "range") %>%
-  predict(df_train_dummy)
+  predict(df_training)
 ```
 
 Note that all pre-processing can also be done with a single call to `preProcess` and `predict`, like this:
@@ -393,16 +394,15 @@ The next step is to split the processed data set into different chunks for train
 
 ```{r}
 set.seed(123)
-
-train_index <- createDataPartition(df_training$kegg_pathway_id, 1, p = 0.75)[[1]]
+train_index <- createDataPartition(classes, 1, p = 0.75)[[1]]
 
 # split into training and test/validation set
-df_train_tra <- df_train_dummy[train_index, ]
-df_train_val <- df_train_dummy[-train_index, ]
+df_train_tra <- df_training[train_index, ]
+df_train_val <- df_training[-train_index, ]
 
 # likewise split target variable into training and test set
-classes_tra <- factor(df_training$kegg_pathway_id[train_index])
-classes_val <- factor(df_training$kegg_pathway_id[-train_index])
+classes_tra <- factor(classes[train_index])
+classes_val <- factor(classes[-train_index])
 ```
 
 
@@ -567,14 +567,14 @@ load(file = "../data/output/ML_models.Rdata")
 
 After training, we can evaluate the training and fitting process. Calling the fitted model shows the final optimal parameters after fitting. We also plot the accuracy per tuning parameter set, and other metrics, see `?plot.train`.
 
-```{r, fig.width = 8, fig.height = 7, warning = FALSE}
+```{r, fig.width = 7, fig.height = 6, warning = FALSE}
 # Training summary
 print(fit_gbm)
 
 # Accuracy per tuning parameter
 ggarrange(ncol = 2, nrow = 2, align = "hv",
   ggplot(fit_gbm) + custom_theme() +
-    custom_theme(legend.position = c(0.85,0.17)),
+    custom_theme(legend.position = c(0.85,0.2)),
   ggplot(fit_raf) + custom_theme(),
   ggplot(fit_mlp) + custom_theme(),
   ggplot(fit_svm) + custom_theme()
@@ -582,13 +582,13 @@ ggarrange(ncol = 2, nrow = 2, align = "hv",
 ```
 
 
-A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final models and plot it. For the MLP and SVM models, the variable importance is not readily available.
+A metric that is very interesting is the contribution of each variable to the overall discriminatory power of the model. We can calculate the relative influence of each variable/feature for the final models and plot it. Decision-tree based models support the extraction of variable contribution. For MLP and SVM models, this metric is not readily available.
 
 ```{r, fig.width = 7, fig.height = 6, warning = FALSE}
 # make df of variable contribution for each model
 bind_rows(.id = "model",
     GBM = summary(fit_gbm, plot = FALSE) %>% as_tibble(rownames = NULL),
-    RAF = varImp(fit_raf, scale = FALSE)[["importance"]] %>% 
+    RAF = varImp(fit_raf, scale = FALSE)[["importance"]] %>%
     as_tibble(rownames = "var") %>%
     rename(rel.inf = Overall) %>% 
     mutate(rel.inf = 100*rel.inf/sum(rel.inf))
@@ -651,7 +651,7 @@ We can look at best predictions in more detail. This table contains all detailed
 The validation data set may contain the same observation/gene multiple times with different (related) labels. The final result table is therefore trimmed down to contain each gene only once together with the best matching prediction.
 
 ```{r}
-df_validation <- df_training %>%
+df_validation <- filter(df_all, !is.na(kegg_pathway_id)) %>%
   select(locus, kegg_pathway_id) %>%
   left_join(by = "kegg_pathway_id",
     select(df_kegg, kegg_pathway, kegg_pathway_id) %>% distinct) %>%
@@ -723,6 +723,20 @@ df_summary <- df_validation %>%
 print(df_summary)
 ```
 
+All predicted classes with at least one correct prediction.
+
+```{r, fig.width = 8, fig.height = 5}
+df_summary %>%
+  ggplot(aes(x = n_true_pos, y = reorder(kegg_pathway, n_true_pos), fill = model)) +
+    geom_col(aes(x = n_true_pos+n_false_neg, y = reorder(kegg_pathway, n_true_pos)),
+      width = 1, fill = grey(0.8)) +
+    geom_col(width = 1) +
+    labs(title = "correct predictions per pathway (sensitivity)", x = "", y = "") +
+    facet_grid( ~ model) +
+    scale_fill_manual(values = custom_colors[1:4]) +
+    custom_theme(legend.position = 0)
+```
+
 We can also look at the probability of all predicted genes to belong to the predicted label. We can plot the probability of a label versus the cumulative sum of correctly predicted labels. This could show a probability cutoff at which more correct than incorrect predictions are made. The second plot shows a histogram of the model-estimated probability to determine a class versus the actual turnout, % correct labels per bin.
 
 
@@ -732,8 +746,9 @@ plot_prob_correct <- df_summary %>%
   mutate(kegg_pathway_id = factor(kegg_pathway_id, unique(kegg_pathway_id))) %>%
   ggplot(aes(x = as.numeric(kegg_pathway_id), y = value, fill = model)) +
     geom_col(width = 1) +
-    labs(title = "performance metrics for classes with corrrect predictions", x = "", y = "") +
-    facet_grid(model ~ factor(metric, unique(metric))) +
+    labs(title = "performance metrics for classes with corrrect predictions",
+      x = "Kegg pathways ranked by sensitivity", y = "") +
+    facet_grid(factor(metric, unique(metric)) ~ model) +
     scale_fill_manual(values = custom_colors[1:4]) +
     custom_theme(legend.position = "")
 
@@ -748,7 +763,7 @@ plot_hist_correct <- df_validation %>%
     custom_theme(legend.position = "bottom") +
     theme(axis.text.x = element_text(angle = 90, vjust = 0.5, size = 8))
 
-ggarrange(nrow = 2, ncol = 1, heights = c(0.6, 0.4),
+ggarrange(nrow = 2, ncol = 1, heights = c(0.57, 0.43),
   plot_prob_correct,
   plot_hist_correct
 )
@@ -756,6 +771,78 @@ ggarrange(nrow = 2, ncol = 1, heights = c(0.6, 0.4),
 
 
 # Function prediction of unknown proteins
+
+From the different ML algorithms that were tested, the best performing ones are selected to predict gene function (here: association with KEGG pathways). Since the models have different predictive power for different pathways, a majority vote of prediction is used.
+
+```{r}
+# preprocess prediction data the same way as training data
+df_prediction <- df_prediction %>% select(all_of(colnames(df_train_val)))
+df_prediction <- df_prediction %>% preProcess(method = "range") %>% predict(df_prediction)
+stopifnot(all(colnames(df_prediction) == colnames(df_train_val)))
+
+df_prediction_final <- df_all %>% filter(is.na(kegg_pathway_id)) %>% 
+  select(locus) %>% mutate(
+    kegg_pathway_id_GBM = predict(fit_gbm, newdata = df_prediction),
+    kegg_pathway_id_RAF = predict(fit_raf, newdata = df_prediction),
+    kegg_pathway_id_SVM = predict(fit_svm, newdata = df_prediction),
+    kegg_pathway_id_GBM_prob = apply(predict(fit_gbm, newdata = df_prediction, type = "prob"), 1, max),
+    kegg_pathway_id_RAF_prob = apply(predict(fit_raf, newdata = df_prediction, type = "prob"), 1, max)
+  ) %>%
+ 
+  # order by probability
+  rowwise() %>% mutate(
+    aggr_prob = mean(c_across(ends_with("prob"))),
+    kegg_pathway_id_consensus = names(max(table(c_across(matches("(GBM|RAF|SVM)$"))))),
+    kegg_pathway_id_consensus_n = max(table(c_across(matches("(GBM|RAF|SVM)$")))),
+    kegg_pathway_consensus = select(df_kegg, kegg_pathway_id, kegg_pathway) %>%
+      deframe %>% {.[kegg_pathway_id_consensus]}
+  ) %>% ungroup %>%
+  filter(kegg_pathway_id_consensus_n >= 2) %>%
+  arrange(desc(kegg_pathway_id_consensus_n), desc(aggr_prob))
+
+# add uniprot gene names to filter genes with known function
+df_prediction_final <- df_prediction_final %>%
+  left_join(by = "locus", 
+    select(df_uniprot, locus, gene_names, `gene_names__(primary_)`,
+      protein_names, subcellular_location))
+```
+
+We can finally inspect the predictions for the top genes by consensus and probability.
+
+
+```{r, fig.width = 8, fig.height = 12}
+plot_list_hits <- lapply(filter(df_summary, sensitivity > 0.5) %>%
+  pull(kegg_pathway) %>% unique, function(pw) {
+    df_prediction_final %>%
+    mutate(pw_n = factor(kegg_pathway_id_consensus_n, 2:3)) %>%
+    filter(kegg_pathway_consensus == pw) %>%
+    arrange(desc(aggr_prob)) %>% slice(1:10) %>%
+    ggplot(aes(x = aggr_prob, y = reorder(locus, aggr_prob),
+      fill = pw_n, label = `gene_names__(primary_)`)) +
+      geom_col(width = 0.8) +
+      geom_text(nudge_x = 0.03, size = 3.5, color = grey(0.4), hjust = 0) +
+      labs(title = pw, x = "probability", y = "") +
+      scale_fill_manual(values = c(colorspace::lighten(custom_colors[2], 0.4),
+        custom_colors[2]), drop = FALSE) +
+      custom_theme(legend.position = "right") +
+      coord_cartesian(xlim = c(0, 1))
+  }
+)
+
+ggarrange(ncol = 2, nrow = 4, plotlist = plot_list_hits)
+```
+
+This is a table with function prediction for the top genes where no name or function is annotated in uniprot.
+
+```{r}
+df_prediction_final %>%
+  #filter(str_detect(protein_names, "^([a-zA-Z0-9]{7}|Uncharacterized) protein$")) %>%
+  filter(is.na(`gene_names__(primary_)`), aggr_prob > 0.5) %>%
+  arrange(desc(aggr_prob)) %>%
+  select(locus, aggr_prob, kegg_pathway_id_consensus,
+    kegg_pathway_consensus, protein_names)
+```
+
 
 
 
