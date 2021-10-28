@@ -1,7 +1,7 @@
 # R-notebook-crispri-lib
 
 <!-- header image -->
-![Principle of a CRISPRi repression library](CRISPRi_lib_principle.svg)
+![Principle of a CRISPRi repression library](CRISPRi_lib_principle.png)
 
 ### News
 
