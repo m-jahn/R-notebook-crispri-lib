@@ -39,10 +39,11 @@ The input data has several important characteristics:
 
 According to different reviews dealing with ML application to biological problems ([Greener et al., Nat Rev Mol Cell Bio, 2021](https://www.nature.com/articles/s41580-021-00407-0) and [Mahood et al., Appl Plant Science, 2020](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC7394712/)), some types of models/frameworks are more appropriate for this type of data than others. We have a **classification** and not a regression problem, which makes the following ML approaches most suitable:
 
-1. Gradient boosting
-2. Support vector machine
-3. Random forest
-4. multi-layer perceptron (neural network)
+1. Gradient boosting machine
+2. Random forest
+3. Multi-layer perceptron (neural network)
+4. Support vector machine
+
 
 # Data import and preprocessing
 
@@ -56,15 +57,24 @@ suppressPackageStartupMessages({
   library(ggpubr)
   library(caret)
   library(httr)
+  library(scales)
 })
 ```
 
-Load raw data with calculated fitness contribution of all genes and all tested conditions.
-Load also KEGG pathways that were downloaded in the preceding pipeline.
+- Load raw data with calculated fitness contribution of all genes and all tested conditions
+- Load also KEGG pathways that were downloaded in the preceding pipeline
 
 ```{r}
 df_gene <- read_csv("../data/output/fitness_genes.csv", col_types = cols())
 df_kegg <- read_csv("../data/output/kegg_annotation.csv", col_types = cols())
+```
+
+- Load protein quantification (by mass spectrometry) from light and CO2 limitation experiments (from [Github](https://github.com/m-jahn/ShinyProt))
+- Load protein quantification (by mass spectrometry) from perturbation experiments (from [Github](https://github.com/m-jahn/ShinyProt))
+
+```{r}
+#load(url("https://github.com/m-jahn/ShinyProt/blob/master/data/Jahn_2018_Light_and_CO2_lim.Rdata?raw=true"))
+#load(url("https://github.com/m-jahn/ShinyProt/blob/master/data/Jahn_2018_Perturbations.Rdata?raw=true"))
 ```
 
 
@@ -98,7 +108,7 @@ trellis.par.set(caretTheme())
 
 ## Mine data bases
 
-Every protein is annotated by a wealth of different features that can be used to categorize proteins further. We can download a selection of the most interesting functional, biochemical, and phylogenetic annotations from [Uniprot](https://www.uniprot.org). For an efficient download, we use their REST API. The list of available columns/database entries is available [here](https://www.uniprot.org/help/uniprotkb_column_names).
+Every protein is annotated by a wealth of different features that can be used to categorize proteins further. We can download a selection of the most interesting functional, biochemical, and phylogenetic annotations from [Uniprot](https://www.uniprot.org). Uniprot also contains functional annotation (terms) from other databases such as Pfam for structural motifs, KEGG for enzymes and pathways, or CHEBI for reaction chemistry. For an efficient download, we use their REST API. The list of available columns/database entries is available [here](https://www.uniprot.org/help/uniprotkb_column_names).
 
 ```{r}
 # List of Uniprot features
@@ -160,7 +170,7 @@ via amide nitrogen and carbonyl oxygen";  /evidence="ECO:0000250"; BINDING 298;
 "ECO:0000250"; BINDING 559;  /note="DXP; via amide nitrogen";  /evidence="ECO:0000250"
 ```
 
-It can be reduce to either the position `56, 169, 298, 324, 559` or to the binding molecules `glycine, fad, dxp`.
+It can be reduced to either the position `56, 169, 298, 324, 559` or to the binding molecules `glycine, fad, dxp`.
 
 ```{r}
 df_uniprot <- df_uniprot %>%
@@ -312,20 +322,50 @@ df_kegg$locus %>% unique %>% length
 
 ## Transforming input data
 
-Factors or character values are non-informative for the ML models. Regardless of the algorithm, it is highly advisable to transform all variables to numeric type (in fact, `logical`). The `dummyVars` function re-arranges the data to a full-factorial matrix, that means all combinations of factor and levels are spelled out explicitly in separate columns, encoded by `0` and `1`. The binary encoding is favorable over a simple conversion of factor to numeric, which might indicate a continuous relationship between levels that does not exist (e.g. think about `13` and `14` closer related to each other than `1` and `14`). This is also called **One Hot Encoding**.
+In order to add **proteomics data** to the fitness measurements, the data needs to be reshaped to wide format, log-transformed, and re-scaled to obtain a symmetric range. The re-scaling requires more attention as compared to simple unrelated variables, because the log2 FC of all conditions should be comparable (that means centered around zero). Proteomics data is currently not included as it was found to not improve predictive power.
 
-First we generate a test data set containing the *response variable* `kegg_pathway`, and the *predictors*, for example weighted mean fitness (`wmean_fitness`) measurements in all conditions. Additional predictors can be added later. The genes that don't map to any KEGG pathway are removed as they have no value in the training/validation set. They can be used to make predictions and hence are assigned to the prediction set.
+```{r, eval = FALSE, include = FALSE}
+# prepare proteomics data
+trim_to_range <- function(x, low, high) {
+  x <- replace(x, x < low, low)
+  x <- replace(x, x > high, high)
+  x
+}
+  
+df_proteome <- bind_rows(
+    rename(Jahn_2018_Light_and_CO2_lim, locus = gene),
+    rename(Jahn_2018_Perturbations, locus = protein)) %>%
+  filter(
+    !condition %in% c("CO2-1-0", "Light-1000", "300-NT", "60-NT"),
+    !locus %in% c("aph", "bla", "eYFP", "mobA", "repA")) %>%
+  mutate(log2FC = log2(rel_intensity) %>% replace_na(0)) %>%
+  group_by(locus) %>%
+  mutate(mean_mass_fraction = log10(mean(mean_massfraction))) %>% ungroup %>%
+  select(locus, condition, mean_mass_fraction, log2FC) %>%
+  pivot_wider(names_from = condition, values_from = log2FC, values_fill = 0) %>%
+  mutate(mean_mass_fraction = rescale(mean_mass_fraction)) %>%
+  mutate(across(matches("CO2|Light|DCMU|GLC|EYFP"), 
+    ~ trim_to_range(., -3, 3) %>% rescale(from = c(-3, 3), to = c(0,1))))
+```
+
+Factors or character values are non-informative for the ML models. Regardless of the algorithm, it is highly advisable to transform all character variables to numeric type (in fact, `logical`). The `dummyVars` function re-arranges the data to a full-factorial matrix, that means all combinations of factor and levels are spelled out explicitly in separate columns, encoded by `0` and `1`. The binary encoding is favorable over a simple conversion of factor to numeric, which might indicate a continuous relationship between levels that does not exist (e.g. think about `13` and `14` closer related to each other than `1` and `14`). This is also called **One Hot Encoding**.
+
+First we generate a test data set containing the *response variable* `kegg_pathway`, and the *predictors*, for example weighted mean fitness (`wmean_fitness`) measurements in all conditions. Additional predictors can be added later. The genes that don't map to any KEGG pathway are removed as they have no value in the training/validation set. They can be used to make predictions and hence are assigned to the **prediction data set**.
 
 ```{r}
 # prepare data for training
 df_all <- df_gene %>%
   filter(time == 0, !is.na(locus)) %>%
   select(locus, condition, wmean_fitness) %>%
-  
   # spread condition-fitness combinations to wide format
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  
+  # optionally add proteomics measurements
+  #left_join(df_proteome, by = "locus", fill = 0) %>%
+  
   # merge with uniprot feature table
   left_join(df_uniprot_train, by = "locus") %>%
+  
   # add response variable
   left_join(select(df_kegg, locus, kegg_pathway_id), by = "locus")
 ```
@@ -413,8 +453,8 @@ The caret package makes it easy to automate the model testing and training steps
 ```{r}
 train_options <- trainControl(
   method = "repeatedcv",
-  number = 5,
-  repeats = 1,
+  number = 10,
+  repeats = 2,
   p = 0.8
 )
 ```
@@ -508,6 +548,10 @@ Training a neural network usually means to vary (optimize) the weight parameter 
 # look up model's tuning parameters
 modelLookup('mlp')
 
+tune_options <- expand.grid(
+  size = c(3:10,15,20,25,30,35,40,45,50)
+)
+
 system.time({
   # start parallel processing
   cl <- makePSOCKcluster(detectCores())
@@ -517,7 +561,8 @@ system.time({
     x = df_train_tra,
     y = classes_tra,
     method = "mlp",
-    trControl = train_options
+    trControl = train_options,
+    tuneGrid = tune_options
   )
   # stop parallel processing
   stopCluster(cl)
@@ -526,12 +571,18 @@ system.time({
 
 ## Support vector machine
 
-Another type of ML algorithm is a support vector machine, that is quite different from tree-based or neural network based algorithms. A SVM is a supervised machine learning algorithm for classification and regression problems. The SVM algorithm tries to reduce the number of dimensions of the data and finds boundaries between different 'clusters' of data points. The shape of these boundaries is determined by the **kernel function**. It can be linear in the most simple case, or a radial, polynomial, or other type of (non-linear) function. In the simples case, a a classification problem with 2 classes, characterized by two different variables, the boundary between the observations is a line. For three feature variables it is a plane, for n variables it is an **n-dimensional hyperplane**. The boundary between classes is characterized by having the **maximum margin towards the support vectors**, that is, the set of points representing the edge/boundary of a point cluster belonging to a class.
+Another type of ML algorithm is a support vector machine, that is quite different from tree-based or neural network based algorithms. A SVM is a supervised machine learning algorithm for classification and regression problems. The SVM algorithm tries to reduce the number of dimensions of the data and finds boundaries between different 'clusters' of data points. The shape of these boundaries is determined by the **kernel function**. It can be linear in the most simple case, or a radial, polynomial, or other type of (non-linear) function. In the simplest case, a classification problem with 2 classes, characterized by two different variables, the boundary between the observations is a line. For three feature variables it is a plane, for n variables it is an **n-dimensional hyperplane**. The boundary between classes is characterized by having the **maximum margin towards the support vectors**, that is, the set of points representing the edge/boundary of a point cluster belonging to a class.
 
 ```{r, warning = FALSE, results = 'hide'}
 # look up model's tuning parameters
 modelLookup('svmRadial')
 
+tune_options <- expand.grid(
+  sigma = c(0.01, 0.02, 0.05),
+  C = seq(0.1,1, 0.1)
+)
+
+# train_options
 system.time({
   # start parallel processing
   cl <- makePSOCKcluster(detectCores())
@@ -541,7 +592,8 @@ system.time({
     x = df_train_tra,
     y = classes_tra,
     method = "svmRadial",
-    trControl = train_options
+    trControl = train_options,
+    tuneGrid = tune_options
   )
   # stop parallel processing
   stopCluster(cl)
@@ -577,7 +629,8 @@ ggarrange(ncol = 2, nrow = 2, align = "hv",
     custom_theme(legend.position = c(0.85,0.2)),
   ggplot(fit_raf) + custom_theme(),
   ggplot(fit_mlp) + custom_theme(),
-  ggplot(fit_svm) + custom_theme()
+  ggplot(fit_svm) + custom_theme() +
+    custom_theme(legend.position = c(0.85,0.2))
 )
 ```
 
@@ -643,7 +696,8 @@ classes_prob_mlp <- predict(fit_mlp, newdata = df_train_val, type = "prob")
 make_confusion_matrix(classes_pred_mlp, classes_val)
 
 classes_pred_svm <- predict(fit_svm, newdata = df_train_val)
-classes_prob_svm <- predict(fit_svm, newdata = df_train_val, type = "prob")
+classes_prob_svm <- classes_prob_mlp %>%
+  apply(2, function(x) rep(0, length(x))) %>% as.data.frame
 make_confusion_matrix(classes_pred_svm, classes_val)
 ```
 
@@ -669,8 +723,8 @@ df_validation <- filter(df_all, !is.na(kegg_pathway_id)) %>%
     names_to = "model", values_to = "prediction") %>%
   arrange(factor(model, c("GBM", "RAF", "MLP", "SVM"))) %>%
   mutate(probability = lapply(
-    list(classes_prob_gbm, classes_prob_raf, classes_prob_mlp, classes_prob_mlp),
-    function(x) apply(x, 1, max)) %>% unlist) %>%
+    list(classes_prob_gbm, classes_prob_raf, classes_prob_mlp, classes_prob_svm),
+    function(x) apply(x, 1, function(x) max(x, na.rm = TRUE))) %>% unlist) %>%
   mutate(correct = prediction == kegg_pathway_id) %>%
   
   # trim duplicated genes/observations
@@ -755,6 +809,7 @@ plot_prob_correct <- df_summary %>%
 plot_hist_correct <- df_validation %>%
   mutate(bin = cut_width(probability, 0.1, center = 0.05)) %>%
   group_by(model, bin) %>% summarize(.groups = "drop", percent_correct = sum(correct)/n()) %>%
+  mutate(percent_correct = case_when(model == "SVM" ~ 0, TRUE ~ percent_correct)) %>%
   ggplot(aes(x = bin, y = percent_correct, fill = model)) +
     geom_col(width = 1) +
     labs(title = "% correct predictions per probability bin", x = "", y = "") +
@@ -792,7 +847,7 @@ df_prediction_final <- df_all %>% filter(is.na(kegg_pathway_id)) %>%
   # order by probability
   rowwise() %>% mutate(
     aggr_prob = mean(c_across(ends_with("prob"))),
-    kegg_pathway_id_consensus = names(max(table(c_across(matches("(GBM|RAF|SVM)$"))))),
+    kegg_pathway_id_consensus = tail(names(sort(table(c_across(matches("(GBM|RAF|SVM)$"))))),1),
     kegg_pathway_id_consensus_n = max(table(c_across(matches("(GBM|RAF|SVM)$")))),
     kegg_pathway_consensus = select(df_kegg, kegg_pathway_id, kegg_pathway) %>%
       deframe %>% {.[kegg_pathway_id_consensus]}
