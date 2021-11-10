@@ -968,14 +968,18 @@ We can plot selected conditions against each other and add gene labels in order 
 
 ```{r}
 make_fitness_plot <- function(data, vars, title = NULL) {
+  # prepare data for two  variables each
   data %>% ungroup %>%
     filter(condition %in% vars, sgRNA_type == "gene") %>%
     select(locus, sgRNA_target, condition, wmean_fitness) %>% distinct %>%
-    group_by(sgRNA_target) %>% 
-    mutate(significant = abs(wmean_fitness[1]-wmean_fitness[2])>4) %>%
     pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
-    mutate(sgRNA_target = if_else(significant, sgRNA_target, "")) %>%
-    # ggplot
+    mutate(
+      dfit = get(vars[1]) - get(vars[2]),
+      significant = !between(dfit, quantile(dfit, probs = c(0.003)),
+        quantile(dfit, probs = c(0.997))),
+      sgRNA_target = if_else(significant, sgRNA_target, "")) %>%
+    
+    # plot
     ggplot(aes(x = get(vars[1]), y = get(vars[2]), 
       color = significant, label = sgRNA_target)) +
     geom_point(size = 1) + custom_theme(legend.position = 0) +
@@ -1016,6 +1020,19 @@ invisible(capture.output(
   })
 ))
 ```
+
+```{r, include = FALSE, eval = FALSE}
+# # Code chunk to perform t-test on summary statistics
+# # -------------------
+# library(BSDA)
+#   mutate(t_test = tsum.test(
+#   mean.x = get(paste0("wmean_fitness_", vars[1])),
+#   s.x = get(paste0("sd_fitness_", vars[1])), n.x = 5, 
+#   mean.y = get(paste0("wmean_fitness_", vars[2])), 
+#   s.y = get(paste0("sd_fitness_", vars[2])), n.y = 5)$p.value) %>%
+#   mutate(significant = t_test <= 0.05) %>%
+```
+
 
 
 ```{r, fig.width = 5, fig.height = 5}
