@@ -38,6 +38,7 @@ suppressPackageStartupMessages({
   library(KEGGREST)
   library(limma)
   library(corrplot)
+  library(kableExtra)
 })
 ```
 
@@ -687,7 +688,8 @@ plot_tsne <- df_tsne %>%
   scale_color_manual(values = custom_colors)
 
 gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
-ggsave("../figures/plot_nmds_tsne.svg", plot = gridExtra::arrangeGrob(plot_nmds, plot_tsne, ncol = 2),
+ggsave("../figures/plot_nmds_tsne.svg",
+  plot = gridExtra::arrangeGrob(plot_nmds, plot_tsne, ncol = 2),
   device = "svg", width = 8, height = 4)
 ```
 
@@ -778,8 +780,6 @@ This strategy reveals a list of interesting condition-specific genes:
 The table with linear regression coefficients and p-values is reshaped to long format for better readability. The `kableExtra` package is used to color cells for easier recognition. Then we subset the table for each treatment in order to spot the most interesting genes.
 
 ```{r}
-library(kableExtra)
-
 df_linreg_wide <- df_linreg %>%
   pivot_wider(names_from = treatment, values_from = coefficient) %>%
   left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
@@ -824,14 +824,23 @@ df_linreg_wide %>% color_table("+G")
 ```{r}
 df_linreg_wide %>% color_table("+D")
 ```
+Based on the multiple linear model correlations, we can try to extract a shortlist of the most interesting **hypothetical genes**. These could warrant further investigations.
 
 ```{r}
-df_linreg_wide %>%
-  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
-  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 )) %>%
+list_top_unknown_hits <- df_linreg_wide %>%
+  left_join(df_uniprot, by = "locus") %>%
+  # filter by name: only unknown proteins
+  filter(
+    is.na(gene_name_short),
+    str_detect(protein, "[a-zA-Z]{3}[0-9]{4} protein|Uncharacterized")) %>%
+  # filter by effect: only correlation > 3
+  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) > 3)) %>%
   arrange(desc(r_squared)) %>%
-  #arrange(across(matches("^pval_"), ~ sum(abs(.)))) %>%
-  mutate(across(3:8, ~ cell_spec(., "html", color = "white",
+  pull(locus)
+
+df_linreg_wide %>% filter(locus %in% list_top_unknown_hits) %>%
+  select(!starts_with("pval"), -sgRNA_target) %>%
+  mutate(across(2:7, ~ cell_spec(., "html", color = "white",
       background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
       bold = TRUE))) %>%
   kbl(format = "html", escape = F) %>%
@@ -845,16 +854,13 @@ The list above shows the genes whose fitness is most significantly correlated wi
 This list of genes is extracted and then simply fitness per condition is plotted as a heatmap, in order to confirm the trends from fitting the multiple liner regression models.
 
 
-
-```{r, fig.width = 8.0, fig.height = 3.5}
+```{r, fig.width = 4.5, fig.height = 3.5}
 library(ggheatmap)
 
-plot_sgRNAs_light <- df_linreg_wide %>%
+plot_sgRNAs_light <- df_gene %>%
   
   # make df with list of strongest correlated genes
-  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
-  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 ))  %>% select(locus) %>%
-  inner_join(df_gene, by = "locus") %>%
+  filter(locus %in% list_top_unknown_hits) %>%
   
   # reshape to wide format
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3.5, 3.5) %>% replace(., . < -3.5, -3.5)) %>%
@@ -872,10 +878,21 @@ plot_sgRNAs_light <- df_linreg_wide %>%
       axis.title.x = element_blank(), axis.title.y = element_blank())
   ))
 
-  
 print(plot_sgRNAs_light)
 save_plot(plot_sgRNAs_light, width = 8.0, height = 3.5)
 ```
+**Summary**
+
+- `sll0364` - 139 AA. KD has higher fitness in HC conditions and lower fitness in HL. Negatively regulating carbon metabolism?
+- `sll0481` - 155 AA. KD has higher fitness in +G conditions and lower fitness in HL. Membrane localization. Negatively regulating glycolysis?
+- `sll0877` - 456 AA. KD has higher fitness _only_ in HC,LL. Mitigates light limitation?
+- `ssl3364` -  74 AA. KD has lower fitness on all HC/+G conditions. This protein is known as CP12 protein, regulating glycolytic flux at GAPDH and PRK.
+- `ssr3532` -  80 AA. KD lower fitness on N-limitation and C-limitation (LC-HL combinations). Same operon as glutaminase glsA (slr2079, catalyzes deamination of gln --> glu), regulatory, involved in N metabolism?
+- `slr1990` - 240 AA, 5 TM domains. KD higher fitness in photoheterotrophy, lower fitness in all HC/LL conditions. Something important for photosystems? Something that wastes e- in photoheterotrophic conditions?
+- `sll6055` - 152 AA. Fitness profile as above. Multiubiquitin domain, involved in protein modification/degradation of PS proteins?
+- `slr1505` - 198 AA. Fitness profile as above. No useful information.
+- `sll1378` - 300 AA.  KD has lower fitness on all LL conditions. Membrane associated protein? In STRING, potential interaction with PbsA1 and PbsA2 (Heme oxygenase 1 and 2). Potentially important for chlorophyll or heme biosynthesis --> would explain importance for photosynthesis in LL condition.
+- `slr1102` - 853 AA. KD has lower fitness on all LL conditions. 4 known domains, FHA (forkhead-associated domain is a phosphopeptide recognition domain found in many regulatory proteins), PAS (signaling, often involved in circadian proteins, detect their signal by way of an associated cofactor like heme, flavin), GGDEF (involved in signal transduction, likely to catalyze synthesis or hydrolysis of cyclic diguanylate c-diGMP), EAL (shown to stimulate degradation of a second messenger, cyclic di-GMP, candidate for a diguanylate phosphodiesterase function. Together with the GGDEF domain, EAL might be involved in regulating cell surface adhesiveness in bacteria). Source: InterPro. Embedded in a [tight network](https://string-db.org/network/1148.1651834) of interacting proteins all involved in chromophore biosynthesis/maturation.
 
 **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
@@ -1092,60 +1109,71 @@ list_central_met_pathways <- c(
 
 
 ```{r}
-plot_gene_fitness <- lapply(list_central_met_pathways, function(pw) {
-  df_gene %>% filter(time == 0) %>%
-    inner_join(df_kegg %>% filter(kegg_pathway == pw) %>% select(locus),
-      by = "locus") %>%
-    
-    ggplot(aes(x = condition, y = wmean_fitness, 
-      ymin = wmean_fitness-sd_fitness, 
-      ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
-      geom_col(position = "dodge", width = 0.6) +
-      geom_errorbar(position = "dodge", width = 0.6, size = 1) +
-      custom_theme(aspect.ratio = 1,
-        legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
-      labs(title = pw) +
-      theme(axis.text.x = element_blank()) +
-      scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-      scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-      facet_wrap(~ sgRNA_target, ncol = 8)
-})
+plot_gene_fitness <- function(df, pw = NULL, gene = NULL, title = NULL) {
+  df <- df %>% filter(time == 0)
+  if (!is.null(pw)) {
+    df <- df %>% inner_join(df_kegg %>% filter(kegg_pathway == pw) %>% select(locus),
+      by = "locus")
+    title <- pw
+  } else if (!is.null(gene)) {
+    df <- df %>% filter(locus %in% gene)
+  }
+  
+  ggplot(df, aes(x = condition, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    custom_theme(aspect.ratio = 1,
+      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
+    labs(title = title) +
+    theme(axis.text.x = element_blank()) +
+    scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
+    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
+    facet_wrap(~ sgRNA_target, ncol = 8)
+}
 ```
 
 
 ```{r, fig.width = 8, fig.height = 6}
-print(plot_gene_fitness[[1]])
-ggsave("../figures/plot_fitness_glycolysis.svg", plot_gene_fitness[[1]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[1]]))
+ggsave("../figures/plot_fitness_glycolysis.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[1]]),
   width = 8, height = 6)
 ```
 
 ```{r, fig.width = 8, fig.height = 5}
-print(plot_gene_fitness[[2]])
-ggsave("../figures/plot_fitness_pentose.svg", plot_gene_fitness[[2]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[2]]))
+ggsave("../figures/plot_fitness_pentose.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[2]]),
   width = 8, height = 5)
 ```
 
 ```{r, fig.width = 8, fig.height = 5}
-print(plot_gene_fitness[[3]])
-ggsave("../figures/plot_fitness_carbonfix.svg", plot_gene_fitness[[3]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[3]]))
+ggsave("../figures/plot_fitness_carbonfix.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[3]]),
   width = 8, height = 5)
 ```
 
 ```{r, fig.width = 8, fig.height = 11}
-print(plot_gene_fitness[[4]])
-ggsave("../figures/plot_fitness_photosys.svg", plot_gene_fitness[[4]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[4]]))
+ggsave("../figures/plot_fitness_photosys.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[4]]),
   width = 8, height = 11)
 ```
 
 ```{r, fig.width = 8, fig.height = 4}
-print(plot_gene_fitness[[5]])
-ggsave("../figures/plot_fitness_antenna.svg", plot_gene_fitness[[5]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[5]]))
+ggsave("../figures/plot_fitness_antenna.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[5]]),
   width = 8, height = 4)
 ```
 
 ```{r, fig.width = 8, fig.height = 4}
-print(plot_gene_fitness[[6]])
-ggsave("../figures/plot_fitness_citrate.svg", plot_gene_fitness[[6]],
+print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[6]]))
+ggsave("../figures/plot_fitness_citrate.svg",
+  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[6]]),
   width = 8, height = 4)
 ```
 
@@ -1153,31 +1181,14 @@ ggsave("../figures/plot_fitness_citrate.svg", plot_gene_fitness[[6]],
 
 OCP (`slr1963`), pgr5 (`ssr2016`), Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon), SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`).
 
-```{r, echo = FALSE}
-plot_stress_genes <- df_gene %>%
-  filter(time == 0, locus %in% c("slr1963", "ssr2016", "sll1521",
-    "sll0219", "sll0550", "sll0217", "sll0218", "sll0306", "sll0184",
-    "sll2012", "sll1689")) %>%
-  
-  ggplot(aes(x = condition, y = wmean_fitness, 
-    ymin = wmean_fitness-sd_fitness, 
-    ymax = wmean_fitness+sd_fitness,
-    fill = condition, color = condition)) +
-    geom_col(position = "dodge", width = 0.6) +
-    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
-    custom_theme(aspect.ratio = 1,
-      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
-    labs(title = "Stress related genes") +
-    theme(axis.text.x = element_blank()) +
-    scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-    facet_wrap(~ sgRNA_target, ncol = 8)
-```
-
-
 ```{r, fig.width = 8, fig.height = 4}
-print(plot_stress_genes)
-ggsave("../figures/plot_fitness_stress.svg", plot_stress_genes,
+list_stress_genes <- c("slr1963", "ssr2016", "sll1521",
+  "sll0219", "sll0550", "sll0217", "sll0218", "sll0306", "sll0184",
+  "sll2012", "sll1689")
+
+plot_gene_fitness(df_gene, gene = list_stress_genes, title = "stress related genes")
+ggsave("../figures/plot_fitness_stress.svg",
+  plot_gene_fitness(df_gene, gene = list_stress_genes, title = "stress related genes"),
   width = 8, height = 4)
 ```
 
@@ -1187,34 +1198,43 @@ ggsave("../figures/plot_fitness_stress.svg", plot_stress_genes,
 `sll1594` ccmR, `sll1031` ccmM, `sll1028` ccmK2, `sll1029` ccmK1, `sll1032` ccmN, `slr0436` ccmO,
 `sll1030` ccmL.
 
-```{r, echo = FALsE}
-plot_carboxysome <- df_gene %>%
-  filter(time == 0, locus %in% c(
-    "slr1512", "slr1513", "sll1734", "slr1302", "sll0359", "sll0822", "sll1594",
-    "sll1031", "sll1028", "sll1029", "sll1032", "slr0436", "sll1030"
-  )) %>%
-  
-  ggplot(aes(x = condition, y = wmean_fitness, 
-    ymin = wmean_fitness-sd_fitness, 
-    ymax = wmean_fitness+sd_fitness,
-    fill = condition, color = condition)) +
-    geom_col(position = "dodge", width = 0.6) +
-    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
-    custom_theme(aspect.ratio = 1,
-      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
-    labs(title = "Carboxysome and carbon transporters") +
-    theme(axis.text.x = element_blank()) +
-    scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-    facet_wrap(~ sgRNA_target, ncol = 8)
-```
-
-
 ```{r, fig.width = 8, fig.height = 4}
-print(plot_carboxysome)
-ggsave("../figures/plot_fitness_carboxysome.svg", plot_carboxysome,
+list_carboxysome_genes <- c(
+  "slr1512", "slr1513", "sll1734", "slr1302", "sll0359", "sll0822", "sll1594",
+  "sll1031", "sll1028", "sll1029", "sll1032", "slr0436", "sll1030"
+)
+
+plot_gene_fitness(df_gene, gene = list_carboxysome_genes,
+  title = "Carboxysome and carbon transporters")
+ggsave("../figures/plot_fitness_carboxysome.svg",
+  plot_gene_fitness(df_gene, gene = list_carboxysome_genes,
+    title = "Carboxysome and carbon transporters"),
   width = 8, height = 4)
 ```
+
+**Genes whose KD leads to increased fitness**
+
+
+```{r, fig.width = 8, fig.height = 8}
+list_genes_pos_fitness <- df_gene %>%
+  filter(time == 0, !is.na(locus), wmean_fitness > 2) %>%
+  pull(locus) %>% unique
+
+plot_gene_fitness(df_gene, gene = list_genes_pos_fitness, title = "Genes with increased fitness (f > 2)")
+ggsave("../figures/plot_fitness_increased.svg",
+  plot_gene_fitness(df_gene, gene = list_genes_pos_fitness, title = "Genes with increased fitness (f > 2)"),
+  width = 8, height = 8)
+```
+
+Summary:
+- pmgA is once again the gene with strongest and most widespread fitness increase, validating results from library V1
+- slr1916 same phenotype as pmgA just weaker. We also know this one from before. Must have identical role as pmgA.
+- all PSII genes show increased fitness in photoheterotrophic condition --> PS is a burden here
+- sll0689, pxcA, slr1609 - all increased fitness in HC,HL, first two are Na+/CO2 (?) trnasporters,
+  slr1609 we know from before,   annotated as fatty acid CoA ligase, but probably it's something different
+- sll6055, slr1505, slr1990 - all increased fitness in photoheterotrophic condition, and decreased fitness in HC/LL conditions.
+  Not much is known about these genes, probably a role in photosynthesis, as the pattern is similar to psb genes (PSII maturation?)
+- slr0813, slr0907, slr909, slr1299 - all increased fitness in HC/LL. Not clear what connects these genes functionally.
 
 # Gene enrichment analysis
 
@@ -1245,7 +1265,7 @@ df_gene %>% filter(time == 0) %>%
 
 ## KEGG pathway enrichment
 
-We use the functions `kegga` for KEGG enrichemnt analysis and `goana` for GO term enrichment from the `limma` package. Both functions test for over or under-representation of genes associated with certain pathways or GO terms. The functions don't take the strength of differential fitness into account (DF; the depletion/enrichment over time).
+We use the functions `kegga` for KEGG enrichment analysis and `goana` for GO term enrichment from the `limma` package. Both functions test for over or under-representation of genes associated with certain pathways or GO terms. The functions don't take the strength of differential fitness into account (DF; the depletion/enrichment over time).
 
 
 ```{r}
