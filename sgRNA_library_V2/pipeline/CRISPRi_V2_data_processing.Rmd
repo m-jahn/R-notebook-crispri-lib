@@ -39,6 +39,8 @@ suppressPackageStartupMessages({
   library(limma)
   library(corrplot)
   library(kableExtra)
+  library(grid)
+  library(ggpubr)
 })
 ```
 
@@ -61,6 +63,8 @@ rm(DESeq_result_table)
 ```{r, echo = FALSE}
 # custom ggplot2 theme that is reused for all later plots
 custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
+custom_range <- function(n = 5) {colorRampPalette(custom_colors[c(1,5,2)])(n)}
+
 custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
   theme_light(base_size = base_size, base_line_size = base_line_size, base_rect_size = base_rect_size) + theme(
     title = element_text(colour = grey(0.4), size = 10),
@@ -81,6 +85,9 @@ custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 
     ...
   )
 }
+
+# set graphical parameter for subfigure labels
+list_fontpars <- list(face = "plain", size = 14)
 
 # function to export an image as svg and png
 save_plot <- function(pl, path = "../figures/", width = 6, height = 6) {
@@ -138,7 +145,7 @@ df_main <- df_main %>%
 Overview about the different conditions.
 
 ```{r}
-df_main %>% group_by(condition) %>%
+df_cultivation_summary <- df_main %>% group_by(condition) %>%
   summarize(
     time_points = paste(unique(time), collapse = ", "),
     carbon = unique(carbon),
@@ -147,6 +154,9 @@ df_main %>% group_by(condition) %>%
     min_fit = min(fitness),
     med_fit = median(fitness),
     max_fit = max(fitness))
+
+print(df_cultivation_summary)
+write_csv(df_cultivation_summary, file = "../data/output/cultivation_summary.csv")
 ```
 
 Retrieve gene info from uniprot and merge with main data frame. We need to make a custom function to retrieve and parse the data from uniprot, because of a bug in the security level on Ubuntu 20.04. The fallback option is to load a local copy of uniprot annotation for this organism.
@@ -200,11 +210,12 @@ plot_sgRNAs_per_gene <- df_main %>%
   group_by(sgRNA_type, sgRNA_target) %>%
   summarize(n_sgRNAs = length(unique(sgRNA_position)), .groups = "drop_last") %>%
   count(n_sgRNAs) %>% filter(n_sgRNAs <= 5) %>%
-  ggplot(aes(x = factor(n_sgRNAs), y = n, fill = factor(n_sgRNAs),
-    label = n)) +
+  ggplot(aes(x = factor(n_sgRNAs, 5:1), y = n, label = n)) +
   geom_col(show.legend = FALSE) +
-  geom_text(size = 3, nudge_y = 100) +
-  facet_grid(~sgRNA_type) +
+  geom_text(size = 3, nudge_y = 200, color = grey(0.5)) +
+  facet_grid(~ sgRNA_type) +
+  labs(x = "n sgRNAs / target", y = "n targets") +
+  coord_cartesian(ylim = c(-50, 3500)) +
   custom_theme() +
   scale_fill_manual(values = custom_colors)
 
@@ -290,7 +301,6 @@ df_main <- df_main %>%
   arrange(sgRNA_target, sgRNA_index, condition, time)
 ```
 
-
 # Fitness score aggregation
 
 ## Correlation of sgRNAs
@@ -306,7 +316,7 @@ plot_sgRNA_ribo_example <- df_main %>% filter(sgRNA_target == "rps10") %>%
   geom_line(size = 1) + geom_point(size = 2) +
   facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
-  scale_color_manual(values = custom_colors)
+  scale_color_manual(values = custom_range(5))
 
 print(plot_sgRNA_ribo_example)
 save_plot(plot_sgRNA_ribo_example, width = 7, height = 5.5)
@@ -337,7 +347,7 @@ weights <- cor_matrix %>% replace(., . == 1, NA) %>%
 
 # plot heatmap
 lattice::levelplot(cor_matrix %>% replace(., . == 1, NA),
-  col.regions = colorRampPalette(custom_colors[c(1,5,2)])(20))
+  col.regions = custom_range(20))
 
 # print weights
 weights
@@ -405,7 +415,7 @@ df_main %>% filter(sgRNA_target == "rps10") %>% ungroup %>%
 
 Plot the **weight of each sgRNA** to see if there is a dependency between correlation and sgRNA position. There is no significant trend.
 
-```{r, fig.width = 5, fig.height = 4}
+```{r, fig.width = 3, fig.height = 3}
 plot_sgRNA_correlation <- df_main %>%
   select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
@@ -413,11 +423,12 @@ plot_sgRNA_correlation <- df_main %>%
   # plot
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_correlation)) +
   geom_boxplot(outlier.shape = "") +
+  labs(x = "sgRNA position", y = "correlation") +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
-    label = round(median(x), 2)), geom = "text") +
-  stat_summary(fun.data = function(x) c(y = 1.2, 
-    label = length(x)), geom = "text", color = grey(0.5)) +
-  coord_cartesian(ylim = c(-0.25, 1.25)) +
+    label = round(median(x), 2)), geom = "text", size = 3) +
+  stat_summary(fun.data = function(x) c(y = 1.1, 
+    label = length(x)), geom = "text", color = grey(0.5), size = 3) +
+  coord_cartesian(ylim = c(-0.15, 1.15)) +
   custom_theme()
 
 save_plot(plot_sgRNA_correlation, width = 5, height = 4)
@@ -426,7 +437,7 @@ print(plot_sgRNA_correlation)
 
 We can also quantify how many genes have strongly correlated sgRNAs and how many have outliers. In order to do this, the median weight of the (up to) 5 sgRNAs per gene is plotted. Generally, the median weight ranges between 0.5 and 1.0, showing on average good correlation.
 
-```{r, fig.width = 5, fig.height = 4}
+```{r, fig.width = 3.5, fig.height = 3.3}
 plot_sgRNA_correlation_hist <- df_main %>%
   select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
@@ -446,22 +457,69 @@ print(plot_sgRNA_correlation_hist)
 
 Second, the binding position of the sgRNAs could be correlated to the strength of repression. In other words sgRNAs binding closer to the promoter could have stronger ability to repress a gene, see Figure 1 B in [Wang et al., Nature Comms, 2018](https://www.nature.com/articles/s41467-018-04899-x). We plot **sgRNA efficiency** for genes only, because the absolute majority of those has 5 sgRNAs.
 
-```{r, fig.width = 5, fig.height = 4}
+```{r, fig.width = 3, fig.height = 3}
 plot_sgRNA_efficiency <- df_main %>%
   filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
   select(sgRNA_target, sgRNA_index, sgRNA_efficiency) %>% distinct %>%
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_efficiency)) +
   geom_boxplot(notch = FALSE, outlier.shape = ".") +
-  coord_cartesian(ylim = c(-0.25, 1.25)) +
+  labs(x = "sgRNA position", y = "repression efficiency") +
+  coord_cartesian(ylim = c(-0.15, 1.15)) +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
-    label = round(median(x), 2)), geom = "text") +
-  stat_summary(fun.data = function(x) c(y = 1.2, 
-    label = length(x)), geom = "text", color = grey(0.5)) +
+    label = round(median(x), 2)), geom = "text", size = 3) +
+  stat_summary(fun.data = function(x) c(y = 1.1, 
+    label = length(x)), geom = "text", color = grey(0.5), size = 3) +
   custom_theme()
 
 save_plot(plot_sgRNA_efficiency, width = 5, height = 4)
 print(plot_sgRNA_efficiency)
 ```
+
+Export draft **Figure 1** for manuscript.
+
+```{r, fig.width = 7, fig.height = 5.5}
+plot_selected_sgRNAs <- df_main %>%
+  filter(
+    grepl("ctrl[1-5]$|rps10$", sgRNA_target), 
+    condition %in% c("HC, HL", "HC, LL", "LC, IL", "LC, LL")) %>%
+  mutate(
+    sgRNA_index2 = as.numeric(str_extract(sgRNA_target, "[1-9]$")),
+    sgRNA_index = case_when(sgRNA_position == 0 ~ sgRNA_index2, TRUE ~ sgRNA_index),
+    sgRNA_target = str_extract(sgRNA_target, "[a-zA-Z]*")
+  ) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_line(size = 1) + geom_point(size = 2) +
+  facet_grid(sgRNA_target ~ condition) +
+  custom_theme(legend.position = 0) +
+  coord_cartesian(ylim = c(-4.5, 2.5)) +
+  scale_color_manual(values = custom_range(5))
+
+
+svg(filename = "../figures/figure1.svg", width = 7, height = 5.5)
+ggarrange(ncol = 2, widths = c(0.6, 0.4),
+  ggarrange(plot_sgRNAs_per_gene, plot_selected_sgRNAs, nrow = 2, labels = c("A", "B"), font.label = list_fontpars),
+  ggarrange(grid.rect(gp = gpar(col = NA)), plot_sgRNA_efficiency, grid.rect(gp = gpar(col = NA)), plot_sgRNA_correlation,
+    nrow = 4, labels = c("C", "", "D", ""), font.label = list_fontpars, heights = c(0.04, 0.46, 0.04, 0.46))
+)
+dev.off()
+```
+
+Export **supplemental figure with all ribosomal genes** (rps*NN*/rpl*NN*).
+
+```{r, fig.width = 7, fig.height = 10}
+plot_sgRNAs_ribosome <- df_main %>%
+  filter(str_detect(sgRNA_target, "rp[sl][0-9]*$")) %>%
+  filter(condition == "HC, HL") %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_line(size = 1) + geom_point(size = 2) +
+  facet_wrap(~ sgRNA_target, ncol = 7) +
+  custom_theme(legend.position = "top") +
+  scale_color_manual(values = custom_range(5))
+
+print(plot_sgRNAs_ribosome)
+save_plot(plot_sgRNAs_ribosome, width = 7, height = 10)
+```
+
 
 # Gene fitness calculation
 
