@@ -18,9 +18,7 @@ This R notebook details the data processing and visualization for growth competi
 
 The first iteration of the _Synechocystis_ sgRNA library was [published in Nature Communications, 2020](https://www.nature.com/articles/s41467-020-15491-7).
 
-# Quality control
-
-## Data import
+# Prerequisites
 
 Load required packages.
 
@@ -44,21 +42,7 @@ suppressPackageStartupMessages({
 })
 ```
 
-Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
-
-```{r}
-# load first seq run
-load("../data/input/DESeq2_result.Rdata")
-df_main <- DESeq_result_table
-
-# load second seq run
-load("../data/input/DESeq2_result_2.Rdata")
-df_main <- bind_rows(df_main, DESeq_result_table)
-
-# remove single results table
-rm(DESeq_result_table)
-```
-
+Define global figure style, default colors, and a plot saving function.
 
 ```{r, echo = FALSE}
 # custom ggplot2 theme that is reused for all later plots
@@ -101,6 +85,26 @@ save_plot <- function(pl, path = "../figures/", width = 6, height = 6) {
   print(pl)
   invisible(capture.output(dev.off()))
 }
+```
+
+
+# Quality control
+
+## Data import
+
+Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
+
+```{r}
+# load first seq run
+load("../data/input/DESeq2_result.Rdata")
+df_main <- DESeq_result_table
+
+# load second seq run
+load("../data/input/DESeq2_result_2.Rdata")
+df_main <- bind_rows(df_main, DESeq_result_table)
+
+# remove single results table
+rm(DESeq_result_table)
 ```
 
 
@@ -415,7 +419,9 @@ df_main %>% filter(sgRNA_target == "rps10") %>% ungroup %>%
 
 Plot the **weight of each sgRNA** to see if there is a dependency between correlation and sgRNA position. There is no significant trend.
 
-```{r, fig.width = 3, fig.height = 3}
+We can also quantify how many genes have strongly correlated sgRNAs and how many have outliers. In order to do this, the median weight of the (up to) 5 sgRNAs per gene is plotted. Generally, the median weight ranges between 0.5 and 1.0, showing on average good correlation.
+
+```{r, fig.width = 6, fig.height = 3}
 plot_sgRNA_correlation <- df_main %>%
   select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
@@ -431,13 +437,6 @@ plot_sgRNA_correlation <- df_main %>%
   coord_cartesian(ylim = c(-0.15, 1.15)) +
   custom_theme()
 
-save_plot(plot_sgRNA_correlation, width = 5, height = 4)
-print(plot_sgRNA_correlation)
-```
-
-We can also quantify how many genes have strongly correlated sgRNAs and how many have outliers. In order to do this, the median weight of the (up to) 5 sgRNAs per gene is plotted. Generally, the median weight ranges between 0.5 and 1.0, showing on average good correlation.
-
-```{r, fig.width = 3.5, fig.height = 3.3}
 plot_sgRNA_correlation_hist <- df_main %>%
   select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
   filter(sgRNA_index <= 5) %>%
@@ -452,18 +451,19 @@ plot_sgRNA_correlation_hist <- df_main %>%
   custom_theme()
 
 save_plot(plot_sgRNA_correlation_hist, width = 5, height = 4)
-print(plot_sgRNA_correlation_hist)
+save_plot(plot_sgRNA_correlation, width = 5, height = 4)
+ggarrange(plot_sgRNA_correlation, plot_sgRNA_correlation_hist, ncol = 2)
 ```
 
 Second, the binding position of the sgRNAs could be correlated to the strength of repression. In other words sgRNAs binding closer to the promoter could have stronger ability to repress a gene, see Figure 1 B in [Wang et al., Nature Comms, 2018](https://www.nature.com/articles/s41467-018-04899-x). We plot **sgRNA efficiency** for genes only, because the absolute majority of those has 5 sgRNAs.
 
-```{r, fig.width = 3, fig.height = 3}
+```{r, fig.width = 6, fig.height = 3}
 plot_sgRNA_efficiency <- df_main %>%
   filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
   select(sgRNA_target, sgRNA_index, sgRNA_efficiency) %>% distinct %>%
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_efficiency)) +
   geom_boxplot(notch = FALSE, outlier.shape = ".") +
-  labs(x = "sgRNA position", y = "repression efficiency") +
+  labs(x = "sgRNA position (relative)", y = "repression efficiency") +
   coord_cartesian(ylim = c(-0.15, 1.15)) +
   stat_summary(fun.data = function(x) c(y = median(x)+0.07, 
     label = round(median(x), 2)), geom = "text", size = 3) +
@@ -471,8 +471,22 @@ plot_sgRNA_efficiency <- df_main %>%
     label = length(x)), geom = "text", color = grey(0.5), size = 3) +
   custom_theme()
 
+
+plot_sgRNA_efficiency_hist <- df_main %>%
+  filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
+  select(sgRNA_target, sgRNA_position, sgRNA_efficiency) %>% distinct %>%
+  group_by(sgRNA_position) %>%
+  summarize(sgRNA_efficiency = median(sgRNA_efficiency), n_pos = n()) %>%
+  filter(n_pos >= 10) %>%
+  ggplot(aes(x = sgRNA_position, y = sgRNA_efficiency)) +
+  labs(x = "sgRNA position (nt)", y = "repression efficiency") +
+  geom_point(col = alpha(custom_colors[5], 0.5)) +
+  geom_smooth() +
+  custom_theme()
+
 save_plot(plot_sgRNA_efficiency, width = 5, height = 4)
-print(plot_sgRNA_efficiency)
+save_plot(plot_sgRNA_efficiency_hist, width = 5, height = 4)
+ggarrange(plot_sgRNA_efficiency, plot_sgRNA_efficiency_hist, ncol = 2)
 ```
 
 Export draft **Figure 1** for manuscript.
@@ -494,12 +508,12 @@ plot_selected_sgRNAs <- df_main %>%
   coord_cartesian(ylim = c(-4.5, 2.5)) +
   scale_color_manual(values = custom_range(5))
 
-
 svg(filename = "../figures/figure1.svg", width = 7, height = 5.5)
-ggarrange(ncol = 2, widths = c(0.6, 0.4),
-  ggarrange(plot_sgRNAs_per_gene, plot_selected_sgRNAs, nrow = 2, labels = c("A", "B"), font.label = list_fontpars),
-  ggarrange(grid.rect(gp = gpar(col = NA)), plot_sgRNA_efficiency, grid.rect(gp = gpar(col = NA)), plot_sgRNA_correlation,
-    nrow = 4, labels = c("C", "", "D", ""), font.label = list_fontpars, heights = c(0.04, 0.46, 0.04, 0.46))
+ggarrange(ncol = 2, nrow = 2, widths = c(0.6, 0.4), labels = LETTERS[1:4], font.label = list_fontpars,
+  plot_sgRNAs_per_gene + theme(plot.margin = unit(c(12,12,12,12), "points")),
+  plot_sgRNA_efficiency + theme(plot.margin = unit(c(26,12,12,12), "points")),
+  plot_selected_sgRNAs + theme(plot.margin = unit(c(12,-4,12,14), "points")),
+  plot_sgRNA_correlation + theme(plot.margin = unit(c(26,12,12,12), "points"))
 )
 dev.off()
 ```
@@ -509,7 +523,7 @@ Export **supplemental figure with all ribosomal genes** (rps*NN*/rpl*NN*).
 ```{r, fig.width = 7, fig.height = 10}
 plot_sgRNAs_ribosome <- df_main %>%
   filter(str_detect(sgRNA_target, "rp[sl][0-9]*$")) %>%
-  filter(condition == "HC, HL") %>%
+  filter(condition == "LC, LL") %>%
   ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
   geom_line(size = 1) + geom_point(size = 2) +
   facet_wrap(~ sgRNA_target, ncol = 7) +
@@ -528,6 +542,9 @@ save_plot(plot_sgRNAs_ribosome, width = 7, height = 10)
 With the correlation and the efficiency per sgRNA, we can compute the **weighted mean of all sgRNAs**. For comparison, we also test simple strategies such as the standard **arithmetic mean** and a top 1 and top 2 sgRNAs strategy. Metrics are calculated for log2 FC, and fitness.
 
 ```{r, warning = FALSE, message = FALSE}
+df_controls <- df_main %>% ungroup %>% 
+  filter(str_detect(sgRNA_target, "ctrl[0-9]+$"))
+
 df_gene <- df_main %>%
   
   # keep all annotation columns
@@ -536,20 +553,34 @@ df_gene <- df_main %>%
   
   # summarize FC and fitness...
   summarize(.groups = "drop",
+    
     # log2 FC
     mean_log2FoldChange = mean(log2FoldChange),
     wmean_log2FoldChange = weighted.mean(log2FoldChange, sgRNA_correlation * sgRNA_efficiency),
     top1_log2FoldChange = log2FoldChange[which.max(sgRNA_efficiency)],
     top2_log2FoldChange = mean(log2FoldChange[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
     sd_log2FoldChange = sd(log2FoldChange),
+    
     # fitness
     mean_fitness = mean(fitness),
     wmean_fitness = weighted.mean(fitness, sgRNA_correlation * sgRNA_efficiency),
     top1_fitness = fitness[which.max(sgRNA_efficiency)],
     top2_fitness = mean(fitness[order(sgRNA_efficiency, decreasing = TRUE)[1:2]]),
-    sd_fitness = sd(fitness)
+    sd_fitness = sd(fitness),
+    
+    # apply significance test, Mann-Whitney U test
+    p_value = wilcox.test(fitness, filter(df_controls, condition == unique(condition))$fitness)$p.value
   )
 ```
+
+Since statistical significane is tested for many genes in parallel, the p-value obtained from MWU test should be multiple-hypothesis corrected. For this purpose we use the Benjamini-Hochberg method (a.k.a. FDR).
+
+```{r}
+df_gene <- df_gene %>%
+  group_by(condition, time) %>%
+  mutate(p_value_adj = p.adjust(p_value, method = "BH"))
+```
+
 
 A comparison of log2 FC aggregated by the different method shows clear differences. For the example gene `rps10` the weighted mean and the top method give similar results, representative of the stronger influence from highly depleted sgRNA repression strains. The regular mean is robust, but "shallow", probably underestimating the real effect n fitness. The top 1 method simply picks the most depleted/enriched sgRNA (over all conditions) as representative.
 
@@ -605,6 +636,21 @@ print(plot_all_fitness_hist)
 save_plot(plot_all_fitness_hist, width = 7, height = 5)
 ```
 
+## Gene fitness vs significance
+
+```{r, fig.width = 7, fig.height = 5}
+plot_all_fitness_volc <- df_gene %>% filter(time == 0) %>%
+  arrange(sgRNA_type) %>%
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), col = sgRNA_type)) +
+  geom_point(size = 0.5, alpha = 0.4) +
+  coord_cartesian(xlim = c(-6, 6)) +
+  facet_wrap( ~ condition, ncol = 4) +
+  custom_theme() +
+  scale_color_manual(values = custom_colors[3:4])
+
+print(plot_all_fitness_volc)
+save_plot(plot_all_fitness_volc, width = 7, height = 5)
+```
 
 ## Behavior of control sgRNAs
 
@@ -616,7 +662,7 @@ plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   geom_line(size = 1) + geom_point(size = 2) + ylim(-5, 5) +
   facet_wrap(~ condition, ncol = 4) +
   custom_theme() +
-  scale_color_manual(values = rep_along(1:10, custom_colors))
+  scale_color_manual(values = custom_range(10))
 
 print(plot_controls_sgRNAs)
 save_plot(plot_controls_sgRNAs, width = 7, height = 5.5)
