@@ -46,7 +46,7 @@ Define global figure style, default colors, and a plot saving function.
 
 ```{r, echo = FALSE}
 # custom ggplot2 theme that is reused for all later plots
-custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#666666", "#1B9E77", "#D95F02", "#A6761D")
+custom_colors = c("#E7298A", "#66A61E", "#E6AB02", "#7570B3", "#B3B3B3", "#1B9E77", "#D95F02", "#A6761D")
 custom_range <- function(n = 5) {colorRampPalette(custom_colors[c(1,5,2)])(n)}
 
 custom_theme <- function(base_size = 12, base_line_size = 1.0, base_rect_size = 1.0, ...) {
@@ -220,8 +220,7 @@ plot_sgRNAs_per_gene <- df_main %>%
   facet_grid(~ sgRNA_type) +
   labs(x = "n sgRNAs / target", y = "n targets") +
   coord_cartesian(ylim = c(-50, 3500)) +
-  custom_theme() +
-  scale_fill_manual(values = custom_colors)
+  custom_theme()
 
 print(plot_sgRNAs_per_gene)
 save_plot(plot_sgRNAs_per_gene, width = 6, height = 3.5)
@@ -531,7 +530,6 @@ plot_sgRNAs_ribosome <- df_main %>%
   scale_color_manual(values = custom_range(5))
 
 print(plot_sgRNAs_ribosome)
-save_plot(plot_sgRNAs_ribosome, width = 7, height = 10)
 ```
 
 
@@ -573,12 +571,16 @@ df_gene <- df_main %>%
   )
 ```
 
-Since statistical significane is tested for many genes in parallel, the p-value obtained from MWU test should be multiple-hypothesis corrected. For this purpose we use the Benjamini-Hochberg method (a.k.a. FDR).
+Since statistical significacne is tested for many genes in parallel, the p-value obtained from MWU test should be multiple-hypothesis corrected. For this purpose we use the Benjamini-Hochberg method. We also calculate a score taking both effect size and p-value into account, according to the publication from [Wang et al., Nat Comm, 2018](http://dx.doi.org/10.1038/s41467-018-04899-x). This score is simply the absolute fitness score multiplied by the negative log10 p-value.
+
 
 ```{r}
 df_gene <- df_gene %>%
   group_by(condition, time) %>%
-  mutate(p_value_adj = p.adjust(p_value, method = "BH"))
+  mutate(
+    p_value_adj = p.adjust(p_value, method = "BH"),
+    score = abs(wmean_fitness)*-log10(p_value_adj)
+  ) %>% ungroup
 ```
 
 
@@ -596,7 +598,7 @@ df_gene %>% filter(sgRNA_target == "rps10") %>%
   facet_wrap(~ condition, ncol = 4) +
   custom_theme(legend.position = "right") +
   coord_cartesian(ylim = c(-3.75, 0.75)) +
-  scale_color_manual(values = custom_colors)
+  scale_color_manual(values = custom_range(4))
 ```
 
 
@@ -616,7 +618,7 @@ df_gene %>% filter(
   facet_wrap(~ sgRNA_target, ncol = 7) +
   custom_theme(legend.position = "top") +
   coord_cartesian(ylim = c(-5, 5)) +
-  scale_color_manual(values = custom_colors)
+  scale_color_manual(values = custom_range(4))
 ```
 
 ## Global distribution of gene fitness
@@ -630,7 +632,7 @@ plot_all_fitness_hist <- df_gene %>% filter(time == 0) %>%
   coord_cartesian(xlim = c(-4, 4), ylim = c(0, 1000)) +
   facet_wrap( ~ condition, ncol = 4) +
   custom_theme() +
-  scale_fill_manual(values = custom_colors[3:4])
+  scale_fill_manual(values = custom_colors[2:1])
 
 print(plot_all_fitness_hist)
 save_plot(plot_all_fitness_hist, width = 7, height = 5)
@@ -638,18 +640,24 @@ save_plot(plot_all_fitness_hist, width = 7, height = 5)
 
 ## Gene fitness vs significance
 
-```{r, fig.width = 7, fig.height = 5}
-plot_all_fitness_volc <- df_gene %>% filter(time == 0) %>%
+```{r, fig.width = 7, fig.height = 3.5}
+plot_all_fitness_volc <- df_gene %>% filter(time == 0,
+    condition %in% c("HC, HL", "LC, LL")) %>%
   arrange(sgRNA_type) %>%
-  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), col = sgRNA_type)) +
-  geom_point(size = 0.5, alpha = 0.4) +
-  coord_cartesian(xlim = c(-6, 6)) +
-  facet_wrap( ~ condition, ncol = 4) +
-  custom_theme() +
-  scale_color_manual(values = custom_colors[3:4])
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), shape = score >= 4, col = sgRNA_type)) +
+  geom_point(alpha = 0.5, size = 1) +
+  geom_line(data = data.frame(x = c(seq(-6, -0.5, 0.1), seq(0.5, 6, 0.1)),
+    y = 4/c(seq(6, 0.5, -0.1), seq(0.5, 6, 0.1))),
+    aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
+  coord_cartesian(xlim = c(-6, 6), ylim = c(0, 4)) +
+  custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
+  facet_wrap(~ condition) +
+  labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
+  scale_color_manual(values = custom_colors[2:1]) +
+  scale_shape_manual(values=c(1, 19))
 
 print(plot_all_fitness_volc)
-save_plot(plot_all_fitness_volc, width = 7, height = 5)
+save_plot(plot_all_fitness_volc, width = 6, height = 3)
 ```
 
 ## Behavior of control sgRNAs
@@ -667,6 +675,150 @@ plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
 print(plot_controls_sgRNAs)
 save_plot(plot_controls_sgRNAs, width = 7, height = 5.5)
 ```
+
+# Gene enrichment
+
+To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. To list the different **KEGG databases** that can be queried, use `listDatabases()`. Gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
+
+
+```{r}
+# get mapping of pathways for each gene
+df_kegg <- keggLink("pathway", "syn") %>%
+  enframe(name = "locus", value = "kegg_pathway_id") %>%
+  
+  # get list of pathways with name/ID pairs
+  left_join(by = "kegg_pathway_id",
+    keggList("pathway", "syn") %>%
+    enframe(name = "kegg_pathway_id", value = "kegg_pathway")
+  ) %>%
+  
+  # get list of gene/enzyme names
+  left_join(by = "locus",
+    keggList("syn") %>%
+    enframe(name = "locus", value = "kegg_gene") %>%
+    mutate(kegg_gene_short = str_extract(kegg_gene, "^[a-zA-Z0-9]*;") %>% 
+      str_remove(";"))
+  ) %>%
+  
+  # trim useless prefixes
+  mutate(
+    locus = str_remove(locus, "syn:"),
+    kegg_pathway_id = str_remove(kegg_pathway_id, "path:"),
+    kegg_pathway = str_remove(kegg_pathway, " - Synechocystis sp. PCC 6803")
+  )
+
+head(df_kegg)
+```
+
+## Fitness per pathway
+
+Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted, or both at the same time / the same conditions.
+
+Before we test for enrichment of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
+
+```{r, fig.width = 5.5, fig.height = 5.5}
+plot_median_fitness_kegg <- df_gene %>% filter(time == 0) %>%
+  inner_join(df_kegg, by = "locus") %>%
+  group_by(kegg_pathway, condition) %>%
+  summarize(.groups = "drop",
+    fitness = median(wmean_fitness),
+    n_genes = n()
+  ) %>% filter(n_genes >= 20) %>%
+  mutate(kegg_pathway = paste0(str_sub(kegg_pathway, 1, 25), "..")) %>%
+  mutate(kegg_pathway = fct_reorder(kegg_pathway, fitness, .desc = TRUE)) %>%
+  
+  ggplot(aes(x = fitness, y = kegg_pathway)) +
+  geom_boxplot(outlier.shape = NULL, color = grey(0.5), fill = grey(0.9)) +
+  geom_point(aes(color = condition)) +
+  geom_vline(xintercept = 0, lty = 2, color = grey(0.5)) +
+  labs(x = "median fitness", y = "") +
+  custom_theme(legend.position = c(0.25, 0.25), legend.key.size = unit(0.4, "cm")) +
+  scale_fill_manual(values = custom_range(11)) +
+  scale_color_manual(values = custom_range(11))
+
+print(plot_median_fitness_kegg)
+```
+
+Export draft **Figure 2** for manuscript.
+We add photosystem I and II genes as examples for differential depletion. A heatmap.
+
+```{r, fig.width = 7, fig.height = 4}
+plot_sgRNAs_ps1 <- df_gene %>%
+  filter(str_detect(sgRNA_target, "psa[A-Z]*"), time == 0) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Photosystem I", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+plot_sgRNAs_ps2 <- df_gene %>%
+  filter(str_detect(sgRNA_target, "psb[A-Z]*"), time == 0) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Photosystem II", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+ggarrange(ncol = 2, plot_sgRNAs_ps1, plot_sgRNAs_ps2)
+```
+
+```{r, fig.width = 8, fig.height = 7}
+svg(filename = "../figures/figure2.svg", width = 8, height = 7)
+ggarrange(ncol = 2, widths = c(0.65, 0.35),
+  ggarrange(nrow = 2, heights =  c(0.34, 0.66), labels = LETTERS[1:2], font.label = list_fontpars,
+    plot_all_fitness_volc + theme(plot.margin = unit(c(12,-12,12,30), "points")),
+    plot_median_fitness_kegg + theme(plot.margin = unit(c(6,12,12,12), "points"))),
+  ggarrange(nrow = 2, heights =  c(0.4, 0.6), labels = LETTERS[3:4], font.label = list_fontpars,
+    plot_sgRNAs_ps1 + theme(plot.margin = unit(c(12,0,-14,0), "points")),
+    plot_sgRNAs_ps2 + theme(plot.margin = unit(c(12,0,0,0), "points"))
+  )
+)
+dev.off()
+```
+
+## Gene enrichment analysis (KEGG)
+
+We use the functions `kegga` for KEGG enrichment analysis and `goana` for GO term enrichment from the `limma` package. Both functions test for over or under-representation of genes associated with certain pathways or GO terms. The functions don't take the strength of differential fitness into account (DF; the depletion/enrichment over time).
+
+
+```{r}
+df_kegg_enrichment <- lapply(unique(df_gene$condition), function(cond) {
+  df_gene %>% filter(
+  sgRNA_type == "gene", time == 0,
+  condition == cond) %>%
+  
+  # filter for differential fitness (DF) genes
+  filter(!between(wmean_fitness, -2.0, 2.0), !is.na(locus)) %>%
+  
+  # perform KEGG enrichment
+  pull(locus) %>% kegga(species.KEGG = "syn") %>%
+  mutate(condition = cond)
+}) %>% bind_rows
+
+head(df_kegg_enrichment)
+```
+
+Now we visualize the pathways that are most enriched for DF genes. It turns out that ribosomal proteins are extremely depleted and therefore score high on the negative log10 p-value for pathway enrichment.
+
+```{r, fig.width = 7, fig.height = 5.5}
+df_kegg_enrichment %>%
+  rename(kegg_pathway = Pathway) %>%
+  group_by(kegg_pathway) %>% filter(N >= 20) %>%
+  select(kegg_pathway, condition, P.DE) %>%
+  mutate(log10_p_value = -log10(P.DE), .keep = "unused") %>%
+  mutate(kegg_pathway = paste0(str_sub(kegg_pathway, 1, 25), "..")) %>%
+  
+  # make correlation plot
+  pivot_wider(names_from = condition, values_from = log10_p_value) %>%
+  column_to_rownames(var = "kegg_pathway") %>% as.matrix %>%
+  corrplot(is.corr = FALSE, tl.col = grey(0.5), tl.cex = 0.8,
+    col = colorRampPalette(custom_colors[c(1,5,2)])(10), col.lim = c(0, 20))
+```
+
 
 # Unsupervised clustering of genes
 
@@ -1015,71 +1167,6 @@ print(plot_sgRNAs_phycobil)
 save_plot(plot_sgRNAs_phycobil, width = 6.5, height = 3.5)
 ```
 
-## Interaction analysis using STRING database
-
-The next step is to retrieve additional information about these clusters to find correlated genes, groups, pathways, or regulatory networks. We can use the STRING database for this task.
-
-```{r, echo = FALSE}
-suppressPackageStartupMessages({
-  library(ggraph)
-  library(tidygraph)
-})
-
-# function to retrieve network interaction data from STRING DB
-# separate gene IDs by "%0d"; species/taxon ID for Synechocystis sp. PCC 6803: 1148
-# (see https://string-db.org/cgi/organisms)
-plot_STRING <- function(gene_ID, taxon_ID, 
-  min_score = 0000, ref = NULL, plot = TRUE, groups = NULL
-) {
-  gene_list <- paste(gene_ID, collapse = "%0d")
-  string_graph <- paste0(
-    "https://string-db.org/api/tsv/network?identifiers=", 
-    gene_list, "&species=", taxon_ID, "&required_score=", min_score) %>%
-    read_tsv(col_types = cols()) %>%
-    select(-stringId_A, -stringId_B) %>%
-    as_tbl_graph()
-  if (!is.null(ref)) {
-    # add gene annotation
-    string_graph <- left_join(string_graph, ref, by = "name")
-  }
-  if (plot) {
-    # function to space labels in certain distance to circle
-    nudge_circle <- function(n, size_x = 0.2, size_y = 0.15) {
-      nudge_x = size_x * -cos(seq(0.5*pi, 2.5*pi, length.out = n))
-      nudge_y = size_y * sin(seq(0.5*pi, 2.5*pi, length.out = n))
-      list(x = nudge_x, y = nudge_y)
-    }
-    # plot using ggraph
-    n_nodes <- string_graph %>% activate(nodes) %>% pull(name) %>% length
-    string_graph %>% arrange(across(matches(groups))) %>% activate(edges) %>%
-      filter(score >= 0.4) %>%
-      ggraph(layout = 'linear', circular = TRUE) +
-      geom_edge_arc(colour = grey(0.6, 0.5), aes(width = score)) + 
-      geom_node_point(aes(colour = .data[[groups]]), size = 4) +
-      geom_node_text(nudge_x = nudge_circle(n_nodes)$x, 
-        nudge_y = nudge_circle(n_nodes)$y,
-        size = 3, aes(label = name, colour = .data[[groups]])) +
-      scale_edge_width(range = c(0.2, 2)) +
-      theme_graph(background = "white", foreground = grey(0.5),
-        plot_margin = margin(10, 10, 10, 10))
-  }
-}
-```
-
-
-```{r, fig.width = 5.5, fig.height = 4.0}
-list_corr_genes <- df_linreg_wide %>%
-  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) >= 3 )) %>%
-  filter(if_any(matches("^pval_"), ~ abs(.) <= 0.05 )) %>% pull(locus)
-  
-plot_STRING(
-  gene_ID = list_corr_genes,
-  taxon_ID = 1148,
-  ref = df_gene %>% select(sgRNA_target, locus, gene_name) %>% 
-    distinct %>% rename(name = sgRNA_target),
-  groups = "name"
-)
-```
 
 # Direct comparison of gene fitness
 
@@ -1165,38 +1252,7 @@ list_condition_pairs[1:4]
 
 ## Central carbon metabolism
 
-To plot gene fitness for the enzymes of central carbon metabolism, we need a complete list of enzymes and the genes that they are mapped to. To list the different **KEGG databases** that can be queried, use `listDatabases()`. Gene-pathway mappings are obtained and merged with pathway names and gene/enzyme names.
-
-```{r}
-# get mapping of pathways for each gene
-df_kegg <- keggLink("pathway", "syn") %>%
-  enframe(name = "locus", value = "kegg_pathway_id") %>%
-  
-  # get list of pathways with name/ID pairs
-  left_join(by = "kegg_pathway_id",
-    keggList("pathway", "syn") %>%
-    enframe(name = "kegg_pathway_id", value = "kegg_pathway")
-  ) %>%
-  
-  # get list of gene/enzyme names
-  left_join(by = "locus",
-    keggList("syn") %>%
-    enframe(name = "locus", value = "kegg_gene") %>%
-    mutate(kegg_gene_short = str_extract(kegg_gene, "^[a-zA-Z0-9]*;") %>% 
-      str_remove(";"))
-  ) %>%
-  
-  # trim useless prefixes
-  mutate(
-    locus = str_remove(locus, "syn:"),
-    kegg_pathway_id = str_remove(kegg_pathway_id, "path:"),
-    kegg_pathway = str_remove(kegg_pathway, " - Synechocystis sp. PCC 6803")
-  )
-
-head(df_kegg)
-```
-
-Then we can extract gene sets for specific pathways and plot fitness. We start with glycolysis and Calvin cycle enzymes.
+To plot gene fitness for the enzymes of central carbon metabolism, we use the complete list of enzymes and the genes that they are mapped to (obtained from KEGG). We can extract gene sets for specific pathways and plot fitness. We start with glycolysis and Calvin cycle enzymes.
 
 ```{r}
 list_central_met_pathways <- c(
@@ -1339,79 +1395,6 @@ Summary:
 - sll6055, slr1505, slr1990 - all increased fitness in photoheterotrophic condition, and decreased fitness in HC/LL conditions.
   Not much is known about these genes, probably a role in photosynthesis, as the pattern is similar to psb genes (PSII maturation?)
 - slr0813, slr0907, slr909, slr1299 - all increased fitness in HC/LL. Not clear what connects these genes functionally.
-
-# Gene enrichment analysis
-
-Sometimes even small effects in fitness can be relevant if several genes of the same pathway (or iso-enzymes) are affected. A simple fitness threshold will not reveal those changes. In such cases a more nuanced approach can be taken, a gene set enrichment analysis (GSEA). Several packages exist to test if functionally related genes are enriched, depleted, or both at the same time / the same conditions.
-
-Before we test for enrichment of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
-
-```{r, fig.width = 10, fig.height = 15}
-df_gene %>% filter(time == 0) %>%
-  inner_join(df_kegg, by = "locus") %>%
-  group_by(kegg_pathway, condition) %>%
-  filter(length(unique(locus)) > 10) %>%
-  
-  ggplot(aes(x = condition, y = wmean_fitness,
-      fill = condition, color = condition)) +
-    geom_abline(intercept = 0, slope = 0, lty = 2, color = grey(0.5)) +
-    geom_violin(color = "white") +
-    stat_summary(fun.data = mean_sdl, geom = "pointrange", size = 0.4) +
-    custom_theme(aspect.ratio = 1,
-      legend.position = "bottom", 
-      legend.key.size = unit(0.4, "cm")) +
-    theme(axis.text.x = element_blank()) +
-    facet_wrap(~ str_sub(kegg_pathway, 1, 16), ncol = 7) +
-    coord_cartesian(ylim = c(-3.5, 3.5)) +
-    scale_fill_manual(values = alpha(colorRampPalette(custom_colors[1:5])(11), 0.5)) +
-    scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11))
-```
-
-## KEGG pathway enrichment
-
-We use the functions `kegga` for KEGG enrichment analysis and `goana` for GO term enrichment from the `limma` package. Both functions test for over or under-representation of genes associated with certain pathways or GO terms. The functions don't take the strength of differential fitness into account (DF; the depletion/enrichment over time).
-
-
-```{r}
-df_kegg_enrichment <- lapply(unique(df_gene$condition), function(cond) {
-  df_gene %>% filter(
-  sgRNA_type == "gene", time == 0,
-  condition == cond) %>%
-  
-  # filter for differential fitness (DF) genes
-  filter(!between(wmean_fitness, -1.0, 1.0), !is.na(locus)) %>%
-  
-  # perform KEGG enrichment
-  pull(locus) %>% kegga(species.KEGG = "syn") %>%
-  mutate(condition = cond)
-}) %>% bind_rows
-
-head(df_kegg_enrichment)
-```
-
-Now we visualize the pathways that are most enriched for DF genes. It turns out that ribosomal proteins are extremely depleted and therefore score high on the negative log10 p-value for pathway enrichment.
-
-```{r}
-df_kegg_enrichment %>%
-  group_by(Pathway) %>% filter(any(P.DE <= 0.01)) %>%
-  select(Pathway, condition, P.DE) %>%
-  mutate(log10_p_value = -log10(P.DE), .keep = "unused") %>%
-  
-  # format some columns
-  mutate(condition = str_replace(condition, pattern = "0.05% CO2", replacement = "LC") %>%
-    str_replace(pattern = "1% CO2", replacement = "HC") %>%
-    str_replace(pattern = "60uE", replacement = "LL") %>%
-    str_replace(pattern = "1000uE", replacement = "HL")) %>%
-  mutate(Pathway = str_sub(Pathway, 1, 25)) %>%
-  # optionally remove ribosomes
-  # filter(Pathway != "Ribosome") %>%
-  
-  # make correlation plot
-  pivot_wider(names_from = condition, values_from = log10_p_value) %>%
-  column_to_rownames(var = "Pathway") %>% as.matrix %>% t %>%
-  corrplot(is.corr = FALSE, tl.col = grey(0.5), tl.cex = 0.8,
-    col = colorRampPalette(custom_colors[c(1,5,2)])(10), col.lim = c(0, 20))
-```
 
 
 # Export summary table of all genes and conditions
