@@ -571,7 +571,7 @@ df_gene <- df_main %>%
   )
 ```
 
-Since statistical significacne is tested for many genes in parallel, the p-value obtained from MWU test should be multiple-hypothesis corrected. For this purpose we use the Benjamini-Hochberg method. We also calculate a score taking both effect size and p-value into account, according to the publication from [Wang et al., Nat Comm, 2018](http://dx.doi.org/10.1038/s41467-018-04899-x). This score is simply the absolute fitness score multiplied by the negative log10 p-value.
+Since statistical significance is tested for many genes in parallel, the p-value obtained from MWU test should be multiple-hypothesis corrected. For this purpose we use the Benjamini-Hochberg method. We also calculate a score taking both effect size and p-value into account, according to the publication from [Wang et al., Nat Comm, 2018](http://dx.doi.org/10.1038/s41467-018-04899-x). This score is simply the absolute fitness score multiplied by the negative log10 p-value.
 
 
 ```{r}
@@ -632,7 +632,7 @@ plot_all_fitness_hist <- df_gene %>% filter(time == 0) %>%
   coord_cartesian(xlim = c(-4, 4), ylim = c(0, 1000)) +
   facet_wrap( ~ condition, ncol = 4) +
   custom_theme() +
-  scale_fill_manual(values = custom_colors[2:1])
+  scale_fill_manual(values = custom_colors[c(3:4)])
 
 print(plot_all_fitness_hist)
 save_plot(plot_all_fitness_hist, width = 7, height = 5)
@@ -644,16 +644,16 @@ save_plot(plot_all_fitness_hist, width = 7, height = 5)
 plot_all_fitness_volc <- df_gene %>% filter(time == 0,
     condition %in% c("HC, HL", "LC, LL")) %>%
   arrange(sgRNA_type) %>%
-  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), shape = score >= 4, col = sgRNA_type)) +
-  geom_point(alpha = 0.5, size = 1) +
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), col = sgRNA_type)) +
+  geom_point(alpha = 0.5, size = 0.5) +
   geom_line(data = data.frame(x = c(seq(-6, -0.5, 0.1), seq(0.5, 6, 0.1)),
     y = 4/c(seq(6, 0.5, -0.1), seq(0.5, 6, 0.1))),
     aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
-  coord_cartesian(xlim = c(-6, 6), ylim = c(0, 4)) +
+  coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
   custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
   facet_wrap(~ condition) +
   labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
-  scale_color_manual(values = custom_colors[2:1]) +
+  scale_color_manual(values = custom_colors[3:4]) +
   scale_shape_manual(values=c(1, 19))
 
 print(plot_all_fitness_volc)
@@ -746,7 +746,7 @@ We add photosystem I and II genes as examples for differential depletion. A heat
 plot_sgRNAs_ps1 <- df_gene %>%
   filter(str_detect(sgRNA_target, "psa[A-Z]*"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
   labs(title = "Photosystem I", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -756,7 +756,8 @@ plot_sgRNAs_ps1 <- df_gene %>%
 plot_sgRNAs_ps2 <- df_gene %>%
   filter(str_detect(sgRNA_target, "psb[A-Z]*"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
+  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
   labs(title = "Photosystem II", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -770,7 +771,7 @@ ggarrange(ncol = 2, plot_sgRNAs_ps1, plot_sgRNAs_ps2)
 svg(filename = "../figures/figure2.svg", width = 8, height = 7)
 ggarrange(ncol = 2, widths = c(0.65, 0.35),
   ggarrange(nrow = 2, heights =  c(0.34, 0.66), labels = LETTERS[1:2], font.label = list_fontpars,
-    plot_all_fitness_volc + theme(plot.margin = unit(c(12,-12,12,30), "points")),
+    plot_all_fitness_volc + theme(plot.margin = unit(c(14,-8,14,40), "points")),
     plot_median_fitness_kegg + theme(plot.margin = unit(c(6,12,12,12), "points"))),
   ggarrange(nrow = 2, heights =  c(0.4, 0.6), labels = LETTERS[3:4], font.label = list_fontpars,
     plot_sgRNAs_ps1 + theme(plot.margin = unit(c(12,0,-14,0), "points")),
