@@ -1335,7 +1335,7 @@ ggsave("../figures/plot_fitness_citrate.svg",
   width = 8, height = 4)
 ```
 
-**Adaptation to light and carbon excess**
+## Adaptation to light and carbon excess
 
 We will look at three different types of regulatory adaptations:
 
@@ -1391,7 +1391,55 @@ dev.off()
 ```
 
 
-**Genes whose KD leads to increased fitness**
+As a Supplementary Figure, we can plot the **total protein mass of the phycobilisome** determined by protein mass spectrometry.
+This data was published in our study [Jahn et al., Cell Reports, 2018](https://www.cell.com/cell-reports/fulltext/S2211-1247(18)31485-2). The data can be downloaded directly from the ShinyProt github page where it is included for on demand visualization.
+
+```{r, fig.width = 6.5, fig.height = 4}
+load(url("https://github.com/m-jahn/ShinyProt/blob/master/data/Jahn_2018_Light_and_CO2_lim.Rdata?raw=true"))
+
+plot_protmass_phycobilisome1 <- Jahn_2018_Light_and_CO2_lim %>%
+  filter(str_detect(protein, "[ac]pc[ABCDEFG]"), sample != "CO2") %>%
+  mutate(protein = str_extract(protein, "[ac]pc[ABCDEFG][12]?")) %>%
+  ggplot(aes(x = factor(light), y = 100*mean_mass_fraction_norm, 
+  fill = protein)) +
+  lims(y = c(0, 22)) +
+  geom_col(position = "stack", width = 0.6, col = grey(0.8)) +
+  custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
+  labs(title = "Light limitation", x = "µmol photons m^-2 s^-1", y = "% protein mass") +
+  scale_fill_manual(values = custom_range(13)) +
+  scale_color_manual(values = custom_range(13))
+
+plot_protmass_phycobilisome2 <- Jahn_2018_Light_and_CO2_lim %>%
+  filter(str_detect(protein, "[ac]pc[ABCDEFG]"), sample == "CO2") %>%
+  mutate(protein = str_extract(protein, "[ac]pc[ABCDEFG][12]?")) %>%
+  ggplot(aes(x = factor(co2_concentration), y = 100*mean_mass_fraction_norm, 
+  fill = protein)) +
+  lims(y = c(0, 22)) +
+  geom_col(position = "stack", width = 0.6, col = grey(0.8)) +
+  custom_theme(legend.position = 0) +
+  labs(title = "CO2 limitation", x = "% CO2 in air", y = "% protein mass") +
+  scale_fill_manual(values = custom_range(13)) +
+  scale_color_manual(values = custom_range(13))
+
+ggarrange(ncol = 2, widths = c(0.5,0.5),
+  labels = LETTERS[1:2], font.label = list_fontpars,
+  plot_protmass_phycobilisome1,
+  plot_protmass_phycobilisome2 +  theme(plot.margin = unit(c(12,12,78,12), "points"))
+)
+```
+
+```{r, include = FALSE}
+svg("../figures/plot_protmass_phycobilisome.svg", width = 6.5, height = 4)
+ggarrange(ncol = 2, widths = c(0.5,0.5),
+  labels = LETTERS[1:2], font.label = list_fontpars,
+  plot_protmass_phycobilisome1,
+  plot_protmass_phycobilisome2 +  theme(plot.margin = unit(c(12,12,78,12), "points"))
+)
+dev.off()
+```
+
+
+## Genes where knock down leads to increased fitness
 
 
 ```{r, fig.width = 8, fig.height = 8}
