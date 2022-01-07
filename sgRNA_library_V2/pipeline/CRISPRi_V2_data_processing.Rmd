@@ -1127,10 +1127,11 @@ plot_sgRNAs_light <- df_gene %>%
   
   # plot heatmap
   ggheatmap(cluster_rows = TRUE, cluster_cols = TRUE,
-    color = brewer_pal(direction = -1, palette = "RdBu")(5),
+    color = c(custom_colors[1], grey(0.9), custom_colors[2]),
     show_cluster_rows	= FALSE, cluster_num = c(1,1),
     tree_color_cols = grey(0.5),
-  ) %>% ggheatmap_theme(plotlist = 1, theme = list(
+  ) %>% 
+  ggheatmap_theme(plotlist = 1, theme = list(
     custom_theme() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5), 
       axis.title.x = element_blank(), axis.title.y = element_blank())
   ))
@@ -1154,15 +1155,16 @@ save_plot(plot_sgRNAs_light, width = 8.0, height = 3.5)
 **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
 
-```{r, fig.width = 6.5, fig.height = 3.5}
+```{r, fig.width = 3.5, fig.height = 4.5}
 plot_sgRNAs_phycobil <- df_gene %>%
   filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = sgRNA_target, y = condition, fill = wmean_fitness)) +
+  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  labs(title = "Apc/Cpc mutants enriched in high light/CO2", x = "", y = "") +
+  labs(title = "Apc/Cpc repression mutants", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_distiller(palette = "RdBu", limits = c(-4, 4))
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
 
 print(plot_sgRNAs_phycobil)
 save_plot(plot_sgRNAs_phycobil, width = 6.5, height = 3.5)
@@ -1230,6 +1232,7 @@ invisible(capture.output(
 ))
 ```
 
+
 ```{r, include = FALSE, eval = FALSE}
 # # Code chunk to perform t-test on summary statistics
 # # -------------------
@@ -1261,7 +1264,6 @@ list_central_met_pathways <- c(
   "Pentose phosphate pathway",
   "Carbon fixation in photosynthetic organisms",
   "Photosynthesis",
-  "Photosynthesis - antenna proteins",
   "Citrate cycle (TCA cycle)",
   "Pyruvate metabolism",
   "Glyoxylate and dicarboxylate metabolism"
@@ -1270,7 +1272,8 @@ list_central_met_pathways <- c(
 
 
 ```{r}
-plot_gene_fitness <- function(df, pw = NULL, gene = NULL, title = NULL) {
+plot_gene_fitness <- function(df, pw = NULL, gene = NULL,
+  title = NULL, ncol = 8, legend.position = "bottom") {
   df <- df %>% filter(time == 0)
   if (!is.null(pw)) {
     df <- df %>% inner_join(df_kegg %>% filter(kegg_pathway == pw) %>% select(locus),
@@ -1286,12 +1289,12 @@ plot_gene_fitness <- function(df, pw = NULL, gene = NULL, title = NULL) {
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
     custom_theme(aspect.ratio = 1,
-      legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
-    labs(title = title) +
-    theme(axis.text.x = element_blank()) +
+      legend.position = legend.position, legend.key.size = unit(0.4, "cm")) + 
+    labs(title = title, x = "", y = "fitness") +
+    theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
     scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
     scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
-    facet_wrap(~ sgRNA_target, ncol = 8)
+    facet_wrap(~ sgRNA_target, ncol = ncol, drop = FALSE)
 }
 ```
 
@@ -1324,54 +1327,69 @@ ggsave("../figures/plot_fitness_photosys.svg",
   width = 8, height = 11)
 ```
 
+
 ```{r, fig.width = 8, fig.height = 4}
 print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[5]]))
-ggsave("../figures/plot_fitness_antenna.svg",
+ggsave("../figures/plot_fitness_citrate.svg",
   plot_gene_fitness(df_gene, pw = list_central_met_pathways[[5]]),
   width = 8, height = 4)
 ```
 
-```{r, fig.width = 8, fig.height = 4}
-print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[6]]))
-ggsave("../figures/plot_fitness_citrate.svg",
-  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[6]]),
-  width = 8, height = 4)
+**Adaptation to light and carbon excess**
+
+We will look at three different types of regulatory adaptations:
+
+- `apc`/`cpc`antenna proteins (phycobilisomes), known to be among the most expressed and regulated genes in cyanos
+- flavoproteins Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon)
+- carbon uptake and regulatory proteins: sbtA (`slr1512`), sbtB (`slr1513`), cupA (`sll1734`), cupB (`slr1302`), 
+  cyabrB1 (`sll0359`), cyabrB2 (`sll0822`), ccmR/rbcR (`sll1594`), CP12 (`ssl3364`)
+
+```{r}
+plot_phycobilisome <- df_gene %>% filter(str_detect(gene_name, "[ac]pc[ABCDEFG]")) %>%
+  mutate(sgRNA_target = recode(sgRNA_target, `this` = "that")) %>%
+  plot_gene_fitness(ncol = 6, legend.position = 0)
+
+plot_flv_genes <- df_gene %>% filter(locus %in% c("sll1521", "sll0219", "sll0550", "sll0217", "sll0218")) %>%
+  mutate(sgRNA_target = recode(sgRNA_target, `sll1521` = "sll1521 (Flv1)", `sll0219` = "sll0219 (Flv2)",
+    `sll0550` = "sll0550 (Flv3)", `sll0217` = "sll0217 (Flv4)", `sll0218` = "sll0218 (?)")) %>%
+  mutate(sgRNA_target = factor(sgRNA_target, c(unique(sgRNA_target), ""))) %>%
+  plot_gene_fitness(ncol = 6, legend.position = 0)
+
+plot_carbon_uptake <- df_gene %>% filter(locus %in% c("slr1512", "slr1513", "sll1734",
+  "slr1302", "sll0359", "sll0822", "sll1594", "ssl3364")) %>%
+  mutate(sgRNA_target = recode(sgRNA_target, `slr1512` = "sbtA (slr1512)", `slr1513` = "sbtB (slr1513)",
+    `sll1734` = "cupA (sll1734)", `slr1302` = "cupB (slr1302)", `sll0359` = "cyabrB1 (sll0359)",
+    `sll0822` = "cyabrB2 (sll0822)", `rbcR` = "ccmR (sll1594)", `ssl3364` = "CP12 (ssl3364)") %>%
+    fct_) %>%
+  plot_gene_fitness(ncol = 6, legend.position = 0)
 ```
 
-**Custom set of stress related genes**
+Genes not included because they did not show any (remarkable) effect on fitness:
 
-OCP (`slr1963`), pgr5 (`ssr2016`), Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon), SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`).
+- OCP (`slr1963`), pgr5 (`ssr2016`)
+- SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`) (rpoD genes 1-4)
+- ccmM (`sll1031`), ccmK2 (`sll1028`), ccmK1 (`sll1029`), ccmN (`sll1032`), ccmO (`slr0436`), ccmL (`sll1030`)
 
-```{r, fig.width = 8, fig.height = 4}
-list_stress_genes <- c("slr1963", "ssr2016", "sll1521",
-  "sll0219", "sll0550", "sll0217", "sll0218", "sll0306", "sll0184",
-  "sll2012", "sll1689")
+Figure 3 draft:
 
-plot_gene_fitness(df_gene, gene = list_stress_genes, title = "stress related genes")
-ggsave("../figures/plot_fitness_stress.svg",
-  plot_gene_fitness(df_gene, gene = list_stress_genes, title = "stress related genes"),
-  width = 8, height = 4)
-```
-
-**Fitness plot for carbon transports and carboxysome shell**
-
-`slr1512` sbtA, `slr1513` sbtB, `sll1734` cupA, `slr1302` cupB, `sll0359` cyabrB1, `sll0822` cyabrB2,
-`sll1594` ccmR, `sll1031` ccmM, `sll1028` ccmK2, `sll1029` ccmK1, `sll1032` ccmN, `slr0436` ccmO,
-`sll1030` ccmL.
-
-```{r, fig.width = 8, fig.height = 4}
-list_carboxysome_genes <- c(
-  "slr1512", "slr1513", "sll1734", "slr1302", "sll0359", "sll0822", "sll1594",
-  "sll1031", "sll1028", "sll1029", "sll1032", "slr0436", "sll1030"
+```{r, fig.width = 6.0, fig.height = 8.5}
+ggarrange(nrow = 3, heights =  c(0.47, 0.2, 0.33), labels = LETTERS[1:3], font.label = list_fontpars,
+  plot_phycobilisome,
+  plot_flv_genes,
+  plot_carbon_uptake
 )
-
-plot_gene_fitness(df_gene, gene = list_carboxysome_genes,
-  title = "Carboxysome and carbon transporters")
-ggsave("../figures/plot_fitness_carboxysome.svg",
-  plot_gene_fitness(df_gene, gene = list_carboxysome_genes,
-    title = "Carboxysome and carbon transporters"),
-  width = 8, height = 4)
 ```
+
+```{r, include = FALSE}
+svg(filename = "../figures/figure3.svg", width = 6.0, height = 8.5)
+ggarrange(nrow = 3, heights =  c(0.47, 0.2, 0.33), labels = LETTERS[1:3], font.label = list_fontpars,
+  plot_phycobilisome,
+  plot_flv_genes,
+  plot_carbon_uptake
+)
+dev.off()
+```
+
 
 **Genes whose KD leads to increased fitness**
 
@@ -1415,6 +1433,8 @@ df_gene %>%
   write_csv("../data/output/fitness_genes.csv")
 
 df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
+
+save(list = ls(), file = "../pipeline/CRISPRi_V2_data_processing.RData")
 ```
 
 
