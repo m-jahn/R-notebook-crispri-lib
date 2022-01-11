@@ -1341,34 +1341,34 @@ We will look at three different types of regulatory adaptations:
 
 - `apc`/`cpc`antenna proteins (phycobilisomes), known to be among the most expressed and regulated genes in cyanos
 - flavoproteins Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon)
-- carbon uptake and regulatory proteins: sbtA (`slr1512`), sbtB (`slr1513`), cupA (`sll1734`), cupB (`slr1302`), 
-  cyabrB1 (`sll0359`), cyabrB2 (`sll0822`), ccmR/rbcR (`sll1594`), CP12 (`ssl3364`)
+- low affinity/high flux transporters Ci transporters: bicA (`sll0834`), NDH-I4 with ndhF4, D4, cupB (`sll0026`, `sll0027`, `slr1302`)
+- high affinity/low flux inducible Ci transporters: BCT1/cmpAB(porB)CD (`slr0040-44`), SbtA/B (`slr1512`, `slr1513`), NDH-I3 with ndhF3, ndhD3, cupA, cupS (`sll1732-35`)
+- carbon transport regulatory proteins: ccmR/rbcR (`sll1594`), cmpR (`sll0030`), cyabrB1 (`sll0359`), cyabrB2 (`sll0822`)
+
 
 ```{r}
 plot_phycobilisome <- df_gene %>% filter(str_detect(gene_name, "[ac]pc[ABCDEFG]")) %>%
-  mutate(sgRNA_target = recode(sgRNA_target, `this` = "that")) %>%
   plot_gene_fitness(ncol = 6, legend.position = 0)
 
 plot_flv_genes <- df_gene %>% filter(locus %in% c("sll1521", "sll0219", "sll0550", "sll0217", "sll0218")) %>%
-  mutate(sgRNA_target = recode(sgRNA_target, `sll1521` = "sll1521 (Flv1)", `sll0219` = "sll0219 (Flv2)",
-    `sll0550` = "sll0550 (Flv3)", `sll0217` = "sll0217 (Flv4)", `sll0218` = "sll0218 (?)")) %>%
+  mutate(sgRNA_target = recode(sgRNA_target, `sll1521` = "Flv1 (sll1521)", `sll0219` = "Flv2 (sll0219)",
+    `sll0550` = "Flv3 (sll0550)", `sll0217` = "Flv4 (sll0217)")) %>%
   mutate(sgRNA_target = factor(sgRNA_target, c(unique(sgRNA_target), ""))) %>%
   plot_gene_fitness(ncol = 6, legend.position = 0)
 
-plot_carbon_uptake <- df_gene %>% filter(locus %in% c("slr1512", "slr1513", "sll1734",
-  "slr1302", "sll0359", "sll0822", "sll1594", "ssl3364")) %>%
-  mutate(sgRNA_target = recode(sgRNA_target, `slr1512` = "sbtA (slr1512)", `slr1513` = "sbtB (slr1513)",
-    `sll1734` = "cupA (sll1734)", `slr1302` = "cupB (slr1302)", `sll0359` = "cyabrB1 (sll0359)",
-    `sll0822` = "cyabrB2 (sll0822)", `rbcR` = "ccmR (sll1594)", `ssl3364` = "CP12 (ssl3364)") %>%
-    fct_) %>%
-  plot_gene_fitness(ncol = 6, legend.position = 0)
+plot_carbon_uptake <- df_gene %>% filter(locus %in% c(
+    "sll0026", "sll0027", "slr1302",
+    "sll1732", "sll1733", "sll1734", "sll1735", "slr0040", "slr0041","slr0043","slr0044"
+  )) %>%
+  mutate(sgRNA_target = recode(sgRNA_target,
+    `nrtC2` = "cmpC", `nrtD3` = "cmpD",
+    `sll1734` = "cupA", `slr1302` = "cupB",
+    `sll1735` = "cupS", `ndhF2` = "ndhF3"
+  )) %>%
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[c(4,6,11,3,5,9,10,1,2,7,8)])) %>%
+  plot_gene_fitness(ncol = 6, legend.position = 0) +
+  coord_cartesian(ylim = c(-7.9, 2.4))
 ```
-
-Genes not included because they did not show any (remarkable) effect on fitness:
-
-- OCP (`slr1963`), pgr5 (`ssr2016`)
-- SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`) (rpoD genes 1-4)
-- ccmM (`sll1031`), ccmK2 (`sll1028`), ccmK1 (`sll1029`), ccmN (`sll1032`), ccmO (`slr0436`), ccmL (`sll1030`)
 
 Figure 3 draft:
 
@@ -1390,11 +1390,33 @@ ggarrange(nrow = 3, heights =  c(0.47, 0.2, 0.33), labels = LETTERS[1:3], font.l
 dev.off()
 ```
 
+As a Supplementary figure to C), we can **plot all other carbon transporters and regulatory genes** that showed a less remarkable effect.
 
-As a Supplementary Figure, we can plot the **total protein mass of the phycobilisome** determined by protein mass spectrometry.
+```{r, fig.width = 6,  fig.height = 2.75}
+plot_carbon_uptake_2 <- df_gene %>% filter(locus %in% c(
+    "sll0834", "slr1512", "slr1513", "sll1594", "sll0030", "sll0359", "sll0822"
+  )) %>%
+  mutate(sgRNA_target = recode(sgRNA_target,
+    `sll0834` = "bicA", `slr1512` = "sbtA", `slr1513` = "sbtB",
+    `sll0359` = "cyabrB1", `sll0822` = "cyabrB2", `rbcR` = "ccmR"
+  )) %>%
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target))) %>%
+  plot_gene_fitness(ncol = 4, legend.position = "right")
+
+plot_carbon_uptake_2
+```
+
+```{r, include = FALSE}
+svg(filename = "../figures/plot_carbon_uptake.svg", width = 6.0, height = 2.75)
+print(plot_carbon_uptake_2)
+dev.off()
+```
+
+
+As another Supplementary Figure, we can plot the **total protein mass of the phycobilisome** determined by protein mass spectrometry.
 This data was published in our study [Jahn et al., Cell Reports, 2018](https://www.cell.com/cell-reports/fulltext/S2211-1247(18)31485-2). The data can be downloaded directly from the ShinyProt github page where it is included for on demand visualization.
 
-```{r, fig.width = 6.5, fig.height = 4}
+```{r, fig.width = 6, fig.height = 3.8}
 load(url("https://github.com/m-jahn/ShinyProt/blob/master/data/Jahn_2018_Light_and_CO2_lim.Rdata?raw=true"))
 
 plot_protmass_phycobilisome1 <- Jahn_2018_Light_and_CO2_lim %>%
@@ -1403,7 +1425,7 @@ plot_protmass_phycobilisome1 <- Jahn_2018_Light_and_CO2_lim %>%
   ggplot(aes(x = factor(light), y = 100*mean_mass_fraction_norm, 
   fill = protein)) +
   lims(y = c(0, 22)) +
-  geom_col(position = "stack", width = 0.6, col = grey(0.8)) +
+  geom_col(position = "stack", width = 0.6, col = grey(1), size = 0.2) +
   custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
   labs(title = "Light limitation", x = "µmol photons m^-2 s^-1", y = "% protein mass") +
   scale_fill_manual(values = custom_range(13)) +
@@ -1415,7 +1437,7 @@ plot_protmass_phycobilisome2 <- Jahn_2018_Light_and_CO2_lim %>%
   ggplot(aes(x = factor(co2_concentration), y = 100*mean_mass_fraction_norm, 
   fill = protein)) +
   lims(y = c(0, 22)) +
-  geom_col(position = "stack", width = 0.6, col = grey(0.8)) +
+  geom_col(position = "stack", width = 0.6, col = grey(1), size = 0.2) +
   custom_theme(legend.position = 0) +
   labs(title = "CO2 limitation", x = "% CO2 in air", y = "% protein mass") +
   scale_fill_manual(values = custom_range(13)) +
@@ -1437,6 +1459,14 @@ ggarrange(ncol = 2, widths = c(0.5,0.5),
 )
 dev.off()
 ```
+
+Other genes of interest that either did not show any (remarkable) effect on fitness, or do not meet the scope of this section:
+
+- OCP (`slr1963`), pgr5 (`ssr2016`)
+- SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`) (rpoD genes 1-4)
+- ccmM (`sll1031`), ccmK2 (`sll1028`), ccmK1 (`sll1029`), ccmN (`sll1032`), ccmO (`slr0436`),
+  ccmL (`sll1030`)
+- CP12 (`ssl3364`)
 
 
 ## Genes where knock down leads to increased fitness
