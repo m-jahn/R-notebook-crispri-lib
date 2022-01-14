@@ -1335,6 +1335,78 @@ ggsave("../figures/plot_fitness_citrate.svg",
   width = 8, height = 4)
 ```
 
+## Gene fitness in mixotrophy and heterotrophy
+
+Using [fluctuator](https://github.com/m-jahn/fluctuator), we can import a custom metabolic map for _Synechocystis_ sp. PCC 6803, and overlay published fluxes that were measured with LC-MS using isotopically labelled carbon sources ([Nakajima et al., 2014](https://doi.org/10.1093/pcp/pcu091)).
+
+Fluctuator can be installed using a function from `devtools`:
+
+```{r, eval = FALSE}
+devtools::install_github("m-jahn/fluctuator")
+```
+
+We import the metabolic flux data from the supplemental items of [Nakajima et al., 2014](https://doi.org/10.1093/pcp/pcu091).
+
+```{r}
+library(fluctuator)
+
+# import flux data
+df_nakajima_mfa <- read.csv("../data/input/Nakajima2014_metabolic_fluxes.csv")
+
+# generate stroke width and color
+df_nakajima_mfa <- df_nakajima_mfa %>%
+  mutate(
+    stroke_width = 0.3 + (0.7*sqrt(abs(flux))),
+    stroke_color = abs(flux) %>% {1+(./max(.))*9} %>% round,
+    stroke_color_rgb =  colorRampPalette(custom_colors[c(5,2,1)])(10)[stroke_color])
+```
+
+The next step is to overlay the fluxes. We generate two types of maps, mixotrophy and photoheterotrophy.
+The stroke width and color for all reactions is set by the flux magnitude.
+
+```{r}
+for (cond in c("mixotroph", "photoheterotroph")) {
+  # import map 
+  SVG_template <- read_svg("../data/input/map_central_metabolism_syn.svg")
+  
+  # set stroke on SVG map
+  SVG_mix <- set_attributes(SVG_template,
+    node = filter(df_nakajima_mfa, condition == cond)$reaction_name,
+    attr = "style",
+    pattern = "stroke-width:[0-9]+\\.[0-9]+",
+    replacement = paste0("stroke-width:",
+      filter(df_nakajima_mfa, condition == cond)$stroke_width))
+  
+  # set color
+  SVG_mix <- set_attributes(SVG_mix,
+    node = filter(df_nakajima_mfa, condition == cond)$reaction_name,
+    attr = "style",
+    pattern = "stroke:#b3b3b3",
+    replacement = paste0("stroke:",
+      filter(df_nakajima_mfa, condition == cond)$stroke_color_rgb))
+  
+  # set arrow directionality
+  SVG_mix <- set_attributes(SVG_mix,
+    node = filter(df_nakajima_mfa, condition == cond, flux < 0)$reaction_name,
+    attr = "style",
+    pattern = "marker-end:url\\(#marker[0-9]*\\);",
+    replacement = "")
+  
+  SVG_mix <- set_attributes(SVG_mix,
+    node = filter(df_nakajima_mfa, condition == cond, flux > 0)$reaction_name,
+    attr = "style",
+    pattern = "marker-start:url\\(#marker[0-9]*\\);",
+    replacement = "")
+  
+  write_svg(SVG_mix, file = paste0("../data/output/map_", cond, "y.svg"))
+}
+```
+
+Metabolic flux with mixotrophy |  Metabolic flux with photoheterotrophy
+:-------------------------:|:-------------------------:
+![](../data/output/map_mixotrophy.svg)  |  ![](../data/output/map_photoheterotrophy.svg)
+
+
 ## Adaptation to light and carbon excess
 
 We will look at three different types of regulatory adaptations:

@@ -1,0 +1,73 @@
+reaction_name,reaction_stoichiometry,condition,flux,ci_low,ci_high
+CTL1,reference,mixotroph,0.5,0,0
+CTL2,reference,mixotroph,1,0,0
+CTL3,reference,mixotroph,2,0,0
+HEX,GLC --> G6P,mixotroph,0.53,0,0
+PGI,G6P --> F6P,mixotroph,0.03,-0.06,0.22
+FBP,FDP --> F6P,mixotroph,0.04,-0.06,0.22
+FBA,FDP --> DHAP + GAP,mixotroph,-0.04,-0.6,0.23
+TPI,DHAP --> GAP,mixotroph,-0.97,-1.02,-0.81
+GAPDH,GAP --> 13DPG,mixotroph,-2.45,-2.56,-2.13
+PGK,13DPG --> 3PG,mixotroph,-2.45,-2.56,-2.13
+PGM,3PG --> 2PG,mixotroph,1.14,1.12,1.17
+ENO,2PG --> PEP,mixotroph,1.14,1.12,1.17
+PYK,PEP --> PYR,mixotroph,0.63,0,0.7
+PDH,PYR --> AcCoA + CO2,mixotroph,0.52,0.51,0.56
+CS,AcCoA + OAA --> CIT,mixotroph,0.11,0.09,0.15
+ACONT,CIT --> IsoCIT,mixotroph,0.11,0.09,0.15
+ICDH,IsoCIT --> 2OG + CO2,mixotroph,0.11,0.09,0.15
+SUCD,SUC --> FUM,mixotroph,0.02,0,0.05
+FUM,FUM --> MAL,mixotroph,0.02,0,0.05
+MDH,MAL --> OAA,mixotroph,-0.13,-0.78,-0.07
+G6PDH,G6P --> 6PGL,mixotroph,0.37,0.18,0.46
+PGL,6PGL --> 6PGC,mixotroph,0.37,0.18,0.46
+GND,6PGC --> Ru5P + CO2,mixotroph,0.37,0.18,0.46
+RPE,Ru5P --> X5P,mixotroph,-0.99,-1.06,-0.96
+RPI,Ru5P --> R5P,mixotroph,0.44,0.48,0.42
+TKT2,R5P + X5P --> S7P + GAP,mixotroph,-0.48,-0.51,-0.46
+TKT1,E4P + X5P --> F6P + GAP,mixotroph,-0.52,-0.55,-0.5
+TAL,GAP + S7P --> F6P + E4P,mixotroph,0.45,-0.2,0.62
+PRUK,R5P --> RuBP,mixotroph,1.81,1.64,1.86
+RUBISCO,RuBP + CO2 --> 2 3PG,mixotroph,1.81,1.64,1.86
+FBA2,DHAP + E4P --> S7P,mixotroph,0.93,0.28,1.1
+PPC,PEP + CO2 --> OAA,mixotroph,0.36,0.3,1.03
+ME,MAL --> PYR + CO2,mixotroph,0.15,0.09,0.81
+ICL,IsoCIT + AcCoA --> MAL + SUC,mixotroph,0,0,0.02
+AKGDH,2OG --> SUCCOA + CO2,mixotroph,0.02,0,0.05
+SUCOAS,SUCCOA --> SUC,mixotroph,0.02,0,0.05
+CTL1,reference,photoheterotroph,0.5,0,0
+CTL2,reference,photoheterotroph,1,0,0
+CTL3,reference,photoheterotroph,2,0,0
+HEX,GLC --> G6P,photoheterotroph,0.58,0,0
+PGI,G6P --> F6P,photoheterotroph,-0.84,-0.9,-0.77
+FBP,FDP --> F6P,photoheterotroph,0.16,-0.9,-0.77
+FBA,FDP --> DHAP + GAP,photoheterotroph,-0.16,-0.22,3.86
+TPI,DHAP --> GAP,photoheterotroph,-0.16,-0.22,-0.1
+GAPDH,GAP --> 13DPG,photoheterotroph,0.01,-0.11,0.13
+PGK,13DPG --> 3PG,photoheterotroph,0.01,-0.11,0.13
+PGM,3PG --> 2PG,photoheterotroph,0.6,0.6,0.61
+ENO,2PG --> PEP,photoheterotroph,0.6,0.6,0.61
+PYK,PEP --> PYR,photoheterotroph,0.39,0,0.41
+PDH,PYR --> AcCoA + CO2,photoheterotroph,0.27,0.27,0.28
+CS,AcCoA + OAA --> CIT,photoheterotroph,0.05,0.27,0.28
+ACONT,CIT --> IsoCIT,photoheterotroph,0.05,0.05,0.06
+ICDH,IsoCIT --> 2OG + CO2,photoheterotroph,0.05,0.05,0.06
+SUCD,SUC --> FUM,photoheterotroph,0,0,0.01
+FUM,FUM --> MAL,photoheterotroph,0,0,0.01
+MDH,MAL --> OAA,photoheterotroph,-0.01,-0.41,0
+G6PDH,G6P --> 6PGL,photoheterotroph,1.35,1.28,1.41
+PGL,6PGL --> 6PGC,photoheterotroph,1.35,1.28,1.41
+GND,6PGC --> Ru5P + CO2,photoheterotroph,1.35,1.28,1.41
+RPE,Ru5P --> X5P,photoheterotroph,0.68,0.65,0.67
+RPI,Ru5P --> R5P,photoheterotroph,-0.37,-0.36,-0.37
+TKT2,R5P + X5P --> S7P + GAP,photoheterotroph,0.35,0.34,0.35
+TKT1,E4P + X5P --> F6P + GAP,photoheterotroph,0.33,0.31,0.33
+TAL,GAP + S7P --> F6P + E4P,photoheterotroph,0.35,0.34,4.41
+PRUK,R5P --> RuBP,photoheterotroph,0.3,0.24,0.36
+RUBISCO,RuBP + CO2 --> 2 3PG,photoheterotroph,0.3,0.24,0.36
+FBA2,DHAP + E4P --> S7P,photoheterotroph,0,0,4.04
+PPC,PEP + CO2 --> OAA,photoheterotroph,0.13,0.11,0.53
+ME,MAL --> PYR + CO2,photoheterotroph,0.01,0,0.42
+ICL,IsoCIT + AcCoA --> MAL + SUC,photoheterotroph,0,0,0.01
+AKGDH,2OG --> SUCCOA + CO2,photoheterotroph,0,0,0.01
+SUCOAS,SUCCOA --> SUC,photoheterotroph,0,0,0.01
