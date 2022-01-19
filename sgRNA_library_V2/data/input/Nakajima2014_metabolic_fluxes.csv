@@ -1,4 +1,4 @@
-reaction_name,reaction_stoichiometry,condition,flux,ci_low,ci_high
+reaction,reaction_stoichiometry,condition,flux,ci_low,ci_high
 CTL1,reference,mixotroph,0.5,0,0
 CTL2,reference,mixotroph,1,0,0
 CTL3,reference,mixotroph,2,0,0

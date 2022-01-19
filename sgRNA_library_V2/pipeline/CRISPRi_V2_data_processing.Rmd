@@ -1320,13 +1320,6 @@ ggsave("../figures/plot_fitness_carbonfix.svg",
   width = 8, height = 5)
 ```
 
-```{r, fig.width = 8, fig.height = 11}
-print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[4]]))
-ggsave("../figures/plot_fitness_photosys.svg",
-  plot_gene_fitness(df_gene, pw = list_central_met_pathways[[4]]),
-  width = 8, height = 11)
-```
-
 
 ```{r, fig.width = 8, fig.height = 4}
 print(plot_gene_fitness(df_gene, pw = list_central_met_pathways[[5]]))
@@ -1371,7 +1364,7 @@ for (cond in c("mixotroph", "photoheterotroph")) {
   
   # set stroke on SVG map
   SVG_mix <- set_attributes(SVG_template,
-    node = filter(df_nakajima_mfa, condition == cond)$reaction_name,
+    node = filter(df_nakajima_mfa, condition == cond)$reaction,
     attr = "style",
     pattern = "stroke-width:[0-9]+\\.[0-9]+",
     replacement = paste0("stroke-width:",
@@ -1379,7 +1372,7 @@ for (cond in c("mixotroph", "photoheterotroph")) {
   
   # set color
   SVG_mix <- set_attributes(SVG_mix,
-    node = filter(df_nakajima_mfa, condition == cond)$reaction_name,
+    node = filter(df_nakajima_mfa, condition == cond)$reaction,
     attr = "style",
     pattern = "stroke:#b3b3b3",
     replacement = paste0("stroke:",
@@ -1387,13 +1380,13 @@ for (cond in c("mixotroph", "photoheterotroph")) {
   
   # set arrow directionality
   SVG_mix <- set_attributes(SVG_mix,
-    node = filter(df_nakajima_mfa, condition == cond, flux < 0)$reaction_name,
+    node = filter(df_nakajima_mfa, condition == cond, flux < 0)$reaction,
     attr = "style",
     pattern = "marker-end:url\\(#marker[0-9]*\\);",
     replacement = "")
   
   SVG_mix <- set_attributes(SVG_mix,
-    node = filter(df_nakajima_mfa, condition == cond, flux > 0)$reaction_name,
+    node = filter(df_nakajima_mfa, condition == cond, flux > 0)$reaction,
     attr = "style",
     pattern = "marker-start:url\\(#marker[0-9]*\\);",
     replacement = "")
@@ -1405,6 +1398,91 @@ for (cond in c("mixotroph", "photoheterotroph")) {
 Metabolic flux with mixotrophy |  Metabolic flux with photoheterotrophy
 :-------------------------:|:-------------------------:
 ![](../data/output/map_mixotrophy.svg)  |  ![](../data/output/map_photoheterotrophy.svg)
+
+
+Now we plot fitness of central carbon metabolism genes for two or three selected conditions. These will be added to the metabolic map manually. The mixotrophic conditions `LC, LL, +G` and `HC, LL, +G` turned out to be very similar.
+
+```{r}
+df_centralcarb <- tibble(
+  locus = c(   "sll0593", "slr0329", "slr1843", "sll1479", "sll0329", "slr1349",
+    "slr0952", "slr2094", "slr0943", "sll0018", "slr0783", "sll1342", "slr0884",
+    "slr0394", "slr1945", "slr0752", "sll0587", "sll1275", "sll1070", "slr1793",
+    "slr0194", "ssl2153", "sll0807", "sll1525", "slr0009", "slr0012", "sll1721",
+    "sll1841", "slr1096", "slr1934", "sll0401", "slr0665", "slr1289", "slr1096",
+    "sll1023", "sll1557", "sll0823", "sll1625", "slr0201", "slr1233", "slr0018",
+    "sll0891", "sll0920", "slr0721"),
+  reaction = c("HEX", "HEX", "G6PDH", "PGL", "GND", "PGI", "FBP",
+    "FBP", "FBA", "FBA", "TPI", "GAPDH", "GAPDH", "PGK", "PGM", "ENO",
+    "PYK", "PYK", "TKT", "TAL", "RPI", "RPI", "RPE", "PRUK", "RUBISCO",
+    "RUBISCO", "PDH", "PDH", "PDH", "PDH", "CS", "ACONT", "ICDH", "AKGDH",
+    "SUCOAS", "SUCOAS", "SUCD", "SUCD", "SUCD", "SUCD", "FUM", "MDH",
+    "PPC", "ME")) %>%
+  inner_join(df_kegg) %>% group_by(locus) %>% slice(1) %>%
+  ungroup %>% arrange(reaction)
+```
+
+
+
+```{r, fig.width = 6, fig.height = 5}
+plot_centralcarb_minifig <- df_gene %>% filter(
+    time == 0,
+    condition %in% c("LC, LL", "LC, LL, +G", "LC, LL, +D, +G")) %>%
+  inner_join(df_centralcarb, by = "locus") %>%
+  mutate(sgRNA_target = paste0(reaction, " (", sgRNA_target, ")")) %>%
+  mutate(condition = factor(condition, c("LC, LL", "LC, LL, +G", "LC, LL, +D, +G"))) %>%
+  
+  ggplot(aes(x = condition, y = wmean_fitness, 
+    ymin = wmean_fitness-sd_fitness, 
+    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+  geom_hline(yintercept = c(0, -5, -10), linetype = 3, col = grey(0.6)) +
+  geom_col(position = "dodge", width = 0.6) +
+  geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+  custom_theme(aspect.ratio = 1,
+    legend.position = "bottom", legend.key.size = unit(0.4, "cm")) + 
+  theme(axis.text.x = element_blank(), axis.text.y = element_blank(), 
+    axis.ticks = element_blank(), panel.grid.major = element_blank(),
+    strip.text = element_text(size = 8)) +
+  labs(x = "", y = "") +
+  coord_cartesian(ylim = c(-11, 1)) +
+  scale_fill_manual(values = custom_colors[c(5,2,3)]) +
+  scale_color_manual(values = custom_colors[c(5,2,3)]) +
+  facet_wrap(~ sgRNA_target, ncol = 9, drop = FALSE)
+
+plot_centralcarb_minifig
+```
+
+```{r, include = FALSE}
+svg(filename = "../figures/plot_centralcarb_minifig.svg", width = 6, height = 5)
+plot_centralcarb_minifig
+dev.off()
+```
+
+Similar but more concisely, we can test if there is a correaltion between flux and fitness penalty upon repression. Theoretically, such a correlation should exist because repression of high flux enzymes should have the strongest penalty on fitness. However, examination of the data does not reveal a clear correlation. Causes for this may be manifold, including the compensation of gene duplicates/iso-enzymes for gene knock down at high flux reactions.
+
+```{r}
+df_gene %>% filter(
+    time == 0,
+    condition %in% c("LC, LL, +G", "LC, LL, +D, +G")) %>%
+  mutate(condition = recode(condition, 
+    `LC, LL, +G` = "mixotroph", `LC, LL, +D, +G` = "photoheterotroph")) %>%
+  inner_join(df_centralcarb, by = "locus") %>%
+  select(sgRNA_target, locus, gene_name, condition, wmean_fitness, sd_fitness, reaction) %>%
+  inner_join(by = c("condition", "reaction"),
+    select(df_nakajima_mfa, condition, reaction, flux, ci_low, ci_high)) %>%
+  
+  ggplot(aes(x = abs(flux), y = abs(wmean_fitness),
+    ymin = abs(wmean_fitness)-sd_fitness, 
+    ymax = abs(wmean_fitness)+sd_fitness,
+    xmin = abs(ci_low), 
+    xmax = abs(ci_high))) +
+  geom_errorbar(orientation = "x", col = grey(0.75)) +
+  geom_errorbar(orientation = "y", col = grey(0.75)) +
+  geom_point() +
+  coord_cartesian(xlim = c(-0.2, 3.2), ylim = c(-0.5, 7.5)) +
+  custom_theme(aspect.ratio = 1) + 
+  facet_wrap(~ condition, ncol = 2)
+```
+
 
 
 ## Adaptation to light and carbon excess

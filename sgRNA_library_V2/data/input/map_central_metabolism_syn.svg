@@ -816,16 +816,16 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="3.7028277"
-     inkscape:cx="113.29179"
-     inkscape:cy="150.83067"
+     inkscape:zoom="7.4056554"
+     inkscape:cx="86.217892"
+     inkscape:cy="100.80134"
      inkscape:document-units="mm"
      inkscape:current-layer="layer2"
      showgrid="false"
      inkscape:window-width="1410"
      inkscape:window-height="1022"
-     inkscape:window-x="673"
-     inkscape:window-y="53"
+     inkscape:window-x="508"
+     inkscape:window-y="2"
      inkscape:window-maximized="0"
      showguides="true"
      inkscape:guide-bbox="true"
@@ -892,8 +892,8 @@
        sodipodi:nodetypes="cc"
        inkscape:label="FBA" />
     <path
-       style="display:inline;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker59533-3-5);marker-end:url(#marker60934-7-2);enable-background:new"
-       d="m -21.412716,15.324209 1.778756,-2.795569 c 0.623485,-1.079908 1.548968,-2.075685 3.392428,-2.075685 h 9.405047"
+       style="display:inline;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker60934-7-2);enable-background:new;marker-start:url(#marker146969)"
+       d="m -21.412716,15.324209 1.778756,-2.795569 c 0.623485,-1.079908 1.548968,-2.075685 3.392428,-2.075685 h 9.2085474"
        id="path6491-9-3-1"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cccc"
@@ -956,14 +956,14 @@
          sodipodi:role="line"
          id="tspan8375-69-2-6-5-1-29-70">FBA2</tspan></text>
     <path
-       style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker11347);marker-end:url(#marker66490);enable-background:new"
+       style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker66490);enable-background:new;marker-start:url(#marker146969)"
        d="m -14.952912,18.852534 -2.064573,3.188568"
        id="path6491-9-2"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="cc"
        inkscape:label="GAPDH" />
     <path
-       style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker12503);marker-end:url(#marker67892);enable-background:new"
+       style="opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-end:url(#marker148665);enable-background:new;marker-start:url(#marker146969)"
        d="m -17.884034,25.594618 v 3.07081"
        id="path6491-9-2-5"
        inkscape:connector-curvature="0"
@@ -1224,7 +1224,7 @@
          sodipodi:role="line"
          id="tspan8375-69-2-6-5-1-29-3">TPI</tspan></text>
     <path
-       style="display:inline;opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker25625);enable-background:new"
+       style="display:inline;opacity:1;vector-effect:none;fill:none;fill-opacity:1;fill-rule:evenodd;stroke:#b3b3b3;stroke-width:0.343958;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;marker-start:url(#marker25625);enable-background:new;marker-end:url(#marker148665)"
        d="M -17.884034,-1.3594158 V 1.8825278"
        id="path6491-0-9"
        inkscape:connector-curvature="0"
