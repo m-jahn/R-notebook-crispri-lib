@@ -62,12 +62,12 @@ rmarkdown::render("pipeline.Rmd")
 
 ### Contents
 
-#### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 2
+#### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 2 (*in preparation*)
 
 - [_Synechocystis_ CRISPRi library V2 data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html)
 - [_Synechocystis_ CRISPRi library V2 machine learning](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html)
 
-#### CRISPRi library in _Synechocystis_ sp. PCC6803 (published in Yao *et al*., Nature Communications, 2020)
+#### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 1 ([Yao et al.,  2020](https://www.nature.com/articles/s41467-020-15491-7))
 
 - [_Synechocystis_ CRISPRi library data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_data_processing.nb.html)
 - [_Synechocystis_ CRISPRi library enrichment analysis](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html)
