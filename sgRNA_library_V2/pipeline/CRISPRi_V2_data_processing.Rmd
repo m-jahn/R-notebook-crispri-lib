@@ -646,8 +646,8 @@ plot_all_fitness_volc <- df_gene %>% filter(time == 0,
   arrange(sgRNA_type) %>%
   ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), col = sgRNA_type)) +
   geom_point(alpha = 0.5, size = 0.5) +
-  geom_line(data = data.frame(x = c(seq(-6, -0.5, 0.1), seq(0.5, 6, 0.1)),
-    y = 4/c(seq(6, 0.5, -0.1), seq(0.5, 6, 0.1))),
+  geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
+    y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
     aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
   coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
   custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
@@ -826,9 +826,6 @@ df_kegg_enrichment %>%
 ## Cluster genes by similarity
 
 ```{r, fig.width = 8, fig.height = 5}
-# generate color palette for heatmap
-heat_cols <- colorspace::diverging_hcl(n = 7, h = c(255, 12), c = c(50, 80), l = c(20, 97), power = c(1, 1.3))
-
 # create a matrix-like df with wide fitness data for plotting heatmap
 df_heatmap <- df_gene %>%
   filter(time == 0, !is.na(locus)) %>%
@@ -858,7 +855,7 @@ Now we can plot _all_ genes, a subset with _only significant genes_, and a dendr
 ```{r, fig.width = 8, fig.height = 2.5}
 plot_heatmap_all <- levelplot(mat_heatmap,
   par.settings = custom.colorblind(),
-  col.regions = colorRampPalette(heat_cols)(20),
+  col.regions = colorRampPalette(c(custom_colors[1], grey(0.9), custom_colors[2]))(20),
   at = seq(-8, 8, 1), aspect = "fill",
   xlab = paste0("genes (", nrow(mat_heatmap),")"),
   ylab = "", scales = list(x = list(draw = FALSE)),
@@ -875,7 +872,7 @@ save_plot(plot_heatmap_all, width = 8, height = 2.5)
 ```{r, fig.width = 8, fig.height = 4}
 plot_heatmap_sig <- levelplot(mat_heatmap_sig,
   par.settings = custom.colorblind(),
-  col.regions = colorRampPalette(heat_cols)(20),
+  col.regions = colorRampPalette(c(custom_colors[1], grey(0.9), custom_colors[2]))(20),
   at = seq(-8, 8, 1), aspect = "fill",
   xlab = paste0("genes (", nrow(mat_heatmap_sig),")"),
   ylab = "", scales = list(x = list(draw = FALSE)),
@@ -1566,46 +1563,48 @@ dev.off()
 As another Supplementary Figure, we can plot the **total protein mass of the phycobilisome** determined by protein mass spectrometry.
 This data was published in our study [Jahn et al., Cell Reports, 2018](https://www.cell.com/cell-reports/fulltext/S2211-1247(18)31485-2). The data can be downloaded directly from the ShinyProt github page where it is included for on demand visualization.
 
-```{r, fig.width = 6, fig.height = 3.8}
+```{r, fig.width = 6, fig.height = 3.6}
 load(url("https://github.com/m-jahn/ShinyProt/blob/master/data/Jahn_2018_Light_and_CO2_lim.Rdata?raw=true"))
 
 plot_protmass_phycobilisome1 <- Jahn_2018_Light_and_CO2_lim %>%
   filter(str_detect(protein, "[ac]pc[ABCDEFG]"), sample != "CO2") %>%
   mutate(protein = str_extract(protein, "[ac]pc[ABCDEFG][12]?")) %>%
   ggplot(aes(x = factor(light), y = 100*mean_mass_fraction_norm, 
-  fill = protein)) +
+  fill = str_sub(protein, 1, 3), label = protein)) +
   lims(y = c(0, 22)) +
-  geom_col(position = "stack", width = 0.6, col = grey(1), size = 0.2) +
+  geom_col(position = "stack", width = 0.7, col = grey(1), size = 0.2) +
+  geom_text(size = 2.5, position = position_stack(vjust = 0.5), color = "white") +
   custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
   labs(title = "Light limitation", x = "µmol photons m^-2 s^-1", y = "% protein mass") +
-  scale_fill_manual(values = custom_range(13)) +
-  scale_color_manual(values = custom_range(13))
+  scale_fill_manual(values = custom_colors[c(2,4)]) +
+  scale_color_manual(values = custom_colors[c(2,4)])
 
 plot_protmass_phycobilisome2 <- Jahn_2018_Light_and_CO2_lim %>%
   filter(str_detect(protein, "[ac]pc[ABCDEFG]"), sample == "CO2") %>%
   mutate(protein = str_extract(protein, "[ac]pc[ABCDEFG][12]?")) %>%
   ggplot(aes(x = factor(co2_concentration), y = 100*mean_mass_fraction_norm, 
-  fill = protein)) +
+  fill = str_sub(protein, 1, 3), label = protein)) +
   lims(y = c(0, 22)) +
-  geom_col(position = "stack", width = 0.6, col = grey(1), size = 0.2) +
-  custom_theme(legend.position = 0) +
+  geom_col(position = "stack", width = 0.7, col = grey(1), size = 0.2) +
+  geom_text(size = 2.5, position = position_stack(vjust = 0.5), color = "white") +
+  custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
   labs(title = "CO2 limitation", x = "% CO2 in air", y = "% protein mass") +
-  scale_fill_manual(values = custom_range(13)) +
-  scale_color_manual(values = custom_range(13))
+  scale_fill_manual(values = custom_colors[c(2,4)]) +
+  scale_color_manual(values = custom_colors[c(2,4)])
 
 ggarrange(ncol = 2, widths = c(0.5,0.5),
   labels = LETTERS[1:2], font.label = list_fontpars,
   plot_protmass_phycobilisome1,
-  plot_protmass_phycobilisome2 +  theme(plot.margin = unit(c(12,12,78,12), "points"))
+  plot_protmass_phycobilisome2
 )
 ```
 
 ```{r, include = FALSE}
-svg("../figures/plot_protmass_phycobilisome.svg", width = 6.5, height = 4)
+svg("../figures/plot_protmass_phycobilisome.svg", width = 6, height = 3.6)
 ggarrange(ncol = 2, widths = c(0.5,0.5),
   labels = LETTERS[1:2], font.label = list_fontpars,
   plot_protmass_phycobilisome1,
-  plot_protmass_phycobilisome2 +  theme(plot.margin = unit(c(12,12,78,12), "points"))
+  plot_protmass_phycobilisome2
 )
 dev.off()
 ```
@@ -1644,6 +1643,67 @@ Summary:
 - slr0813, slr0907, slr909, slr1299 - all increased fitness in HC/LL. Not clear what connects these genes functionally.
 
 
+# Differential fitness of non-coding RNAs (ncRNAs)
+
+The library contains 1712 ncRNAs each targeted by 1 to 5 sgRNAs. Only very few of those showed an effect on fitness.
+We filter all ncRNAs that have a "significance" equivalent to a fitness score abs(F) >= 2 and -log10 p-value >= 2 (alpha = 0.01).
+Significance here means effect size (F) multiplied by p-value.
+
+```{r, fig.width = 6.5, fig.height = 5}
+df_gene %>% filter(sgRNA_type == "ncRNA", time == 0) %>%
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = score >= 4)) +
+  geom_point(alpha = 0.5, size = 0.7) +
+  geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
+    y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
+    aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
+  coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
+  custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
+  facet_wrap(~ condition) +
+  labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
+  scale_color_manual(values = custom_colors[c(5,1)])
+```
+
+
+```{r, fig.width = 3.5, fig.height = 6}
+df_ncRNAs <- filter(df_main, sgRNA_type == "ncRNA") %>%
+  filter(length(unique(sgRNA_position)) >= 2) %>%
+  select(sgRNA_target) %>% distinct %>%
+  inner_join(df_gene, by = "sgRNA_target") %>%
+  filter(time == 0) %>%
+  filter(any(score >= 4))
+
+# cluster sgRNAs by fitness and obtain order
+df_ncRNAs_order <- df_ncRNAs %>%
+  select(sgRNA_target, condition, wmean_fitness) %>%
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  column_to_rownames(var = "sgRNA_target") %>%
+  as.matrix %>% dist %>% hclust(method = "ward.D2") %>%
+  as.dendrogram %>% order.dendrogram()
+  
+df_ncRNAs %>% ungroup %>%
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNAs_order])) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  group_by(sgRNA_target) %>% filter(mean(wmean_fitness) > -0.5) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme(legend.pos = "bottom") +
+  labs(title = "ncRNA fitness", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+df_ncRNAs %>% ungroup %>%
+  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNAs_order])) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  group_by(sgRNA_target) %>% filter(mean(wmean_fitness) < -2) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme(legend.pos = "bottom") +
+  labs(title = "ncRNA fitness", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+```
+
+
 # Export summary table of all genes and conditions
 
 Export a summary table of all genes and conditions, so that it's easy for other people to look up single conditions as for example done in [one-by-one fitness comparisons](#fitness-of-all-conditions-vs-each-other). This is best done in wide format (one column per condition).
@@ -1661,7 +1721,14 @@ df_gene %>%
   write_csv("../data/output/fitness_genes.csv")
 
 df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
+```
 
+The entire pipeline takes about 25 minutes to run on a standard notebook.
+To work on single sections, the work space is exported to avoid constant recalculation of result tables.
+
+```{r}
+# remove large intermediate objects
+rm("list_condition_pairs")
 save(list = ls(), file = "../pipeline/CRISPRi_V2_data_processing.RData")
 ```
 
