@@ -1230,20 +1230,6 @@ invisible(capture.output(
 ```
 
 
-```{r, include = FALSE, eval = FALSE}
-# # Code chunk to perform t-test on summary statistics
-# # -------------------
-# library(BSDA)
-#   mutate(t_test = tsum.test(
-#   mean.x = get(paste0("wmean_fitness_", vars[1])),
-#   s.x = get(paste0("sd_fitness_", vars[1])), n.x = 5, 
-#   mean.y = get(paste0("wmean_fitness_", vars[2])), 
-#   s.y = get(paste0("sd_fitness_", vars[2])), n.y = 5)$p.value) %>%
-#   mutate(significant = t_test <= 0.05) %>%
-```
-
-
-
 ```{r, fig.width = 5, fig.height = 5}
 # example of first 4 combinations
 list_condition_pairs[1:4]
@@ -1645,62 +1631,92 @@ Summary:
 
 # Differential fitness of non-coding RNAs (ncRNAs)
 
-The library contains 1712 ncRNAs each targeted by 1 to 5 sgRNAs. Only very few of those showed an effect on fitness.
-We filter all ncRNAs that have a "significance" equivalent to a fitness score abs(F) >= 2 and -log10 p-value >= 2 (alpha = 0.01).
-Significance here means effect size (F) multiplied by p-value.
+The first task to study ncRNAs is to generate a new data frame with additional annotation for ncRNAs.
+Additional annotation tables were exported from Geneious and are based on the publication from [Mitschke et al., PNAS, 2010](https://doi.org/10.1073/pnas.1015154108). According to this publication, ncRNAs are grouped into four different (slightly overlapping) classes:
 
-```{r, fig.width = 6.5, fig.height = 5}
-df_gene %>% filter(sgRNA_type == "ncRNA", time == 0) %>%
-  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = score >= 4)) +
-  geom_point(alpha = 0.5, size = 0.7) +
+- non-coding regulatory RNAs (ncRNAs in strict sense) not associated to a gene
+- iTSS, internal TSS within a gene
+- asRNA, regulatory anti-sense RNAs associated with a gene
+- Not included: 5'UTRs, alternative transcription start sites (TSS) associated to a gene
+
+```{r}
+df_ncRNA <- df_main %>% filter(sgRNA_type == "ncRNA") %>%
+  # obtain number of sgRNAs per target
+  group_by(sgRNA_target) %>%
+  summarize(sgRNA_number = length(unique(sgRNA_position))) %>%
+  # merge with df_gene table
+  inner_join(df_gene, by = "sgRNA_target") %>%
+  # generate ncRNA type based on target name
+  select(-locus, -gene_name, -sgRNA_type) %>%
+  mutate(sgRNA_target = str_sub(sgRNA_target, 4, 100)) %>%
+  left_join(by = "sgRNA_target",
+    bind_rows(lapply(c("NC_000911_ncRNA.tsv", "NC_000911_asRNA.tsv", "NC_000911_iTSS.tsv"),
+      FUN = function(f) read_tsv(paste0("../data/input/", f), col_types = cols())
+    ))
+  )
+
+df_ncRNA %>% group_by(ncRNA_type) %>%
+  summarize(n_targets = length(unique(sgRNA_target)))
+```
+
+Looking at the fitness and significance scores for one conditions, it seems as internal transcription start sites are overrepresented in the group that shows an effect. This is not a surprise, given that sgRNAs targeting iTSS basically also repress the native gene as a regular sgRNA. We therefore exlcude iTSS from the analysis.
+
+```{r, fig.width = 4, fig.height = 4}
+df_ncRNA %>% filter(time == 0, condition == "HC, HL") %>%
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = ncRNA_type)) +#score >= 4
+  geom_point(alpha = 0.5) +
   geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
     y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
     aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
   coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
-  custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
-  facet_wrap(~ condition) +
+  custom_theme(aspect = 1, legend.position = "bottom", legend.key.size = unit(0.4, "cm")) +
   labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
-  scale_color_manual(values = custom_colors[c(5,1)])
+  scale_color_manual(values = custom_colors)
 ```
 
 
-```{r, fig.width = 3.5, fig.height = 6}
-df_ncRNAs <- filter(df_main, sgRNA_type == "ncRNA") %>%
-  filter(length(unique(sgRNA_position)) >= 2) %>%
-  select(sgRNA_target) %>% distinct %>%
-  inner_join(df_gene, by = "sgRNA_target") %>%
-  filter(time == 0) %>%
-  filter(any(score >= 4))
+The library contains 1712 ncRNAs each targeted by 1 to 5 sgRNAs. Only very few of those showed an effect on fitness.
+We can filter all ncRNAs that have a "significance" equivalent to a fitness score abs(F) >= 2 and -log10 p-value >= 2 (alpha = 0.01).
+Significance here means effect size (F) multiplied by -log10 p-value, the threshold is indicated by the dashed line.
+
+```{r, fig.width = 6, fig.height = 6}
+df_ncRNA %>% filter(time == 0, ncRNA_type != "iTSS") %>%
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = ncRNA_type)) +#score >= 4
+  geom_point(alpha = 0.5, size = 1) +
+  geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
+    y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
+    aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
+  coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
+  custom_theme(aspect = 1, legend.position = "bottom", legend.key.size = unit(0.4, "cm")) +
+  facet_wrap(~ condition) +
+  labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
+  scale_color_manual(values = custom_colors[2:1])
+```
+
+
+```{r, fig.width = 3.5, fig.height = 8}
+df_ncRNA <- df_ncRNA %>%
+  filter(ncRNA_type != "iTSS", time == 0) %>%
+  group_by(sgRNA_target) %>%
+  filter(any(score >= 4)) %>% ungroup
 
 # cluster sgRNAs by fitness and obtain order
-df_ncRNAs_order <- df_ncRNAs %>%
+df_ncRNA_order <- df_ncRNA %>%
   select(sgRNA_target, condition, wmean_fitness) %>%
   pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
   column_to_rownames(var = "sgRNA_target") %>%
   as.matrix %>% dist %>% hclust(method = "ward.D2") %>%
   as.dendrogram %>% order.dendrogram()
   
-df_ncRNAs %>% ungroup %>%
-  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNAs_order])) %>%
+df_ncRNA %>% mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNA_order])) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  group_by(sgRNA_target) %>% filter(mean(wmean_fitness) > -0.5) %>%
   ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
   geom_tile() + custom_theme(legend.pos = "bottom") +
   labs(title = "ncRNA fitness", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
-
-df_ncRNAs %>% ungroup %>%
-  mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNAs_order])) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  group_by(sgRNA_target) %>% filter(mean(wmean_fitness) < -2) %>%
-  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
-  geom_tile() + custom_theme(legend.pos = "bottom") +
-  labs(title = "ncRNA fitness", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
+    limits = c(-4, 4)) +
+  facet_grid(ncRNA_type ~ ., scales="free")
 ```
 
 
