@@ -825,90 +825,74 @@ df_kegg_enrichment %>%
 
 ## Cluster genes by similarity
 
-```{r, fig.width = 8, fig.height = 5}
-# create a matrix-like df with wide fitness data for plotting heatmap
-df_heatmap <- df_gene %>%
-  filter(time == 0, !is.na(locus)) %>%
-  select(locus, condition, wmean_fitness) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 8, 8) %>% replace(., . < -8, -8)) %>%
-  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
-  column_to_rownames(var = "locus")
+We can devise a generalized `tidyverse` friendly function to cluster a name variable by a value, grouped by one or more grouping variables. For example, cluster genes (name) by fitness (value) over several conditions (groups). The output is a factor with re-ordered levels.
 
-# subset of df with *strongly changed* genes
-df_heatmap2 <- df_heatmap %>%
-  filter(if_any(.cols = matches("[HL]C, "), ~ !between(., -4, 4)))
+```{r}
+fct_cluster <- function(variable, group, value, method = "ward.D2") {
+  df <- tibble(variable = variable, group = group, value = value)
+  df <- pivot_wider(df, names_from = group, values_from = value)
+  mat <- as.matrix(column_to_rownames(df, var = "variable"))
+  cl <- hclust(dist(mat), method = method)
+  ord <- order.dendrogram(as.dendrogram(cl))
+  factor(variable, unique(variable)[ord])
+}
+```
 
-# create cluster for reordering
-mat_cluster <- df_heatmap %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
-mat_heatmap <- df_heatmap %>% as.matrix %>%
-  .[order.dendrogram(as.dendrogram(mat_cluster)), ncol(.):1]
+Heat map of fitness for *all genes and all conditions*.
 
-# repeat this step with subset of *significantly changed* genes
-mat_cluster_sig <- df_heatmap2 %>% as.matrix %>% dist %>% hclust(method = "ward.D2")
-mat_heatmap_sig <- df_heatmap2 %>% as.matrix %>%
-  .[order.dendrogram(as.dendrogram(mat_cluster_sig)), ncol(.):1]
+```{r, fig.width = 8, fig.height = 2.2}
+plot_heatmap_all <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
+  mutate(locus = fct_cluster(locus, condition, wmean_fitness)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = locus, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme(legend.pos = "right") +
+  labs(x = paste0("genes (", length(unique(df_gene$locus)),")"), y = "") +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+print(plot_heatmap_all)
+save_plot(plot_heatmap_all, width = 8, height = 2.2)
 ```
 
 
 Now we can plot _all_ genes, a subset with _only significant genes_, and a dendrogram for clustering. The result is hard to interpret. With some exceptions, most genes are grouped in broad unspecific clusters that do not reveal clear relationships between treatment variables and fitness outcome.
- 
-```{r, fig.width = 8, fig.height = 2.5}
-plot_heatmap_all <- levelplot(mat_heatmap,
-  par.settings = custom.colorblind(),
-  col.regions = colorRampPalette(c(custom_colors[1], grey(0.9), custom_colors[2]))(20),
-  at = seq(-8, 8, 1), aspect = "fill",
-  xlab = paste0("genes (", nrow(mat_heatmap),")"),
-  ylab = "", scales = list(x = list(draw = FALSE)),
-  panel = function(x, y, z, ...) {
-    panel.levelplot(x, y, z, ...)
-    panel.abline(h = 1:5+0.5, col = "white", lwd = 1.5)
-  }
-)
 
-print(plot_heatmap_all)
-save_plot(plot_heatmap_all, width = 8, height = 2.5)
-```
 
 ```{r, fig.width = 8, fig.height = 4}
-plot_heatmap_sig <- levelplot(mat_heatmap_sig,
-  par.settings = custom.colorblind(),
-  col.regions = colorRampPalette(c(custom_colors[1], grey(0.9), custom_colors[2]))(20),
-  at = seq(-8, 8, 1), aspect = "fill",
-  xlab = paste0("genes (", nrow(mat_heatmap_sig),")"),
-  ylab = "", scales = list(x = list(draw = FALSE)),
-  panel = function(x, y, z, ...) {
-    panel.levelplot(x, y, z, ...)
-    panel.abline(h = 1:ncol(mat_heatmap_sig)+0.5, col = "white", lwd = 1.5)
-  }
-)
+# prepare new df and plot heatmap
+df_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
+  group_by(locus) %>% filter(any(!between(wmean_fitness, -4, 4))) %>% ungroup %>%
+  mutate(locus = fct_cluster(locus, condition, wmean_fitness)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 8, 8) %>% replace(., . < -8, -8))
 
-plot_cluster_dend <- mat_cluster_sig %>% as.dendrogram %>%
+plot_heatmap_sig <- df_heatmap %>%
+  ggplot(aes(x = locus, y = condition, fill = wmean_fitness)) +
+  geom_tile() + custom_theme(legend.pos = "right") +
+  labs(x = paste0("genes (", length(unique(df_gene$locus)),")"), y = "") +
+  theme(axis.text.x = element_blank(), axis.ticks.x = element_blank()) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-8, 8))
+
+# prepare dist object for clustering and plot dend
+dist_heatmap <- df_heatmap %>% select(locus, condition, wmean_fitness) %>%
+  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
+  column_to_rownames(var = "locus") %>% as.matrix %>%
+  dist
+
+plot_cluster_dend <- dist_heatmap %>%
+  hclust(method = "ward.D2") %>% as.dendrogram %>%
   set("branches_k_col", custom_colors[1:5], k = 5) %>%
   set("branches_lwd", 0.5) %>%
   as.ggdend %>%
   ggplot(labels = FALSE)
 
-gridExtra::grid.arrange(
-  # coords for unit: top, right, bottom, left
-  plot_cluster_dend + 
-    theme(plot.margin = unit(c(0.1, 0.075, -0.26, 0.135),"npc")),
-  plot_heatmap_sig,
-  nrow = 2
+# arrange both on same plot
+ggarrange(nrow = 2, heights =  c(0.5, 0.5),
+  plot_cluster_dend + theme(plot.margin = unit(c(0.1, 0.09, -0.15, 0.136),"npc")),
+  plot_heatmap_sig
 )
 ```
-
-```{r, include = FALSE}
-png("../figures/plot_heatmap_signif.png", width = 1600, height = 800, res = 200)
-gridExtra::grid.arrange(
-  # coords for unit: top, right, bottom, left
-  plot_cluster_dend + 
-    theme(plot.margin = unit(c(0.1, 0.08, -0.25, 0.14),"npc")),
-  plot_heatmap_sig,
-  nrow = 2
-)
-invisible(capture.output(dev.off()))
-```
-
 
 ## Gene similarity by dimensionality reduction methods
 
@@ -919,31 +903,33 @@ We use two different dimensionality reduction methods, **nMDS** and **t-SNE**. W
 set.seed(123)
 
 # run nMDS analysis
-NMDS <- df_heatmap2 %>% as.matrix %>% dist %>% metaMDS
+NMDS <-  dist_heatmap %>% metaMDS
 df_nmds <- NMDS$points %>% as_tibble(rownames = "locus") %>%
-  left_join(enframe(cutreeord(mat_cluster_sig, k = 5), "locus", "cluster"))
+  left_join(enframe(name = "locus", value = "cluster",
+    cutreeord(hclust(dist_heatmap, method = "ward.D2"), k = 5)))
 
 # run t-SNE analysis
-SNE <- tsne::tsne(df_heatmap2 %>% as.matrix %>% dist)
+SNE <- dist_heatmap %>% tsne(max_iter = 500, perplexity = 8)
 df_tsne <- SNE %>% setNames(c("x", "y")) %>% as_tibble %>%
-  mutate(locus = rownames(df_heatmap2)) %>%
-  left_join(enframe(cutreeord(mat_cluster_sig, k = 5), "locus", "cluster"))
+  mutate(locus = unique(df_heatmap$locus)) %>%
+  left_join(enframe(name = "locus", value = "cluster",
+    cutreeord(hclust(dist_heatmap, method = "ward.D2"), k = 5)))
 
-plot_nmds <- df_nmds %>% 
+plot_nmds <- df_nmds %>%
   ggplot(aes(x = MDS1, y = MDS2, color = factor(cluster))) +
   geom_point(size = 2) + labs(title = "nMDS") +
   custom_theme(legend.position = c(0.85, 0.78)) +
   scale_color_manual(values = custom_colors)
 
-plot_tsne <- df_tsne %>% 
+plot_tsne <- df_tsne %>%
   ggplot(aes(x = V1, y = V2, color = factor(cluster))) +
   geom_point(size = 2) + labs(title = "t-SNE") +
   custom_theme(legend.position = c(0.85, 0.78)) +
   scale_color_manual(values = custom_colors)
 
-gridExtra::grid.arrange(plot_nmds, plot_tsne, ncol = 2)
+ggarrange(ncol = 2, plot_nmds, plot_tsne)
 ggsave("../figures/plot_nmds_tsne.svg",
-  plot = gridExtra::arrangeGrob(plot_nmds, plot_tsne, ncol = 2),
+  plot = ggarrange(ncol = 2, plot_nmds, plot_tsne),
   device = "svg", width = 8, height = 4)
 ```
 
@@ -1001,7 +987,7 @@ plot_tsne_linreg <- df_tsne %>%
   custom_theme(aspect = 1) +
   scale_color_gradientn(limits = c(-5, 5),
     colours = c(custom_colors[1], grey(0.6, 0.8), custom_colors[2])) +
-  scale_size_continuous(range = c(0.5, 7)) +
+  scale_size_continuous(range = c(1, 6)) +
   geom_text_repel(size = 3, max.overlaps = 50) +
   facet_wrap( ~ treatment, ncol = 2)
 
@@ -1108,30 +1094,18 @@ The list above shows the genes whose fitness is most significantly correlated wi
 This list of genes is extracted and then simply fitness per condition is plotted as a heatmap, in order to confirm the trends from fitting the multiple liner regression models.
 
 
-```{r, fig.width = 4.5, fig.height = 3.5}
-library(ggheatmap)
-
+```{r, fig.width = 4, fig.height = 4}
 plot_sgRNAs_light <- df_gene %>%
-  
-  # make df with list of strongest correlated genes
-  filter(locus %in% list_top_unknown_hits) %>%
-  
-  # reshape to wide format
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 3.5, 3.5) %>% replace(., . < -3.5, -3.5)) %>%
-  filter(time == 0) %>% select(sgRNA_target, condition, wmean_fitness) %>%
-  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
-  column_to_rownames("sgRNA_target") %>% t %>%
-  
-  # plot heatmap
-  ggheatmap(cluster_rows = TRUE, cluster_cols = TRUE,
-    color = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    show_cluster_rows	= FALSE, cluster_num = c(1,1),
-    tree_color_cols = grey(0.5),
-  ) %>% 
-  ggheatmap_theme(plotlist = 1, theme = list(
-    custom_theme() + theme(axis.text.x = element_text(angle = 90, vjust = 0.5), 
-      axis.title.x = element_blank(), axis.title.y = element_blank())
-  ))
+  filter(locus %in% list_top_unknown_hits, time == 0) %>%
+  mutate(sgRNA_target = fct_cluster(sgRNA_target, condition, wmean_fitness)) %>%
+  mutate(condition = fct_cluster(condition, sgRNA_target, wmean_fitness)) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  labs(title = "Top unknown genes", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
 
 print(plot_sgRNAs_light)
 save_plot(plot_sgRNAs_light, width = 8.0, height = 3.5)
@@ -1631,6 +1605,8 @@ Summary:
 
 # Differential fitness of non-coding RNAs (ncRNAs)
 
+## General trends
+
 The first task to study ncRNAs is to generate a new data frame with additional annotation for ncRNAs.
 Additional annotation tables were exported from Geneious and are based on the publication from [Mitschke et al., PNAS, 2010](https://doi.org/10.1073/pnas.1015154108). According to this publication, ncRNAs are grouped into four different (slightly overlapping) classes:
 
@@ -1648,7 +1624,7 @@ df_ncRNA <- df_main %>% filter(sgRNA_type == "ncRNA") %>%
   inner_join(df_gene, by = "sgRNA_target") %>%
   # generate ncRNA type based on target name
   select(-locus, -gene_name, -sgRNA_type) %>%
-  mutate(sgRNA_target = str_sub(sgRNA_target, 4, 100)) %>%
+  mutate(sgRNA_target = str_sub(sgRNA_target, 4, 1000)) %>%
   left_join(by = "sgRNA_target",
     bind_rows(lapply(c("NC_000911_ncRNA.tsv", "NC_000911_asRNA.tsv", "NC_000911_iTSS.tsv"),
       FUN = function(f) read_tsv(paste0("../data/input/", f), col_types = cols())
@@ -1656,69 +1632,96 @@ df_ncRNA <- df_main %>% filter(sgRNA_type == "ncRNA") %>%
   )
 
 df_ncRNA %>% group_by(ncRNA_type) %>%
-  summarize(n_targets = length(unique(sgRNA_target)))
+  filter(time == 0, condition == "HC, HL") %>%
+  select(sgRNA_target, score) %>%
+  summarize(n_targets = length(unique(sgRNA_target)), sum(score >= 4), sum(score < 4),
+    percent = sum(score >= 4)/n()*100)
 ```
 
 Looking at the fitness and significance scores for one conditions, it seems as internal transcription start sites are overrepresented in the group that shows an effect. This is not a surprise, given that sgRNAs targeting iTSS basically also repress the native gene as a regular sgRNA. We therefore exlcude iTSS from the analysis.
-
-```{r, fig.width = 4, fig.height = 4}
-df_ncRNA %>% filter(time == 0, condition == "HC, HL") %>%
-  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = ncRNA_type)) +#score >= 4
-  geom_point(alpha = 0.5) +
-  geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
-    y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
-    aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
-  coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
-  custom_theme(aspect = 1, legend.position = "bottom", legend.key.size = unit(0.4, "cm")) +
-  labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
-  scale_color_manual(values = custom_colors)
-```
-
 
 The library contains 1712 ncRNAs each targeted by 1 to 5 sgRNAs. Only very few of those showed an effect on fitness.
 We can filter all ncRNAs that have a "significance" equivalent to a fitness score abs(F) >= 2 and -log10 p-value >= 2 (alpha = 0.01).
 Significance here means effect size (F) multiplied by -log10 p-value, the threshold is indicated by the dashed line.
 
-```{r, fig.width = 6, fig.height = 6}
-df_ncRNA %>% filter(time == 0, ncRNA_type != "iTSS") %>%
-  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = ncRNA_type)) +#score >= 4
-  geom_point(alpha = 0.5, size = 1) +
+```{r, fig.width = 2.5, fig.height = 6}
+plot_ncRNA_overview <- df_ncRNA %>% filter(time == 0, condition == "HC, HL") %>%
+  mutate(ncRNA_type = factor(ncRNA_type, c("asRNA", "ncRNA", "iTSS"))) %>%
+  ggplot(aes(x = wmean_fitness, y = -log10(p_value_adj), color = ncRNA_type)) +
+  geom_point(alpha = 0.5, size = 1.5) +
   geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
     y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
     aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
   coord_cartesian(xlim = c(-7, 7), ylim = c(0, 4)) +
-  custom_theme(aspect = 1, legend.position = "bottom", legend.key.size = unit(0.4, "cm")) +
-  facet_wrap(~ condition) +
+  custom_theme(aspect = 1, legend.position = "none") +
+  facet_wrap(~ ncRNA_type, ncol = 1) +
   labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
-  scale_color_manual(values = custom_colors[2:1])
+  scale_color_manual(values = custom_colors)
+
+print(plot_ncRNA_overview)
+```
+## Antisense RNAs as regulatory elements
+
+The first part of a more detailed analysis is to extract asRNAs with differential fitness, and compare them to their associated genes. The assumption is that sgRNAs targeting asRNAs in reality repress transcription of their parent genes, and by these means produce a fitness effect that can not be attributed to the action of the asRNA itself. The first step is filter the ncRNA dataset and order ncRNAs by fitness similarity.
+
+```{r, fig.width = 3.5, fig.height = 8}
+df_ncRNA_select <- df_ncRNA %>%
+  filter(ncRNA_type != "iTSS", time == 0) %>%
+  group_by(sgRNA_target) %>%
+  filter(any(score >= 4)) %>% ungroup %>%
+  mutate(sgRNA_target = fct_cluster(sgRNA_target, condition, wmean_fitness))
 ```
 
 
-```{r, fig.width = 3.5, fig.height = 8}
-df_ncRNA <- df_ncRNA %>%
-  filter(ncRNA_type != "iTSS", time == 0) %>%
-  group_by(sgRNA_target) %>%
-  filter(any(score >= 4)) %>% ungroup
-
-# cluster sgRNAs by fitness and obtain order
-df_ncRNA_order <- df_ncRNA %>%
-  select(sgRNA_target, condition, wmean_fitness) %>%
-  pivot_wider(names_from = condition, values_from = wmean_fitness) %>%
-  column_to_rownames(var = "sgRNA_target") %>%
-  as.matrix %>% dist %>% hclust(method = "ward.D2") %>%
-  as.dendrogram %>% order.dendrogram()
-  
-df_ncRNA %>% mutate(sgRNA_target = factor(sgRNA_target, unique(sgRNA_target)[df_ncRNA_order])) %>%
+```{r}
+plot_asRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "asRNA") %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
   geom_tile() + custom_theme(legend.pos = "bottom") +
-  labs(title = "ncRNA fitness", x = "", y = "") +
+  labs(x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4)) +
-  facet_grid(ncRNA_type ~ ., scales="free")
+    limits = c(-4, 4))
+
+# check correlation of asRNA fitness with associated gene fitness
+plot_asRNA_xy <- df_ncRNA_select %>% filter(ncRNA_type == "asRNA") %>%
+  left_join(by = c("condition", "locus"),
+    select(df_gene, locus, condition, wmean_fitness, sd_fitness) %>% distinct %>%
+    rename(gene_fitness = wmean_fitness, sd_gene_fitness = sd_fitness)) %>%
+  select(locus, condition, wmean_fitness, gene_fitness) %>%
+  mutate(locus = if_else(locus %in% c("slr0882", "sll1773", "sml0004", "slr1609", "slr1939"), locus, "other")) %>%
+  ggplot(aes(x = wmean_fitness, y = gene_fitness, color = locus)) +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  geom_abline(intercept = 4, slope = 1, lty = 2) +
+  geom_abline(intercept = -4, slope = 1, lty = 2) +
+  geom_point() +
+  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
+  custom_theme(legend.pos = c(0.15, 0.8), legend.key.size = unit(0.3, "cm")) +
+  labs(x = "asRNA fitness", y = "gene fitness") +
+  scale_color_manual(values = custom_colors[c(5,1:4,6)])
 ```
 
+## noncoding RNAs as regulatory elements
+
+The second part of this analysis is to look at non-gene associated (intergenic) ncRNA elements. Of these, several are known to have a regulatory effect.
+
+```{r, fig.width = 8, fig.height = 7.5}
+plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  geom_tile() + custom_theme(legend.pos = "none") +
+  labs(x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+ggarrange(ncol = 3,
+  plot_ncRNA_overview,
+  ggarrange(nrow = 2, heights = c(0.65, 0.35),
+    plot_asRNA_heat, plot_asRNA_xy + theme(plot.margin = unit(c(4,12,16,12), "points"))),
+  ggarrange(nrow = 2, heights = c(0.75, 0.25), plot_ncRNA_heat, ggplot() + custom_theme())
+)
+```
 
 # Export summary table of all genes and conditions
 
