@@ -1633,9 +1633,9 @@ df_ncRNA <- df_main %>% filter(sgRNA_type == "ncRNA") %>%
 
 df_ncRNA %>% group_by(ncRNA_type) %>%
   filter(time == 0, condition == "HC, HL") %>%
-  select(sgRNA_target, score) %>%
-  summarize(n_targets = length(unique(sgRNA_target)), sum(score >= 4), sum(score < 4),
-    percent = sum(score >= 4)/n()*100)
+  select(sgRNA_target, ncRNA_type, score) %>%
+  summarize(n_targets = length(unique(sgRNA_target)), sig = sum(score >= 4),
+    non_sig = sum(score < 4), percent = sum(score >= 4)/n()*100)
 ```
 
 Looking at the fitness and significance scores for one conditions, it seems as internal transcription start sites are overrepresented in the group that shows an effect. This is not a surprise, given that sgRNAs targeting iTSS basically also repress the native gene as a regular sgRNA. We therefore exlcude iTSS from the analysis.
@@ -1662,7 +1662,7 @@ print(plot_ncRNA_overview)
 ```
 ## Antisense RNAs as regulatory elements
 
-The first part of a more detailed analysis is to extract asRNAs with differential fitness, and compare them to their associated genes. The assumption is that sgRNAs targeting asRNAs in reality repress transcription of their parent genes, and by these means produce a fitness effect that can not be attributed to the action of the asRNA itself. The first step is filter the ncRNA dataset and order ncRNAs by fitness similarity.
+The first part of a more detailed analysis is to extract asRNAs with differential fitness, and compare them to their associated genes. The assumption is that sgRNAs targeting asRNAs in reality repress transcription of their parent genes, and by these means produce a fitness effect that can not be attributed to the action of the asRNA itself. The first step is filter the ncRNA dataset and order ncRNAs by fitness similarity. The complete figure for the analysis follows at the end of the chapter.
 
 ```{r, fig.width = 3.5, fig.height = 8}
 df_ncRNA_select <- df_ncRNA %>%
@@ -1715,13 +1715,26 @@ plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
 
-ggarrange(ncol = 3,
+ggarrange(ncol = 3, labels = c("A"), font.label = list_fontpars,
   plot_ncRNA_overview,
-  ggarrange(nrow = 2, heights = c(0.65, 0.35),
-    plot_asRNA_heat, plot_asRNA_xy + theme(plot.margin = unit(c(4,12,16,12), "points"))),
-  ggarrange(nrow = 2, heights = c(0.75, 0.25), plot_ncRNA_heat, ggplot() + custom_theme())
+  ggarrange(nrow = 2, heights = c(0.65, 0.35), labels = c("B", "C"), font.label = list_fontpars,
+    plot_asRNA_heat + theme(plot.margin = unit(c(12,12,12,0), "points")),
+    plot_asRNA_xy + theme(plot.margin = unit(c(4,12,16,12), "points"))),
+  ggarrange(nrow = 2, heights = c(0.75, 0.25), labels = c("D", "E"), font.label = list_fontpars,
+    plot_ncRNA_heat, ggplot() + custom_theme())
 )
 ```
+
+## Analysis of ncRNA structure and function
+
+Export list of interesting ncRNAs (subfigure D) to table or fasta file for further analysis with python.
+
+```{r}
+df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
+  select(!matches("time|log2Fold")) %>%
+  write_csv("../data/output/fitness_ncRNA.csv")
+```
+
 
 # Export summary table of all genes and conditions
 
@@ -1747,7 +1760,9 @@ To work on single sections, the work space is exported to avoid constant recalcu
 
 ```{r}
 # remove large intermediate objects
-rm("list_condition_pairs")
+if ("list_condition_pairs" %in% ls()) rm("list_condition_pairs")
+
+# export workspace
 save(list = ls(), file = "../pipeline/CRISPRi_V2_data_processing.RData")
 ```
 
