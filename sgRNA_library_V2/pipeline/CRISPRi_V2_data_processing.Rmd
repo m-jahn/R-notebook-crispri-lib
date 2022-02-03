@@ -1703,7 +1703,29 @@ plot_asRNA_xy <- df_ncRNA_select %>% filter(ncRNA_type == "asRNA") %>%
 
 ## noncoding RNAs as regulatory elements
 
-The second part of this analysis is to look at non-gene associated (intergenic) ncRNA elements. Of these, several are known to have a regulatory effect.
+The second part of this analysis is to look at non-gene associated (intergenic) ncRNA elements. Of these, several are known to have a regulatory effect. We import an alignment that was done in `python` using the `biopython` package. All ncRNAs were aligned to the *Synechocystis* genome, and we can now extract the genome positions to retrieve the neighboring genes.
+
+```{r}
+df_annotation <- read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv", col_types = cols())
+df_alignment <- read_lines("../data/output/ncRNA_alignment.txt") %>%
+  as_tibble %>%
+  mutate(name = rep(c("locus", "genome", "genome_length", "score", "seq", "alignment", "genome_pos", "blank"), length.out = n())) %>%
+  pivot_wider(names_from = "name", values_from = "value") %>%
+  tidyr::unchop(cols = everything()) %>%
+  mutate(locus = str_remove(locus, "alignment of: ")) %>%
+  filter(str_detect(genome, "2051288975")) %>%
+  select(-genome_length, -score, -seq, -alignment, -blank) %>%
+  mutate(
+    genome_start = str_extract(genome_pos, "Sbjct: +[0-9]*") %>%
+    str_extract("[0-9]+") %>% as.numeric) %>%
+  mutate(
+    genome_end = str_extract(genome_pos, "[ATCG] +[0-9]*") %>%
+    str_extract("[0-9]+") %>% as.numeric) %>%
+  mutate(length = abs(genome_end-genome_start))
+
+head(df_alignment)
+```
+
 
 ```{r, fig.width = 8, fig.height = 7.5}
 plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
@@ -1714,7 +1736,10 @@ plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
+```
 
+
+```{r, fig.width = 8, fig.height = 7.5}
 ggarrange(ncol = 3, labels = c("A"), font.label = list_fontpars,
   plot_ncRNA_overview,
   ggarrange(nrow = 2, heights = c(0.65, 0.35), labels = c("B", "C"), font.label = list_fontpars,
@@ -1757,6 +1782,22 @@ df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
 
 The entire pipeline takes about 25 minutes to run on a standard notebook.
 To work on single sections, the work space is exported to avoid constant recalculation of result tables.
+
+```{r, include = FALSE, echo = FALSE, eval = FALSE}
+# this hidden code chunk simply exports the fitness data in a different format
+# suitable for deposition on the ShinyLib app 
+# App: https://m-jahn.shinyapps.io/ShinyLib/
+# Github: https://github.com/m-jahn/ShinyLib
+CRISPRi_library_2022 <- df_main %>% ungroup %>%
+  filter(sgRNA_type == "gene") %>%
+  select(-group, -reference_group, -baseMean, -protein, -length, -mass, -ec_number) %>%
+  left_join(by = "locus", df_annotation %>%
+    select(GeneID, Process, Pathway, Protein) %>%
+    rename(locus = GeneID, process = Process, pathway = Pathway, protein = Protein)) %>%
+  mutate(FoldChange = 2^log2FoldChange)
+
+save(CRISPRi_library_2022, file = "../../../ShinyLib/data/CRISPRi_library_2022.Rdata")
+```
 
 ```{r}
 # remove large intermediate objects
