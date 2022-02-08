@@ -1689,31 +1689,78 @@ plot_asRNA_xy <- df_ncRNA_select %>% filter(ncRNA_type == "asRNA") %>%
     select(df_gene, locus, condition, wmean_fitness, sd_fitness) %>% distinct %>%
     rename(gene_fitness = wmean_fitness, sd_gene_fitness = sd_fitness)) %>%
   select(locus, condition, wmean_fitness, gene_fitness) %>%
-  mutate(locus = if_else(locus %in% c("slr0882", "sll1773", "sml0004", "slr1609", "slr1939"), locus, "other")) %>%
+  mutate(locus = if_else(locus %in% c("sll1773", "sml0004", "slr1609", "slr1939"), locus, "other")) %>%
   ggplot(aes(x = wmean_fitness, y = gene_fitness, color = locus)) +
   geom_abline(intercept = 0, slope = 1, lty = 2) +
   geom_abline(intercept = 4, slope = 1, lty = 2) +
   geom_abline(intercept = -4, slope = 1, lty = 2) +
   geom_point() +
   coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
-  custom_theme(legend.pos = c(0.15, 0.8), legend.key.size = unit(0.3, "cm")) +
+  custom_theme(legend.pos = c(0.8, 0.15), legend.key.size = unit(0.2, "cm")) +
   labs(x = "asRNA fitness", y = "gene fitness") +
-  scale_color_manual(values = custom_colors[c(5,1:4,6)])
+  scale_color_manual(values = custom_colors[c(5,1:4)])
+```
+
+
+```{r, fig.width = 5.5, fig.height = 7.5}
+ggarrange(ncol = 2, labels = c("A"), font.label = list_fontpars,
+  plot_ncRNA_overview,
+  ggarrange(nrow = 2, heights = c(0.65, 0.35), labels = c("B", "C"), font.label = list_fontpars,
+    plot_asRNA_heat + theme(plot.margin = unit(c(26,12,-16,4), "points")),
+    plot_asRNA_xy + theme(plot.margin = unit(c(4,12,12,12), "points")))
+)
+```
+
+```{r, include = FALSE, eval = TRUE}
+svg("../figures/plot_ncRNA_suppl.svg", width = 5.5, height = 7.5)
+ggarrange(ncol = 2, labels = c("A"), font.label = list_fontpars,
+  plot_ncRNA_overview,
+  ggarrange(nrow = 2, heights = c(0.65, 0.35), labels = c("B", "C"), font.label = list_fontpars,
+    plot_asRNA_heat + theme(plot.margin = unit(c(26,12,-16,4), "points")),
+    plot_asRNA_xy + theme(plot.margin = unit(c(4,12,12,12), "points")))
+)
+dev.off()
 ```
 
 ## noncoding RNAs as regulatory elements
 
 The second part of this analysis is to look at non-gene associated (intergenic) ncRNA elements. Of these, several are known to have a regulatory effect. We import an alignment that was done in `python` using the `biopython` package. All ncRNAs were aligned to the *Synechocystis* genome, and we can now extract the genome positions to retrieve the neighboring genes.
 
+```{r, include = FALSE, eval = TRUE}
+get_neighbors <- function(n, threshold, type = "logical",
+  lower_neighbor = TRUE, upper_neighbor = TRUE) {
+  n <- sort(n)
+  l <- rep_along(n, FALSE)
+  for (tr in threshold) {
+    if (tr > tail(n, 1) | tr < n[1])
+      stop("threshold exceeds range of input values")
+    if (upper_neighbor) {
+      l <- l | !duplicated(tr < n)}
+    if (lower_neighbor) {
+      l <- l | !duplicated(tr < n, fromLast = TRUE)}
+    if (!(tr >= n[1] & tr < n[2])) l[1] <- FALSE
+    if (!(tr > n[length(n)-1] & tr <= n[length(n)])){
+      l[length(n)] <- FALSE} 
+  }
+  if (type == "logical") return(l)
+  else if (type == "pos") return(which(l))
+  else if (type == "value") return(n[l])
+}
+```
+
+The first step is to parse the (important) information of the alignment text file into a table.
+
 ```{r}
-df_annotation <- read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv", col_types = cols())
+df_annotation <- read_csv("../../sgRNA_library/raw_data/Synechocystis_PCC6803_genome_annotation_20190614.csv", col_types = cols()) %>%
+  arrange(start_bp)
+
 df_alignment <- read_lines("../data/output/ncRNA_alignment.txt") %>%
   as_tibble %>%
   mutate(name = rep(c("locus", "genome", "genome_length", "score", "seq", "alignment", "genome_pos", "blank"), length.out = n())) %>%
   pivot_wider(names_from = "name", values_from = "value") %>%
   tidyr::unchop(cols = everything()) %>%
   mutate(locus = str_remove(locus, "alignment of: ")) %>%
-  filter(str_detect(genome, "2051288975")) %>%
+  filter(str_detect(genome, "47118304")) %>%
   select(-genome_length, -score, -seq, -alignment, -blank) %>%
   mutate(
     genome_start = str_extract(genome_pos, "Sbjct: +[0-9]*") %>%
@@ -1725,9 +1772,47 @@ df_alignment <- read_lines("../data/output/ncRNA_alignment.txt") %>%
 
 head(df_alignment)
 ```
+The second step is to look up the 5' and 3' neighboring genes for each ncRNA. One could also do this manually but it becomes impractical for something like 10+ ncRNA loci. After obtaining a table with both the ncRNA in one column and its associated 5' and 3' neighboring genes in separate columns, we can make a summary fitness table and plot fitness of ncRNA and its neighbors against each other.
 
+```{r}
+# get neighboring genes
+df_alignment <- df_alignment %>%
+  bind_cols(
+    sapply(df_alignment$genome_start, function(x) {
+      df = filter(df_annotation, location == "Chr")
+      neighbors = get_neighbors(n = df$start_bp, threshold = x, type = "pos")
+      unlist(as.list(df[neighbors, "GeneID"]))
+    }) %>% t %>% as_tibble
+  )
 
-```{r, fig.width = 8, fig.height = 7.5}
+# some join operations to merge different fitness data in one DF
+df_ncRNA_comp <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
+  left_join(rename(df_alignment, sgRNA_target = locus, upstream = GeneID1, downstream = GeneID2) %>%
+    select(sgRNA_target, upstream, downstream),
+    by = "sgRNA_target") %>%
+  left_join(df_gene %>% select(locus, condition, wmean_fitness) %>%
+    distinct %>% rename(upstream = locus, wmean_fitness_us = wmean_fitness),
+    by = c("condition", "upstream")
+  ) %>%
+  left_join(df_gene %>% select(locus, condition, wmean_fitness) %>%
+    distinct %>% rename(downstream = locus, wmean_fitness_ds = wmean_fitness),
+    by = c("condition", "downstream")
+  )
+
+# get a list of interesting ncRNAs where the neighboring gene
+# has NO effect on fitness
+list_ncRNA_hits <- df_ncRNA_comp %>%
+  filter(
+    abs(wmean_fitness - wmean_fitness_us) >= 4 &
+    abs(wmean_fitness - wmean_fitness_ds) >= 4
+  ) %>% group_by(sgRNA_target) %>% count %>%
+  filter(n > 1) %>%
+  pull(sgRNA_target)
+```
+
+The third step is to plot a heat map and the comparison of upstream and downstream gene fitness.
+
+```{r}
 plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
@@ -1736,17 +1821,56 @@ plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
+
+# check correlation of ncRNA fitness with upstream lying genes
+plot_ncRNA_upstream <- df_ncRNA_comp %>%
+  mutate(sgRNA_target = if_else(locus %in% list_ncRNA_hits, sgRNA_target, "other")) %>%
+  arrange(desc(sgRNA_target)) %>%
+  ggplot(aes(x = wmean_fitness, y = wmean_fitness_us, color = sgRNA_target)) +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  geom_abline(intercept = 4, slope = 1, lty = 2) +
+  geom_abline(intercept = -4, slope = 1, lty = 2) +
+  geom_point() +
+  #geom_text_repel(size = 3) +
+  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
+  custom_theme(legend.pos = c(0.8, 0.2), legend.key.size = unit(0.2, "cm")) +
+  labs(x = "ncRNA fitness", y = "upstream gene fitness") +
+  scale_color_manual(values = custom_colors[c(1:3,5)])
+
+# check correlation of ncRNA fitness with downstream lying genes
+plot_ncRNA_downstream <- df_ncRNA_comp %>%
+  mutate(sgRNA_target = if_else(locus %in% list_ncRNA_hits, sgRNA_target, "other")) %>%
+  arrange(desc(sgRNA_target)) %>%
+  ggplot(aes(x = wmean_fitness, y = wmean_fitness_ds, color = sgRNA_target)) +
+  geom_abline(intercept = 0, slope = 1, lty = 2) +
+  geom_abline(intercept = 4, slope = 1, lty = 2) +
+  geom_abline(intercept = -4, slope = 1, lty = 2) +
+  geom_point() +
+  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
+  custom_theme(legend.pos = c(0.8, 0.2), legend.key.size = unit(0.2, "cm")) +
+  labs(x = "ncRNA fitness", y = "downstream gene fitness") +
+  scale_color_manual(values = custom_colors[c(1:3,5)])
+
+plot_ncRNA_single <- df_main %>% filter(sgRNA_target %in% paste0("nc_", list_ncRNA_hits)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_point(size = 2) + ylim(-5, 5) +
+  geom_smooth() +
+  facet_grid( ~ sgRNA_target) +
+  custom_theme() +
+  scale_color_manual(values = custom_range(5))
 ```
 
 
-```{r, fig.width = 8, fig.height = 7.5}
-ggarrange(ncol = 3, labels = c("A"), font.label = list_fontpars,
-  plot_ncRNA_overview,
-  ggarrange(nrow = 2, heights = c(0.65, 0.35), labels = c("B", "C"), font.label = list_fontpars,
-    plot_asRNA_heat + theme(plot.margin = unit(c(12,12,12,0), "points")),
-    plot_asRNA_xy + theme(plot.margin = unit(c(4,12,16,12), "points"))),
-  ggarrange(nrow = 2, heights = c(0.75, 0.25), labels = c("D", "E"), font.label = list_fontpars,
-    plot_ncRNA_heat, ggplot() + custom_theme())
+Main text figure for ncRNAs only.
+
+```{r, fig.width = 5.5, fig.height = 6.5}
+ggarrange(ncol = 2, labels = c("A", "B"), font.label = list_fontpars,
+  plot_ncRNA_heat,
+  ggarrange(nrow = 3, heights = c(0.43, 0.43, 0.14),
+    labels = c("", "C", ""), font.label = list_fontpars,
+    plot_ncRNA_upstream,
+    plot_ncRNA_downstream
+  )
 )
 ```
 
