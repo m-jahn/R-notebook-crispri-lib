@@ -1920,7 +1920,15 @@ CRISPRi_library_2022 <- df_main %>% ungroup %>%
     rename(locus = GeneID, process = Process, pathway = Pathway, protein = Protein)) %>%
   mutate(FoldChange = 2^log2FoldChange)
 
+# save as Rdata file
 save(CRISPRi_library_2022, file = "../../../ShinyLib/data/CRISPRi_library_2022.Rdata")
+
+# save as csv file for ML application
+CRISPRi_library_2022 %>% select(
+  sgRNA, sgRNA_target, sgRNA_position, condition,
+  time, log2FoldChange, fitness, sgRNA_index, sgRNA_type, locus,
+  sgRNA_correlation, sgRNA_efficiency) %>%
+  write_csv(file = "../data/output/fitness_sgRNA.csv")
 ```
 
 ```{r}
