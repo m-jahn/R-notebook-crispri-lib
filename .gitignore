@@ -18,3 +18,4 @@ sgRNA_library_V2/pipeline/*.RData
 sgRNA_library_V2/pipeline/*.html
 sgRNA_library_V2/figures/figure*
 sgRNA_library_V2/pipeline/.ipynb_checkpoints/*
+sgRNA_library_V2/data/input/ncRNA_annotation.tsv
