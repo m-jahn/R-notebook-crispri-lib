@@ -202,33 +202,41 @@ pre code {
 </ul>
 <p>All care was taken to guarantee scientific accuracy and adhere to good scientific practice in terms of statistics, reproducibility and code documentation. Please report any errors by filing a <a href="https://github.com/m-jahn/R-notebook-crispri-lib/issues">github issue</a> for this repository, or contact <a href="mailto:michael.jahn@scilifelab.se" class="email">michael.jahn@scilifelab.se</a>.</p>
 </div>
+<div id="contents" class="section level3">
+<h3>Contents</h3>
+<ul>
+<li><code>docs</code>- rendered pipelines in <code>html</code> format
+<ul>
+<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_data_processing.nb.html"><em>Synechocystis</em> CRISPRi library data processing</a></li>
+<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html"><em>Synechocystis</em> CRISPRi library enrichment analysis</a></li>
+<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_additional_tests.nb.html"><em>Synechocystis</em> CRISPRi library additional tests</a></li>
+<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html"><em>Synechocystis</em> CRISPRi library V2 data processing</a></li>
+<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html"><em>Synechocystis</em> CRISPRi library V2 machine learning</a></li>
+</ul></li>
+<li><code>sgRNA_library</code> - <em>Synechocystis</em> CRISPRi library Version 1 (<a href="https://www.nature.com/articles/s41467-020-15491-7">Yao et al., 2020</a>)
+<ul>
+<li><code>figures</code> - exported figures from pipelines</li>
+<li><code>pipeline</code> - data processing pipelines, R markdown format (<code>.Rmd</code>)</li>
+<li><code>processed_data</code> - directory containing the output data</li>
+<li><code>raw_data</code> - directory containing the input</li>
+</ul></li>
+<li><code>sgRNA_library_V2</code> - <em>Synechocystis</em> CRISPRi library Version 2 (<em>in preparation</em>)
+<ul>
+<li><code>data</code> - directory containing the input and output data</li>
+<li><code>figures</code> - exported figures from pipelines</li>
+<li><code>pipeline</code> - data processing pipelines, R markdown format (<code>.Rmd</code>)</li>
+</ul></li>
+</ul>
+</div>
 <div id="how-to-run-the-pipelines" class="section level3">
 <h3>How to run the pipelines</h3>
 <p>The pipelines collected in this repository are self-contained and executable. The code <em>and</em> the documentation are part of one and the same R markdown document for each pipeline. Pipelines can be downloaded and executed from the <code>pipeline</code> sub-folders. To simply view the rendered pipelines follow the links to the <code>*.html</code> reports at <a href="#Contents">Contents</a>.</p>
 <p>To download the repository on your local drive use <code>git clone</code> in a (linux) terminal:</p>
 <pre class="bash"><code>cd /your-target-folder
-git clone https://github.com/m-jahn/R-notebooks.git</code></pre>
+git clone https://github.com/m-jahn/R-notebook-crispri-lib.git</code></pre>
 <p>Open a pipeline with Rstudio and execute code (chunks) with the <code>Run</code> button. Alternatively, open an interactive R session and render the R markdown pipeline:</p>
 <pre class="bash"><code>require(rmarkdown)
 rmarkdown::render(&quot;pipeline.Rmd&quot;)</code></pre>
-</div>
-<div id="contents" class="section level3">
-<h3>Contents</h3>
-<div id="crispri-library-in-synechocystis-sp.-pcc6803-version-2-in-preparation" class="section level4">
-<h4>CRISPRi library in <em>Synechocystis</em> sp. PCC6803, Version 2 (<em>in preparation</em>)</h4>
-<ul>
-<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html"><em>Synechocystis</em> CRISPRi library V2 data processing</a></li>
-<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html"><em>Synechocystis</em> CRISPRi library V2 machine learning</a></li>
-</ul>
-</div>
-<div id="crispri-library-in-synechocystis-sp.-pcc6803-version-1-yao-et-al.-2020" class="section level4">
-<h4>CRISPRi library in <em>Synechocystis</em> sp. PCC6803, Version 1 (<a href="https://www.nature.com/articles/s41467-020-15491-7">Yao et al., 2020</a>)</h4>
-<ul>
-<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_data_processing.nb.html"><em>Synechocystis</em> CRISPRi library data processing</a></li>
-<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html"><em>Synechocystis</em> CRISPRi library enrichment analysis</a></li>
-<li><a href="https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_additional_tests.nb.html"><em>Synechocystis</em> CRISPRi library additional tests</a></li>
-</ul>
-</div>
 </div>
 </div>
 

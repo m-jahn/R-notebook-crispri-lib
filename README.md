@@ -40,6 +40,24 @@ This repository contains data processing pipelines for the analysis of **CRISPRi
 
 All care was taken to guarantee scientific accuracy and adhere to good scientific practice in terms of statistics, reproducibility and code documentation. Please report any errors by filing a [github issue](https://github.com/m-jahn/R-notebook-crispri-lib/issues) for this repository, or contact michael.jahn@scilifelab.se.
 
+### Contents
+
+- `docs`- rendered pipelines in `html` format
+  - [_Synechocystis_ CRISPRi library data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_data_processing.nb.html)
+  - [_Synechocystis_ CRISPRi library enrichment analysis](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html)
+  - [_Synechocystis_ CRISPRi library additional tests](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_additional_tests.nb.html)
+  - [_Synechocystis_ CRISPRi library V2 data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html)
+  - [_Synechocystis_ CRISPRi library V2 machine learning](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html)
+- `sgRNA_library` - *Synechocystis* CRISPRi library Version 1 ([Yao et al., 2020](https://www.nature.com/articles/s41467-020-15491-7))
+  - `figures` - exported figures from pipelines
+  - `pipeline` - data processing pipelines, R markdown format (`.Rmd`)
+  - `processed_data` - directory containing the output data
+  - `raw_data` - directory containing the input
+- `sgRNA_library_V2` - *Synechocystis* CRISPRi library Version 2 (*in preparation*)
+  - `data` - directory containing the input and output data
+  - `figures` - exported figures from pipelines
+  - `pipeline` - data processing pipelines, R markdown format (`.Rmd`)
+
 ### How to run the pipelines
 
 The pipelines collected in this repository are self-contained and executable. The code _and_ the documentation are part of one and the same R markdown document for each pipeline. Pipelines can be downloaded and executed from the `pipeline` sub-folders. To simply view the rendered pipelines follow the links to the `*.html` reports at [Contents](#Contents).
@@ -48,7 +66,7 @@ To download the repository on your local drive use `git clone` in a (linux) term
 
 ``` bash
 cd /your-target-folder
-git clone https://github.com/m-jahn/R-notebooks.git
+git clone https://github.com/m-jahn/R-notebook-crispri-lib.git
 ```
 
 Open a pipeline with Rstudio and execute code (chunks) with the `Run` button.
@@ -58,17 +76,3 @@ Alternatively, open an interactive R session and render the R markdown pipeline:
 require(rmarkdown)
 rmarkdown::render("pipeline.Rmd")
 ```
-
-
-### Contents
-
-#### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 2 (*in preparation*)
-
-- [_Synechocystis_ CRISPRi library V2 data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html)
-- [_Synechocystis_ CRISPRi library V2 machine learning](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html)
-
-#### CRISPRi library in _Synechocystis_ sp. PCC6803, Version 1 ([Yao et al.,  2020](https://www.nature.com/articles/s41467-020-15491-7))
-
-- [_Synechocystis_ CRISPRi library data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_data_processing.nb.html)
-- [_Synechocystis_ CRISPRi library enrichment analysis](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html)
-- [_Synechocystis_ CRISPRi library additional tests](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_additional_tests.nb.html)
