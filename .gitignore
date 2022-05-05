@@ -14,7 +14,7 @@ sgRNA_library/pipeline/CRISPRi_library_pre_depletion.R
 sgRNA_library_V2/data/input/preconditions.csv
 sgRNA_library_V2/data/input/conditions.csv
 sgRNA_library_V2/data/output/fitness_sgRNA.csv
-sgRNA_library_V2/pipeline/*.RData
+sgRNA_library_V2/pipeline/*.Rdata
 sgRNA_library_V2/pipeline/*.html
 sgRNA_library_V2/figures/figure*
 sgRNA_library_V2/pipeline/.ipynb_checkpoints/*

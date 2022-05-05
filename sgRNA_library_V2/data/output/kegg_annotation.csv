@@ -134,7 +134,6 @@ slr1518,syn00130,Ubiquinone and other terpenoid-quinone biosynthesis,"menA; 1,4-
 slr1736,syn00130,Ubiquinone and other terpenoid-quinone biosynthesis,unknown protein,NA
 slr1737,syn00130,Ubiquinone and other terpenoid-quinone biosynthesis,unknown protein,NA
 slr1743,syn00130,Ubiquinone and other terpenoid-quinone biosynthesis,ndh; NADH dehydrogenase,ndh
-slr1916,syn00130,Ubiquinone and other terpenoid-quinone biosynthesis,esterase,NA
 sll0026,syn00190,Oxidative phosphorylation,ndhF; NADH dehydrogenase subunit 5,ndhF
 sll0027,syn00190,Oxidative phosphorylation,ndhD; NADH dehydrogenase subunit 4,ndhD
 sll0223,syn00190,Oxidative phosphorylation,ndhB; NADH dehydrogenase subunit 2,ndhB
@@ -286,18 +285,15 @@ sll0469,syn00230,Purine metabolism,prsA; ribose-phosphate pyrophosphokinase,prsA
 sll0509,syn00230,Purine metabolism,Ap-4-A phosphorylase II,NA
 sll0573,syn00230,Purine metabolism,arcC; carbamate kinase,arcC
 sll0578,syn00230,Purine metabolism,purK; phosphoribosyl aminoimidazole carboxylase,purK
-sll0587,syn00230,Purine metabolism,pykF; pyruvate kinase,pykF
 sll0646,syn00230,Purine metabolism,cyaA; adenylate cyclase,cyaA
 sll0726,syn00230,Purine metabolism,pgm; phosphoglucomutase,pgm
 sll0757,syn00230,Purine metabolism,purF; amidophosphoribosyltransferase,purF
 sll0901,syn00230,Purine metabolism,purE; phosphoribosylaminoimidazole carboxylase,purE
-sll1005,syn00230,Purine metabolism,regulatory protein for beta-lactamase,NA
 sll1054,syn00230,Purine metabolism,hypothetical protein,NA
 sll1056,syn00230,Purine metabolism,purL; phosphoribosylformyl glycinamidine synthetase II,purL
 sll1059,syn00230,Purine metabolism,adk; adenylate kinase,adk
 sll1108,syn00230,Purine metabolism,hypothetical protein,NA
 sll1161,syn00230,Purine metabolism,adenylate cyclase,NA
-sll1275,syn00230,Purine metabolism,pykF; pyruvate kinase,pykF
 sll1430,syn00230,Purine metabolism,apt; adenine phosphoribosyltransferase,apt
 sll1459,syn00230,Purine metabolism,hypothetical protein,NA
 sll1546,syn00230,Purine metabolism,ppx; exopolyphosphatase,ppx
@@ -324,6 +320,7 @@ slr1165,syn00230,Purine metabolism,met3; sulfate adenylyltransferase,met3
 slr1226,syn00230,Purine metabolism,purC; phosphoribosyl aminoidazole succinocarboxamide synthetase,purC
 slr1256,syn00230,Purine metabolism,ureA; urease gamma subunit,ureA
 slr1325,syn00230,Purine metabolism,spoT; (p)ppGpp 3'-pyrophosphohydrolase,spoT
+slr1573,syn00230,Purine metabolism,unknown protein,NA
 slr1722,syn00230,Purine metabolism,guaB; IMP dehydrogenase subunit,guaB
 slr1991,syn00230,Purine metabolism,cyaA; adenylate cyclase,cyaA
 sll0144,syn00240,Pyrimidine metabolism,pyrH; uridine monophosphate kinase,pyrH
@@ -331,6 +328,7 @@ sll0368,syn00240,Pyrimidine metabolism,pyrR; pyrimidine operon regulatory protei
 sll0370,syn00240,Pyrimidine metabolism,"carB; carbamoyl-phosphate synthase, pyrimidine-specific, large chain",carB
 sll0744,syn00240,Pyrimidine metabolism,unknown protein,NA
 sll0838,syn00240,Pyrimidine metabolism,pyrF; orotidine 5' monophosphate decarboxylase,pyrF
+sll0905,syn00240,Pyrimidine metabolism,maf; maf protein,maf
 sll1018,syn00240,Pyrimidine metabolism,pyrC; dihydroorotase,pyrC
 sll1035,syn00240,Pyrimidine metabolism,upp; uracil phosphoribosyltransferase,upp
 sll1108,syn00240,Pyrimidine metabolism,hypothetical protein,NA
@@ -415,6 +413,7 @@ slr0657,syn00270,Cysteine and methionine metabolism,lysC; aspartate kinase,lysC
 slr0689,syn00270,Cysteine and methionine metabolism,hypothetical protein,NA
 slr1238,syn00270,Cysteine and methionine metabolism,gshB; glutathione synthetase,gshB
 slr1348,syn00270,Cysteine and methionine metabolism,cysE; serine acetyltransferase,cysE
+slr1573,syn00270,Cysteine and methionine metabolism,unknown protein,NA
 slr1842,syn00270,Cysteine and methionine metabolism,cysK; cysteine synthase,cysK
 slr1938,syn00270,Cysteine and methionine metabolism,hypothetical protein,NA
 slr2059,syn00270,Cysteine and methionine metabolism,ferredoxin,NA
@@ -690,6 +689,11 @@ slr1424,syn00550,Peptidoglycan biosynthesis,hypothetical protein,NA
 slr1656,syn00550,Peptidoglycan biosynthesis,murG; UDP-N-acetylglucosamine-N-acetylmuramyl-(pentapeptide)pyrophosphoryl-undecaprenol N-acetylglucosamine transferase,murG
 slr1742,syn00550,Peptidoglycan biosynthesis,unknown protein,NA
 slr1874,syn00550,Peptidoglycan biosynthesis,ddlA; D-alanine:D-alanine ligase-related protein,ddlA
+sll0210,syn00552,Teichoic acid biosynthesis,hypothetical protein,NA
+sll1872,syn00552,Teichoic acid biosynthesis,lytR; membrane bound protein; LytR,lytR
+slr0883,syn00552,Teichoic acid biosynthesis,psr; regulation of penicillin binding protein 5 production,psr
+slr1118,syn00552,Teichoic acid biosynthesis,rffM; UDP-N-acetyl-D-mannosaminuronic acid transferase,rffM
+slr1271,syn00552,Teichoic acid biosynthesis,rffM; UDP-N-acetyl-D-mannosaminuronic acid transferase,rffM
 sll1376,syn00561,Glycerolipid metabolism,unknown protein,NA
 sll1377,syn00561,Glycerolipid metabolism,hypothetical protein,NA
 sll1848,syn00561,Glycerolipid metabolism,unknown protein,NA
@@ -876,9 +880,12 @@ slr0387,syn00730,Thiamine metabolism,nifS; NifS protein,nifS
 slr0633,syn00730,Thiamine metabolism,thiG; ThiG protein,thiG
 slr1787,syn00730,Thiamine metabolism,hypothetical protein,NA
 sll0300,syn00740,Riboflavin metabolism,ribC; riboflavin synthase alpha chain,ribC
+sll1054,syn00740,Riboflavin metabolism,hypothetical protein,NA
 sll1282,syn00740,Riboflavin metabolism,ribH; riboflavin synthase beta subunit,ribH
 sll1894,syn00740,Riboflavin metabolism,ribA; GTP cyclohydrolase II,ribA
 slr0066,syn00740,Riboflavin metabolism,ribG; riboflavin biosynthesis protein,ribG
+slr1099,syn00740,Riboflavin metabolism,ubiX; 3-octaprenyl-4-hydroxybenzoate carboxy-lyase,ubiX
+slr1134,syn00740,Riboflavin metabolism,hypothetical protein,NA
 slr1882,syn00740,Riboflavin metabolism,hypothetical protein,NA
 sll1172,syn00750,Vitamin B6 metabolism,thrC; threonine synthase,thrC
 sll1440,syn00750,Vitamin B6 metabolism,pdxH; pyridoxamine 5'-phosphate oxidase,pdxH
@@ -920,6 +927,7 @@ sll1069,syn00780,Biotin metabolism,fabF; beta ketoacyl-acyl carrier protein synt
 sll1605,syn00780,Biotin metabolism,fabZ; (3R)-hydroxymyristol acyl carrier protein dehydrase,fabZ
 sll1655,syn00780,Biotin metabolism,birA; biotin [acetyl-CoA-carboxylase] ligase,birA
 sll5079,syn00780,Biotin metabolism,probable short chain dehydrogenase,NA
+slr0355,syn00780,Biotin metabolism,unknown protein,NA
 slr0523,syn00780,Biotin metabolism,dethiobiotin synthetase; BioD,NA
 slr0886,syn00780,Biotin metabolism,fabG; 3-oxoacyl-[acyl-carrier protein] reductase,fabG
 slr0917,syn00780,Biotin metabolism,bioF; 7-keto-8-aminopelargonic acid synthetase,bioF
@@ -947,60 +955,60 @@ slr1626,syn00790,Folate biosynthesis,hypothetical protein,NA
 slr1979,syn00790,Folate biosynthesis,trpE; anthranilate synthase component I,trpE
 slr2026,syn00790,Folate biosynthesis,folP; dihydropteroate pyrophosphorylase,folP
 ssl2296,syn00790,Folate biosynthesis,dcoH; pterin-4a-carbinolamine dehydratase,dcoH
-sll0017,syn00860,Porphyrin and chlorophyll metabolism,"hemL; glutamate-1-semialdehyde 2,1-aminomutase",hemL
-sll0037,syn00860,Porphyrin and chlorophyll metabolism,unknown protein,NA
-sll0099,syn00860,Porphyrin and chlorophyll metabolism,cbiE; precorrin-6y methylase,cbiE
-sll0166,syn00860,Porphyrin and chlorophyll metabolism,hemD; uroporphyrin-III synthase,hemD
-sll0179,syn00860,Porphyrin and chlorophyll metabolism,gltX; glutamyl-tRNA synthetase,gltX
-sll0378,syn00860,Porphyrin and chlorophyll metabolism,cysG; uroporphyrin-III C-methyltransferase,cysG
-sll0794,syn00860,Porphyrin and chlorophyll metabolism,merR; mercuric resistance operon regulatory protein; precorrin isomerase,merR
-sll0916,syn00860,Porphyrin and chlorophyll metabolism,cbiC; precorrin isomerase,cbiC
-sll1091,syn00860,Porphyrin and chlorophyll metabolism,43 kD bacteriochlorophyll synthase subunit,NA
-sll1184,syn00860,Porphyrin and chlorophyll metabolism,ho1; heme oxygenase,ho1
-sll1185,syn00860,Porphyrin and chlorophyll metabolism,hemF; coproporphyrinogen III oxidase,hemF
-sll1214,syn00860,Porphyrin and chlorophyll metabolism,PNIL34 or AT103 phytochrome-regulated gene homologue,NA
-sll1341,syn00860,Porphyrin and chlorophyll metabolism,bfr; bacterioferritin,bfr
-sll1501,syn00860,Porphyrin and chlorophyll metabolism,"cbiA; cobyrinic acid a,c-diamide synthase",cbiA
-sll1874,syn00860,Porphyrin and chlorophyll metabolism,AT103; phytochrome-regulated gene,AT103
-sll1875,syn00860,Porphyrin and chlorophyll metabolism,ho2; heme oxygenase,ho2
-sll1876,syn00860,Porphyrin and chlorophyll metabolism,hemN; oxygen independent coprophorphyrinogen III oxidase,hemN
-sll1890,syn00860,Porphyrin and chlorophyll metabolism,cobN; CobN protein,cobN
-sll1898,syn00860,Porphyrin and chlorophyll metabolism,unknown protein,NA
-sll1899,syn00860,Porphyrin and chlorophyll metabolism,ctaB; cytochrome c oxidase folding protein,ctaB
-sll1994,syn00860,Porphyrin and chlorophyll metabolism,hemB; porphobilinogen synthase,hemB
-slr0056,syn00860,Porphyrin and chlorophyll metabolism,chlG; chlorophyll a synthase,chlG
-slr0116,syn00860,Porphyrin and chlorophyll metabolism,unknown protein,NA
-slr0216,syn00860,Porphyrin and chlorophyll metabolism,cobU; cobinamide kinase/cobinamide phosphate guanylyltransferase,cobU
-slr0239,syn00860,Porphyrin and chlorophyll metabolism,cbiF; precorrin methylase,cbiF
-slr0252,syn00860,Porphyrin and chlorophyll metabolism,hypothetical protein,NA
-slr0260,syn00860,Porphyrin and chlorophyll metabolism,cobA; cob(I)alamin adenosyltransferase,cobA
-slr0506,syn00860,Porphyrin and chlorophyll metabolism,pcr; protochlorophyllide oxido-reductase,pcr
-slr0525,syn00860,Porphyrin and chlorophyll metabolism,chlM; Mg-protoporphyrin IX methyl transferase,chlM
-slr0536,syn00860,Porphyrin and chlorophyll metabolism,hemE; uroporphyrinogen decarboxylase,hemE
-slr0618,syn00860,Porphyrin and chlorophyll metabolism,cbiP; cobyric acid synthase,cbiP
-slr0636,syn00860,Porphyrin and chlorophyll metabolism,hypothetical protein,NA
-slr0749,syn00860,Porphyrin and chlorophyll metabolism,chlL; light-independent protochlorophyllide reductase iron protein subunit; ChlL,chlL
-slr0750,syn00860,Porphyrin and chlorophyll metabolism,chlN; protochlorophillide reductase subunit; ChlN,chlN
-slr0772,syn00860,Porphyrin and chlorophyll metabolism,chlB; protochlorophyllide reductase ChlB subunit,chlB
-slr0839,syn00860,Porphyrin and chlorophyll metabolism,hemH; ferrochelatase,hemH
-slr0905,syn00860,Porphyrin and chlorophyll metabolism,bchE; Mg-protoporphyrin IX monomethyl ester oxidative cyclase 66 kD subunit,bchE
-slr0969,syn00860,Porphyrin and chlorophyll metabolism,cbiH; precorrin methylase,cbiH
-slr1030,syn00860,Porphyrin and chlorophyll metabolism,chlI; Mg chelatase subunit; ChlI,chlI
-slr1055,syn00860,Porphyrin and chlorophyll metabolism,chlH; Mg-chelatase subunit; ChlH,chlH
-slr1211,syn00860,Porphyrin and chlorophyll metabolism,cobN; CobN protein,cobN
-slr1368,syn00860,Porphyrin and chlorophyll metabolism,cbiT; precorrin decarbocylase,cbiT
-slr1467,syn00860,Porphyrin and chlorophyll metabolism,precorrin isomerase,NA
-slr1538,syn00860,Porphyrin and chlorophyll metabolism,cbiD; CbiD protein,cbiD
-slr1748,syn00860,Porphyrin and chlorophyll metabolism,hypothetical protein,NA
-slr1777,syn00860,Porphyrin and chlorophyll metabolism,chlD; Mg chelatase subunit; ChlD,chlD
-slr1784,syn00860,Porphyrin and chlorophyll metabolism,bvdR; biliverdin reductase,bvdR
-slr1790,syn00860,Porphyrin and chlorophyll metabolism,hypothetical protein,NA
-slr1808,syn00860,Porphyrin and chlorophyll metabolism,hemA; transfer RNA-Gln reductase,hemA
-slr1879,syn00860,Porphyrin and chlorophyll metabolism,cbiL; S-adenosyl-methionine: precorrin-2 methyltransferase,cbiL
-slr1887,syn00860,Porphyrin and chlorophyll metabolism,hemC; porphobilinogen deaminase,hemC
-slr1890,syn00860,Porphyrin and chlorophyll metabolism,bfr; bacterioferritin,bfr
-slr1923,syn00860,Porphyrin and chlorophyll metabolism,hypothetical protein,NA
-slr1925,syn00860,Porphyrin and chlorophyll metabolism,cbiB; CbiB protein,cbiB
+sll0017,syn00860,Porphyrin metabolism,"hemL; glutamate-1-semialdehyde 2,1-aminomutase",hemL
+sll0037,syn00860,Porphyrin metabolism,unknown protein,NA
+sll0099,syn00860,Porphyrin metabolism,cbiE; precorrin-6y methylase,cbiE
+sll0166,syn00860,Porphyrin metabolism,hemD; uroporphyrin-III synthase,hemD
+sll0179,syn00860,Porphyrin metabolism,gltX; glutamyl-tRNA synthetase,gltX
+sll0378,syn00860,Porphyrin metabolism,cysG; uroporphyrin-III C-methyltransferase,cysG
+sll0794,syn00860,Porphyrin metabolism,merR; mercuric resistance operon regulatory protein; precorrin isomerase,merR
+sll0916,syn00860,Porphyrin metabolism,cbiC; precorrin isomerase,cbiC
+sll1091,syn00860,Porphyrin metabolism,43 kD bacteriochlorophyll synthase subunit,NA
+sll1184,syn00860,Porphyrin metabolism,ho1; heme oxygenase,ho1
+sll1185,syn00860,Porphyrin metabolism,hemF; coproporphyrinogen III oxidase,hemF
+sll1214,syn00860,Porphyrin metabolism,PNIL34 or AT103 phytochrome-regulated gene homologue,NA
+sll1341,syn00860,Porphyrin metabolism,bfr; bacterioferritin,bfr
+sll1501,syn00860,Porphyrin metabolism,"cbiA; cobyrinic acid a,c-diamide synthase",cbiA
+sll1874,syn00860,Porphyrin metabolism,AT103; phytochrome-regulated gene,AT103
+sll1875,syn00860,Porphyrin metabolism,ho2; heme oxygenase,ho2
+sll1876,syn00860,Porphyrin metabolism,hemN; oxygen independent coprophorphyrinogen III oxidase,hemN
+sll1890,syn00860,Porphyrin metabolism,cobN; CobN protein,cobN
+sll1898,syn00860,Porphyrin metabolism,unknown protein,NA
+sll1899,syn00860,Porphyrin metabolism,ctaB; cytochrome c oxidase folding protein,ctaB
+sll1994,syn00860,Porphyrin metabolism,hemB; porphobilinogen synthase,hemB
+slr0056,syn00860,Porphyrin metabolism,chlG; chlorophyll a synthase,chlG
+slr0116,syn00860,Porphyrin metabolism,unknown protein,NA
+slr0216,syn00860,Porphyrin metabolism,cobU; cobinamide kinase/cobinamide phosphate guanylyltransferase,cobU
+slr0239,syn00860,Porphyrin metabolism,cbiF; precorrin methylase,cbiF
+slr0252,syn00860,Porphyrin metabolism,hypothetical protein,NA
+slr0260,syn00860,Porphyrin metabolism,cobA; cob(I)alamin adenosyltransferase,cobA
+slr0506,syn00860,Porphyrin metabolism,pcr; protochlorophyllide oxido-reductase,pcr
+slr0525,syn00860,Porphyrin metabolism,chlM; Mg-protoporphyrin IX methyl transferase,chlM
+slr0536,syn00860,Porphyrin metabolism,hemE; uroporphyrinogen decarboxylase,hemE
+slr0618,syn00860,Porphyrin metabolism,cbiP; cobyric acid synthase,cbiP
+slr0636,syn00860,Porphyrin metabolism,hypothetical protein,NA
+slr0749,syn00860,Porphyrin metabolism,chlL; light-independent protochlorophyllide reductase iron protein subunit; ChlL,chlL
+slr0750,syn00860,Porphyrin metabolism,chlN; protochlorophillide reductase subunit; ChlN,chlN
+slr0772,syn00860,Porphyrin metabolism,chlB; protochlorophyllide reductase ChlB subunit,chlB
+slr0839,syn00860,Porphyrin metabolism,hemH; ferrochelatase,hemH
+slr0905,syn00860,Porphyrin metabolism,bchE; Mg-protoporphyrin IX monomethyl ester oxidative cyclase 66 kD subunit,bchE
+slr0969,syn00860,Porphyrin metabolism,cbiH; precorrin methylase,cbiH
+slr1030,syn00860,Porphyrin metabolism,chlI; Mg chelatase subunit; ChlI,chlI
+slr1055,syn00860,Porphyrin metabolism,chlH; Mg-chelatase subunit; ChlH,chlH
+slr1211,syn00860,Porphyrin metabolism,cobN; CobN protein,cobN
+slr1368,syn00860,Porphyrin metabolism,cbiT; precorrin decarbocylase,cbiT
+slr1467,syn00860,Porphyrin metabolism,precorrin isomerase,NA
+slr1538,syn00860,Porphyrin metabolism,cbiD; CbiD protein,cbiD
+slr1748,syn00860,Porphyrin metabolism,hypothetical protein,NA
+slr1777,syn00860,Porphyrin metabolism,chlD; Mg chelatase subunit; ChlD,chlD
+slr1784,syn00860,Porphyrin metabolism,bvdR; biliverdin reductase,bvdR
+slr1790,syn00860,Porphyrin metabolism,hypothetical protein,NA
+slr1808,syn00860,Porphyrin metabolism,hemA; transfer RNA-Gln reductase,hemA
+slr1879,syn00860,Porphyrin metabolism,cbiL; S-adenosyl-methionine: precorrin-2 methyltransferase,cbiL
+slr1887,syn00860,Porphyrin metabolism,hemC; porphobilinogen deaminase,hemC
+slr1890,syn00860,Porphyrin metabolism,bfr; bacterioferritin,bfr
+slr1923,syn00860,Porphyrin metabolism,hypothetical protein,NA
+slr1925,syn00860,Porphyrin metabolism,cbiB; CbiB protein,cbiB
 sll0019,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
 sll0506,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
 sll0711,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
@@ -1011,6 +1019,7 @@ slr0348,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
 slr0611,syn00900,Terpenoid backbone biosynthesis,sds; solanesyl diphosphate synthase,sds
 slr0739,syn00900,Terpenoid backbone biosynthesis,crtE; geranylgeranyl pyrophosphate synthase,crtE
 slr0951,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
+slr1099,syn00900,Terpenoid backbone biosynthesis,ubiX; 3-octaprenyl-4-hydroxybenzoate carboxy-lyase,ubiX
 slr1542,syn00900,Terpenoid backbone biosynthesis,hypothetical protein,NA
 slr1993,syn00900,Terpenoid backbone biosynthesis,thl; acetyl coenzyme A acetyltransferase (thiolase),thl
 slr2136,syn00900,Terpenoid backbone biosynthesis,gcpE; GcpE protein,gcpE
@@ -1123,6 +1132,9 @@ trnV-GAC,syn00970,Aminoacyl-tRNA biosynthesis,trnV-GAC,NA
 trnV-UAC,syn00970,Aminoacyl-tRNA biosynthesis,trnV-UAC,NA
 trnW-CCA,syn00970,Aminoacyl-tRNA biosynthesis,trnW-CCA,NA
 trnY-GUA,syn00970,Aminoacyl-tRNA biosynthesis,trnY-GUA,NA
+sll0927,syn00999,Biosynthesis of various plant secondary metabolites,metX; S-adenosylmethionine synthetase,metX
+sll1538,syn00999,Biosynthesis of various plant secondary metabolites,bgl; beta-glucosidase,bgl
+slr1559,syn00999,Biosynthesis of various plant secondary metabolites,aroE; shikimate 5-dehydrogenase,aroE
 sll0002,syn01100,Metabolic pathways,ponA; penicillin-binding protein 1A,ponA
 sll0006,syn01100,Metabolic pathways,aspC; aspartate aminotransferase,aspC
 sll0017,syn01100,Metabolic pathways,"hemL; glutamate-1-semialdehyde 2,1-aminomutase",hemL
@@ -1240,6 +1252,7 @@ sll0899,syn01100,Metabolic pathways,glmU; UDP-N-acetylglucosamine pyrophosphoryl
 sll0900,syn01100,Metabolic pathways,hisG; ATP phosphoribosyltransferase,hisG
 sll0901,syn01100,Metabolic pathways,purE; phosphoribosylaminoimidazole carboxylase,purE
 sll0902,syn01100,Metabolic pathways,argF; ornithine carbamoyltransferase chain f,argF
+sll0905,syn01100,Metabolic pathways,maf; maf protein,maf
 sll0916,syn01100,Metabolic pathways,cbiC; precorrin isomerase,cbiC
 sll0920,syn01100,Metabolic pathways,ppc; phosphoenolpyruvate carboxylase,ppc
 sll0927,syn01100,Metabolic pathways,metX; S-adenosylmethionine synthetase,metX
@@ -1250,7 +1263,6 @@ sll0945,syn01100,Metabolic pathways,glgA; glycogen synthase,glgA
 sll0990,syn01100,Metabolic pathways,formaldehyde dehydrogenase (glutathione),NA
 sll0992,syn01100,Metabolic pathways,esterase,NA
 sll1004,syn01100,Metabolic pathways,unknown protein,NA
-sll1005,syn01100,Metabolic pathways,regulatory protein for beta-lactamase,NA
 sll1018,syn01100,Metabolic pathways,pyrC; dihydroorotase,pyrC
 sll1019,syn01100,Metabolic pathways,HAGH1; glyoxalase II,HAGH1
 sll1023,syn01100,Metabolic pathways,sucC; succinate--CoA ligase,sucC
@@ -1455,6 +1467,7 @@ slr0335,syn01100,Metabolic pathways,apcE; phycobilisome LCM core-membrane linker
 slr0342,syn01100,Metabolic pathways,petB; cytochrome b6,petB
 slr0343,syn01100,Metabolic pathways,petD; cytochrome b6-f complex subunit 4,petD
 slr0348,syn01100,Metabolic pathways,hypothetical protein,NA
+slr0355,syn01100,Metabolic pathways,unknown protein,NA
 slr0370,syn01100,Metabolic pathways,gabD; succinate-semialdehyde dehydrogenase (NADP+),gabD
 slr0379,syn01100,Metabolic pathways,hypothetical protein,NA
 slr0381,syn01100,Metabolic pathways,hypothetical protein,NA
@@ -1644,6 +1657,7 @@ slr1542,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1556,syn01100,Metabolic pathways,ddh; 2-hydroxyaciddehydrogenase,ddh
 slr1559,syn01100,Metabolic pathways,aroE; shikimate 5-dehydrogenase,aroE
 slr1560,syn01100,Metabolic pathways,hisS; histidyl tRNA synthetase,hisS
+slr1573,syn01100,Metabolic pathways,unknown protein,NA
 slr1598,syn01100,Metabolic pathways,lipA; lipoic acid synthetase,lipA
 slr1609,syn01100,Metabolic pathways,long-chain-fatty-acid CoA ligase,NA
 slr1615,syn01100,Metabolic pathways,rfbE; perosamine synthetase,rfbE
@@ -1694,7 +1708,6 @@ slr1879,syn01100,Metabolic pathways,cbiL; S-adenosyl-methionine: precorrin-2 met
 slr1882,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1887,syn01100,Metabolic pathways,hemC; porphobilinogen deaminase,hemC
 slr1898,syn01100,Metabolic pathways,argB; N-acetylglutamate kinase,argB
-slr1916,syn01100,Metabolic pathways,esterase,NA
 slr1923,syn01100,Metabolic pathways,hypothetical protein,NA
 slr1925,syn01100,Metabolic pathways,cbiB; CbiB protein,cbiB
 slr1933,syn01100,Metabolic pathways,"rfbC; dTDP-4-dehydrorhamnose 3,5-epimerase",rfbC
@@ -1908,6 +1921,7 @@ slr0088,syn01110,Biosynthesis of secondary metabolites,crtO; b-carotene ketolase
 slr0089,syn01110,Biosynthesis of secondary metabolites,erg6; delta(24)-sterol C-methyltransferase,erg6
 slr0091,syn01110,Biosynthesis of secondary metabolites,aldehyde dehydrogenase,NA
 slr0116,syn01110,Biosynthesis of secondary metabolites,unknown protein,NA
+slr0121,syn01110,Biosynthesis of secondary metabolites,unknown protein,NA
 slr0186,syn01110,Biosynthesis of secondary metabolites,leuA; 2-isopropylmalate synthase,leuA
 slr0194,syn01110,Biosynthesis of secondary metabolites,rpiA; ribose 5-phosphate isomerase,rpiA
 slr0201,syn01110,Biosynthesis of secondary metabolites,hdrB; heterodisulfide reductase subunit B,hdrB
@@ -2023,7 +2037,6 @@ slr1867,syn01110,Biosynthesis of secondary metabolites,trpD; anthranilate phosph
 slr1882,syn01110,Biosynthesis of secondary metabolites,hypothetical protein,NA
 slr1887,syn01110,Biosynthesis of secondary metabolites,hemC; porphobilinogen deaminase,hemC
 slr1898,syn01110,Biosynthesis of secondary metabolites,argB; N-acetylglutamate kinase,argB
-slr1916,syn01110,Biosynthesis of secondary metabolites,esterase,NA
 slr1933,syn01110,Biosynthesis of secondary metabolites,"rfbC; dTDP-4-dehydrorhamnose 3,5-epimerase",rfbC
 slr1934,syn01110,Biosynthesis of secondary metabolites,"pyruvate dehydrogenase E1 component, alpha subunit",NA
 slr1945,syn01110,Biosynthesis of secondary metabolites,"yibO; 2,3-bisphosphoglycerate-independent phosphoglycerate mutase",yibO
@@ -2377,6 +2390,33 @@ slr2072,syn01230,Biosynthesis of amino acids,ilvA; L-threonine deaminase,ilvA
 slr2088,syn01230,Biosynthesis of amino acids,ilvG; acetohydroxy acid synthase,ilvG
 slr2130,syn01230,Biosynthesis of amino acids,aroB; 3-dehydroquinate synthase,aroB
 ssl2153,syn01230,Biosynthesis of amino acids,rpiB; ribose phosphate isomerase B,rpiB
+sll0144,syn01232,Nucleotide metabolism,pyrH; uridine monophosphate kinase,pyrH
+sll0368,syn01232,Nucleotide metabolism,pyrR; pyrimidine operon regulatory protein; PyrR,pyrR
+sll0398,syn01232,Nucleotide metabolism,dgt; dGTP triphosphohydrolase,dgt
+sll0421,syn01232,Nucleotide metabolism,purB; adenylosuccinate lyase,purB
+sll0905,syn01232,Nucleotide metabolism,maf; maf protein,maf
+sll1035,syn01232,Nucleotide metabolism,upp; uracil phosphoribosyltransferase,upp
+sll1059,syn01232,Nucleotide metabolism,adk; adenylate kinase,adk
+sll1108,syn01232,Nucleotide metabolism,hypothetical protein,NA
+sll1249,syn01232,Nucleotide metabolism,panC_kcy; pantothenate synthetase/cytidylate kinase,NA
+sll1258,syn01232,Nucleotide metabolism,unknown protein,NA
+sll1430,syn01232,Nucleotide metabolism,apt; adenine phosphoribosyltransferase,apt
+sll1443,syn01232,Nucleotide metabolism,pyrG; CTP synthetase,pyrG
+sll1459,syn01232,Nucleotide metabolism,hypothetical protein,NA
+sll1635,syn01232,Nucleotide metabolism,Thy1 protein homologue,NA
+sll1815,syn01232,Nucleotide metabolism,adk; adenylate kinase,adk
+sll1823,syn01232,Nucleotide metabolism,purA; adenylosuccinate synthetase,purA
+sll1852,syn01232,Nucleotide metabolism,ndkR; nucleoside diphosphate kinase,ndkR
+slr0213,syn01232,Nucleotide metabolism,guaA; GMP synthetase,guaA
+slr0306,syn01232,Nucleotide metabolism,unknown protein,NA
+slr0379,syn01232,Nucleotide metabolism,hypothetical protein,NA
+slr0402,syn01232,Nucleotide metabolism,hypothetical protein,NA
+slr0591,syn01232,Nucleotide metabolism,unknown protein,NA
+slr1123,syn01232,Nucleotide metabolism,gmk; guanylate kinase,gmk
+slr1164,syn01232,Nucleotide metabolism,nrdA; ribonucleotide reductase subunit alpha,nrdA
+slr1237,syn01232,Nucleotide metabolism,codA; cytosine deaminase,codA
+slr1573,syn01232,Nucleotide metabolism,unknown protein,NA
+slr1722,syn01232,Nucleotide metabolism,guaB; IMP dehydrogenase subunit,guaB
 sll0017,syn01240,Biosynthesis of cofactors,"hemL; glutamate-1-semialdehyde 2,1-aminomutase",hemL
 sll0037,syn01240,Biosynthesis of cofactors,unknown protein,NA
 sll0099,syn01240,Biosynthesis of cofactors,cbiE; precorrin-6y methylase,cbiE
@@ -2390,7 +2430,6 @@ sll0378,syn01240,Biosynthesis of cofactors,cysG; uroporphyrin-III C-methyltransf
 sll0409,syn01240,Biosynthesis of cofactors,unknown protein,NA
 sll0418,syn01240,Biosynthesis of cofactors,sterol-C-methyltransferase,NA
 sll0421,syn01240,Biosynthesis of cofactors,purB; adenylosuccinate lyase,purB
-sll0587,syn01240,Biosynthesis of cofactors,pykF; pyruvate kinase,pykF
 sll0603,syn01240,Biosynthesis of cofactors,"menD; 2-succinyl-6-hydroxy-2,4-cyclohexadiene-1-carboxylate synthase",menD
 sll0622,syn01240,Biosynthesis of cofactors,nadA; quinolinate synthetase,nadA
 sll0631,syn01240,Biosynthesis of cofactors,nadB; L-aspartate oxidase,nadB
@@ -2412,7 +2451,6 @@ sll1069,syn01240,Biosynthesis of cofactors,fabF; beta ketoacyl-acyl carrier prot
 sll1127,syn01240,Biosynthesis of cofactors,menB; naphthoate synthase,menB
 sll1185,syn01240,Biosynthesis of cofactors,hemF; coproporphyrinogen III oxidase,hemF
 sll1249,syn01240,Biosynthesis of cofactors,panC_kcy; pantothenate synthetase/cytidylate kinase,NA
-sll1275,syn01240,Biosynthesis of cofactors,pykF; pyruvate kinase,pykF
 sll1282,syn01240,Biosynthesis of cofactors,ribH; riboflavin synthase beta subunit,ribH
 sll1285,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
 sll1415,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
@@ -2451,6 +2489,7 @@ slr0216,syn01240,Biosynthesis of cofactors,cobU; cobinamide kinase/cobinamide ph
 slr0239,syn01240,Biosynthesis of cofactors,cbiF; precorrin methylase,cbiF
 slr0252,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
 slr0260,syn01240,Biosynthesis of cofactors,cobA; cob(I)alamin adenosyltransferase,cobA
+slr0355,syn01240,Biosynthesis of cofactors,unknown protein,NA
 slr0387,syn01240,Biosynthesis of cofactors,nifS; NifS protein,nifS
 slr0400,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
 slr0406,syn01240,Biosynthesis of cofactors,pyrC; dihydroorotase,pyrC
@@ -2512,7 +2551,6 @@ slr1808,syn01240,Biosynthesis of cofactors,hemA; transfer RNA-Gln reductase,hemA
 slr1879,syn01240,Biosynthesis of cofactors,cbiL; S-adenosyl-methionine: precorrin-2 methyltransferase,cbiL
 slr1882,syn01240,Biosynthesis of cofactors,hypothetical protein,NA
 slr1887,syn01240,Biosynthesis of cofactors,hemC; porphobilinogen deaminase,hemC
-slr1916,syn01240,Biosynthesis of cofactors,esterase,NA
 slr1925,syn01240,Biosynthesis of cofactors,cbiB; CbiB protein,cbiB
 slr1979,syn01240,Biosynthesis of cofactors,trpE; anthranilate synthase component I,trpE
 slr2026,syn01240,Biosynthesis of cofactors,folP; dihydropteroate pyrophosphorylase,folP
