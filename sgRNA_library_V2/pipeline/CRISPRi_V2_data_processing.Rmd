@@ -92,7 +92,7 @@ save_plot <- function(pl, path = "../figures/", width = 6, height = 6) {
 
 ## Data import
 
-Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness score. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebooks), much of the functionality from the notebook was transferred into the [new CRISPRi library pipeline on github](https://github.com/m-jahn/CRISPRi-lib-pipe).
+Load raw data. The main table contains already normalized quantification of all sgRNAs, fold change, multiple hypothesis corrected p-values, and fitness scores on the guide RNA and gene level. Contrary to the processing of [our first CRISPRi library V1](https://github.com/m-jahn/R-notebook-crispri-lib#contents), much of the functionality from the notebook was transferred into a new [NExtflow CRISPRi library pipeline](https://github.com/m-jahn/nf-core-crispriscreen) available on github.
 
 ```{r}
 load("../data/input/result.Rdata")
@@ -303,8 +303,8 @@ We can also quantify how many genes have strongly correlated sgRNAs and how many
 
 ```{r, fig.width = 6, fig.height = 3}
 plot_sgRNA_correlation <- df_main %>%
-  select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
-  filter(sgRNA_index <= 5) %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_correlation, sgRNA_type) %>%
+  filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
   distinct %>%
   # plot
   ggplot(aes(x = factor(sgRNA_index), y = sgRNA_correlation)) +
@@ -318,8 +318,8 @@ plot_sgRNA_correlation <- df_main %>%
   custom_theme()
 
 plot_sgRNA_correlation_hist <- df_main %>%
-  select(sgRNA_target, sgRNA_index, sgRNA_correlation) %>%
-  filter(sgRNA_index <= 5) %>%
+  select(sgRNA_target, sgRNA_index, sgRNA_correlation, sgRNA_type) %>%
+  filter(sgRNA_index <= 5, sgRNA_type == "gene") %>%
   distinct %>% group_by(sgRNA_target) %>%
   summarize(
     median_sgRNA_correlation = median(sgRNA_correlation),
@@ -382,6 +382,7 @@ plot_selected_sgRNAs <- df_main %>%
   facet_grid(sgRNA_target ~ condition) +
   custom_theme(legend.position = 0) +
   coord_cartesian(ylim = c(-4.5, 2.5)) +
+  scale_x_continuous(breaks = c(0,2,4,6,8,10)) +
   scale_color_manual(values = custom_range(5))
 
 svg(filename = "../figures/figure1.svg", width = 7, height = 5.5)
@@ -1322,9 +1323,9 @@ plot_protmass_phycobilisome1 <- Jahn_2018_Light_and_CO2_lim %>%
   geom_col(position = "stack", width = 0.7, col = grey(1), size = 0.2) +
   geom_text(size = 2.5, position = position_stack(vjust = 0.5), color = "white") +
   custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
-  labs(title = "Light limitation", x = "µmol photons m^-2 s^-1", y = "% protein mass") +
-  scale_fill_manual(values = custom_colors[c(2,4)]) +
-  scale_color_manual(values = custom_colors[c(2,4)])
+  labs(title = "Light limitation", x = expression("µmol photons m"^-2*" s"^-1), y = "% protein mass") +
+  scale_fill_manual(values = c("#8eb655", "#937fb3")) +
+  scale_color_manual(values = c("#8eb655", "#937fb3"))
 
 plot_protmass_phycobilisome2 <- Jahn_2018_Light_and_CO2_lim %>%
   filter(str_detect(protein, "[ac]pc[ABCDEFG]"), sample == "CO2") %>%
@@ -1337,8 +1338,8 @@ plot_protmass_phycobilisome2 <- Jahn_2018_Light_and_CO2_lim %>%
   geom_text(size = 2.5, position = position_stack(vjust = 0.5), color = "white") +
   custom_theme(legend.position = "bottom", legend.key.size = unit(0.5, "cm")) +
   labs(title = "CO2 limitation", x = "% CO2 in air", y = "% protein mass") +
-  scale_fill_manual(values = custom_colors[c(2,4)]) +
-  scale_color_manual(values = custom_colors[c(2,4)])
+  scale_fill_manual(values = c("#8eb655", "#937fb3")) +
+  scale_color_manual(values = c("#8eb655", "#937fb3"))
 
 ggarrange(ncol = 2, widths = c(0.5,0.5),
   labels = LETTERS[1:2], font.label = list_fontpars,
@@ -1517,7 +1518,7 @@ ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars,
 ```
 
 ```{r, include = FALSE, eval = TRUE}
-svg("../figures/figureSX_ncRNAs.svg", width = 5.5, height = 5.5)
+svg("../figures/figureSX_asRNA_iTSS.svg", width = 5.5, height = 5.5)
 ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars,
   plot_ncRNA_overview,
   ggarrange(ncol = 2, labels = c("B", "C"), font.label = list_fontpars,
