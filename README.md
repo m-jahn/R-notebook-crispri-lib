@@ -5,6 +5,12 @@
 
 ### News
 
+**2022-05-06 | New Nextflow pipeline for CRISPRi library data**
+
+A new [Nextflow](nextflow.io/)-based pipeline for automated analysis of NGS CRISPRi library data is available, [nf-core-crispriscreen](https://github.com/m-jahn/nf-core-crispriscreen). The pipeline is a much improved re-implementation of
+our [old pipeline](https://github.com/m-jahn/CRISPRi-lib-pipe) using all the great features from the [nf-core](https://nf-co.re/) community. Main advantages of nf-core/nextflow are automatic retrieval of latest software packages, containerization,
+native support of multi-core computation, and generally improved output of results.
+
 **2021-06-22 | Github repository moved**
 
 The original repository `R-notebooks` became too small and too diverse for all library projects.
