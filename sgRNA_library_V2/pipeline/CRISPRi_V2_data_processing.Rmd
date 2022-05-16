@@ -663,7 +663,8 @@ Now we can plot _all_ genes, a subset with _only significant genes_, and a dendr
 ```{r, fig.width = 8, fig.height = 4}
 # prepare new df and plot heatmap
 df_heatmap <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
-  group_by(locus) %>% filter(any(!between(wmean_fitness, -4, 4))) %>% ungroup %>%
+  group_by(locus) %>%
+  filter(any(!between(wmean_fitness, -4, 4) & p_fitness_adj < 0.01)) %>% ungroup %>%
   mutate(locus = fct_cluster(locus, condition, wmean_fitness)) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 8, 8) %>% replace(., . < -8, -8))
 
@@ -701,7 +702,7 @@ We use two different dimensionality reduction methods, **nMDS** and **t-SNE**. W
 
 ```{r, fig.width = 8, fig.height = 4}
 # set a seed to obtain same pattern for stochastic methods
-set.seed(123)
+set.seed(321)
 
 # run nMDS analysis
 NMDS <-  dist_heatmap %>% metaMDS
@@ -761,7 +762,7 @@ df_linreg <- df_gene %>%
   # fit model
   group_by(locus) %>%
   summarize(coefficient = fit_linreg(wmean_fitness, carbon, light, `-N`, `+FL`, `+G`, `+D`),
-    .groups = "keep") %>% #unnest(coefficient) %>%
+    .groups = "keep") %>%
   mutate(treatment = c(rep(c("intercept", "carbon", "light", "-N", "+FL", "+G", "+D"), 2) %>% 
     paste0(rep(c("", "pval_"), each = 7), .), "r_squared"))
 ```
@@ -780,8 +781,8 @@ plot_tsne_linreg <- df_tsne %>%
   ggplot(aes(x = V1, y = V2, size = point_size,
     color = coefficient, label = sgRNA_target)) +
   geom_point() +
-  labs(title = "t-SNE clustering of DF genes", 
-    subtitle = paste0("dot color/size encodes effect of variable, n = ", nrow(df_tsne))) +
+  labs(title = "t-SNE clustering of genes with absolute fitness > 4 and p-value < 0.01.", 
+    subtitle = paste0("dot color/size encodes effect of variable from MLR, n = ", nrow(df_tsne))) +
   custom_theme(aspect = 1) +
   scale_color_gradientn(limits = c(-5, 5),
     colours = c(custom_colors[1], grey(0.6, 0.8), custom_colors[2])) +
@@ -794,10 +795,11 @@ print(plot_tsne_linreg)
 
 This strategy reveals a list of interesting condition-specific genes:
 
-- Nitrogen limitation: `ssr3532` - unknown short protein, strongest known interaction in STRING with GlsA glutaminase
 - Fluctuating light:
-  - `sll1521` - Putative diflavin flavoprotein A3 (dfa3), negatively corr. with fitness
-  - `sll0217` Putative diflavin flavoprotein A2 (dfa2), positively corr. with fitness
+  - `sll0217` - Putative diflavin flavoprotein A2 (dfa2 / Flv4)
+  - `sll0218` - Putative diflavin flavoprotein associated protein
+  - Putative diflavin flavoproteins `sll1521` (Flv1) and `sll0550` (Flv3) show inverse but FL+ specific
+    fitness pattern but were not included in figure because of lower significance/FC
 - Mixotrophy:
   - `sll0593` - glk, glucokinase, catalyzes P-ylation of Glc to G6P
   - `sll1533` - pilT, fimbria assembly, mobility, Glc transport or sensing?
@@ -811,7 +813,9 @@ This strategy reveals a list of interesting condition-specific genes:
 - Carbon:
   - `sll0217` Putative diflavin flavoprotein A2 (dfa2), KO negatively correlated with fitness with C, positive with +FL
   - `sll0218` same behavior as dfa2, interacts with dfa2,4, contributes to PSII stabilization, 
-     [Bersanini et al., 2017](https://pubmed.ncbi.nlm.nih.gov/27928824/)
+     [Bersanini et al., 2017](https://pubmed.ncbi.nlm.nih.gov/27928824/). Negative fitness score
+     probably side effect of downstream KD of `sll0219` (Flv2). That shows essentially same pattern as
+     `sll0217` and `sll0218` but weaker effect on fitness.
 
 ## List of genes with strong fitness correlation
 
@@ -889,36 +893,35 @@ df_linreg_wide %>% filter(locus %in% list_top_unknown_hits) %>%
 ## Extract and analyze interesting gene clusters
 
 The list above shows the genes whose fitness is most significantly correlated with one of the treatments.
-This list of genes is extracted and then simply fitness per condition is plotted as a heatmap, in order to confirm the trends from fitting the multiple liner regression models.
+This list of genes (length: `r length(list_top_unknown_hits)`) is extracted and then simply fitness per condition is plotted as a heat map, in order to confirm the trends from fitting the multiple liner regression models. Note that this list of genes was not filtered by fitness p-value, but only derived from multiple linear regression. The fitness p-value is indicated in the figure if `p <= 0.1`.
 
-
-```{r, fig.width = 4, fig.height = 4}
-plot_sgRNAs_light <- df_gene %>%
+```{r, fig.width = 5, fig.height = 4.5}
+plot_unknown_genes <- df_gene %>%
   filter(locus %in% list_top_unknown_hits, time == 0) %>%
   mutate(sgRNA_target = fct_cluster(sgRNA_target, condition, wmean_fitness)) %>%
   mutate(condition = fct_cluster(condition, sgRNA_target, wmean_fitness)) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
+  mutate(p_label = if_else(p_fitness_adj <= 0.1, as.character(round(p_fitness_adj, 2)), "")) %>%
+  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness, label = p_label)) +
   geom_tile() + custom_theme() +
-  labs(title = "Top unknown genes", x = "", y = "") +
+  geom_text(size = 3) +
+  labs(title = "Top unknown genes, fitness.", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
 
-print(plot_sgRNAs_light)
+print(plot_unknown_genes)
 ```
 **Summary**
 
-- `sll0364` - 139 AA. KD has higher fitness in HC conditions and lower fitness in HL. Negatively regulating carbon metabolism?
-- `sll0481` - 155 AA. KD has higher fitness in +G conditions and lower fitness in HL. Membrane localization. Negatively regulating glycolysis?
 - `sll0877` - 456 AA. KD has higher fitness _only_ in HC,LL. Mitigates light limitation?
-- `ssl3364` -  74 AA. KD has lower fitness on all HC/+G conditions. This protein is known as CP12 protein, regulating glycolytic flux at GAPDH and PRK.
+- `sll0481` - 155 AA. KD has higher fitness in +G conditions and lower fitness in HL. Membrane localization. Negatively regulating glycolysis?
 - `ssr3532` -  80 AA. KD lower fitness on N-limitation and C-limitation (LC-HL combinations). Same operon as glutaminase glsA (slr2079, catalyzes deamination of gln --> glu), regulatory, involved in N metabolism?
-- `slr1990` - 240 AA, 5 TM domains. KD higher fitness in photoheterotrophy, lower fitness in all HC/LL conditions. Something important for photosystems? Something that wastes e- in photoheterotrophic conditions?
-- `sll6055` - 152 AA. Fitness profile as above. Multiubiquitin domain, involved in protein modification/degradation of PS proteins?
-- `slr1505` - 198 AA. Fitness profile as above. No useful information.
-- `sll1378` - 300 AA.  KD has lower fitness on all LL conditions. Membrane associated protein? In STRING, potential interaction with PbsA1 and PbsA2 (Heme oxygenase 1 and 2). Potentially important for chlorophyll or heme biosynthesis --> would explain importance for photosynthesis in LL condition.
 - `slr1102` - 853 AA. KD has lower fitness on all LL conditions. 4 known domains, FHA (forkhead-associated domain is a phosphopeptide recognition domain found in many regulatory proteins), PAS (signaling, often involved in circadian proteins, detect their signal by way of an associated cofactor like heme, flavin), GGDEF (involved in signal transduction, likely to catalyze synthesis or hydrolysis of cyclic diguanylate c-diGMP), EAL (shown to stimulate degradation of a second messenger, cyclic di-GMP, candidate for a diguanylate phosphodiesterase function. Together with the GGDEF domain, EAL might be involved in regulating cell surface adhesiveness in bacteria). Source: InterPro. Embedded in a [tight network](https://string-db.org/network/1148.1651834) of interacting proteins all involved in chromophore biosynthesis/maturation.
+- `sll1378` - 300 AA.  KD has lower fitness on all LL conditions. Membrane associated protein? In STRING, potential interaction with PbsA1 and PbsA2 (Heme oxygenase 1 and 2). Potentially important for chlorophyll or heme biosynthesis --> would explain importance for photosynthesis in LL condition.
+- `slr1505` - 198 AA. Fitness profile as above. No useful information.
+- `sll6055` - 152 AA. Fitness profile as above. Multiubiquitin domain, involved in protein modification/degradation of PS proteins?
+- `slr1990` - 240 AA, 5 TM domains. KD higher fitness in photoheterotrophy, lower fitness in all HC/LL conditions. Something important for photosystems? Something that wastes e- in photoheterotrophic conditions?
 
 **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
