@@ -1041,9 +1041,16 @@ plot_gene_fitness <- function(df, pw = NULL, gene = NULL,
   
   ggplot(df, aes(x = condition, y = wmean_fitness, 
     ymin = wmean_fitness-sd_fitness, 
-    ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+    ymax = wmean_fitness+sd_fitness,
+    fill = condition,
+    color = condition,
+    label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    geom_text(size = 5, aes(y = mapply(FUN = function(x, y) {
+      if (x < 0) x-y-2
+      else x+y+0.3
+    }, wmean_fitness, sd_fitness))) +
     custom_theme(aspect.ratio = 1,
       legend.position = legend.position, legend.key.size = unit(0.4, "cm")) + 
     labs(title = title, x = "", y = "fitness") +
@@ -1379,9 +1386,6 @@ list_genes_pos_fitness <- df_gene %>%
   pull(locus) %>% unique
 
 plot_gene_fitness(df_gene, gene = list_genes_pos_fitness, title = "Genes with increased fitness (f > 2)")
-ggsave("../figures/plot_fitness_increased.svg",
-  plot_gene_fitness(df_gene, gene = list_genes_pos_fitness, title = "Genes with increased fitness (f > 2)"),
-  width = 8, height = 8)
 ```
 
 Summary:
