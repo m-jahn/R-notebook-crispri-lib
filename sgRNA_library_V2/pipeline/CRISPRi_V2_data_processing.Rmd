@@ -767,27 +767,41 @@ df_linreg <- df_gene %>%
     paste0(rep(c("", "pval_"), each = 7), .), "r_squared"))
 ```
 
+Reshape the long data frame into a wide format, with slope, intercept and r-squared in separate columns.
+Add gene names and tSNE coordinates.
+
+```{r}
+df_linreg_wide <- df_linreg %>%
+  left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
+  mutate(coeff_type = case_when(
+    treatment == "r_squared" ~ "r_squared",
+    str_detect(treatment, "pval") ~ "p_value",
+    TRUE ~ "slope"
+  )) %>%
+  mutate(treatment = str_remove(treatment, "pval_") %>% str_replace("r_squared", "intercept")) %>%
+  pivot_wider(names_from = "coeff_type", values_from = "coefficient") %>%
+  group_by(locus) %>% fill(r_squared)
+```
+
 Now we can overlay the information of the best predictor variable on the cluster map produced by tSNE, for example, and this way identify groups of genes regulated in a similar degree, by similar variables.
 
 ```{r, fig.width = 9, fig.height = 12}
-plot_tsne_linreg <- df_tsne %>%
-  inner_join(df_linreg, by = "locus") %>%
-  left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
-  filter(!str_detect(treatment, "intercept|pval|r_squared")) %>%
-  mutate(sgRNA_target = if_else(abs(coefficient) > 2, sgRNA_target, "")) %>%
-  mutate(point_size = abs(coefficient),
-    coefficient = coefficient %>% replace(., . > 5, 5) %>% replace(., . < -5, -5)) %>%
-  
-  ggplot(aes(x = V1, y = V2, size = point_size,
-    color = coefficient, label = sgRNA_target)) +
-  geom_point() +
-  labs(title = "t-SNE clustering of genes with absolute fitness > 4 and p-value < 0.01.", 
-    subtitle = paste0("dot color/size encodes effect of variable from MLR, n = ", nrow(df_tsne))) +
+plot_tsne_linreg <- df_linreg_wide %>%
+  inner_join(df_tsne, by = "locus") %>%
+  filter(treatment != "intercept") %>%
+  arrange(treatment, abs(slope)) %>%
+  mutate(sgRNA_target = if_else(abs(slope) >= 2 | p_value <= 0.1, sgRNA_target, "")) %>%
+  ggplot(aes(x = V1, y = V2, size = abs(slope),
+    color = cut(p_value, breaks = c(0, 0.01, 0.05, 0.1, 1)), label = sgRNA_target)) +
+  geom_point(alpha = 0.7) +
+  geom_text_repel(size = 3, max.overlaps = 50, show.legend = FALSE) +
+  labs(title = paste0("t-SNE clustering of ", nrow(df_tsne), " genes with absolute fitness score > 4"),
+    subtitle = paste0("dot size encodes effect of variable from multiple linear regresson, ",
+      "dot color encodes p-value")) +
   custom_theme(aspect = 1) +
-  scale_color_gradientn(limits = c(-5, 5),
-    colours = c(custom_colors[1], grey(0.6, 0.8), custom_colors[2])) +
+  scale_color_manual(values = c(colorRampPalette(c("#E7298A", "#E6AB02"))(3), "#B3B3B3")) +
+  #scale_color_gradientn(limits = c(-5, 5), colours = custom_colors[1:2]) +
   scale_size_continuous(range = c(1, 6)) +
-  geom_text_repel(size = 3, max.overlaps = 50) +
   facet_wrap( ~ treatment, ncol = 2)
 
 print(plot_tsne_linreg)
@@ -819,20 +833,25 @@ This strategy reveals a list of interesting condition-specific genes:
 
 ## List of genes with strong fitness correlation
 
-The table with linear regression coefficients and p-values is reshaped to long format for better readability. The `kableExtra` package is used to color cells for easier recognition. Then we subset the table for each treatment in order to spot the most interesting genes.
+The table with linear regression coefficients and p-values is reshaped to wide format for better readability. The `kableExtra` package is used to color cells for easier recognition. Then we subset the table for each treatment in order to spot the most interesting genes.
 
 ```{r}
-df_linreg_wide <- df_linreg %>%
-  pivot_wider(names_from = treatment, values_from = coefficient) %>%
-  left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
-  select(-matches("intercept")) %>%
-  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) > 2)) %>%
-  mutate(across(matches("carb|light|\\-|\\+"), ~ round(., 3))) %>% 
-  ungroup %>% select(sgRNA_target, locus, matches("."))
-
+df_linreg_filtered <- df_linreg_wide %>% 
+  filter(treatment != "intercept") %>% 
+  group_by(locus) %>%
+  filter(any(abs(slope) >= 2 & p_value <= 0.1)) %>%
+  mutate(across(where(is.numeric), ~ round(., 3))) %>%
+  pivot_wider(
+    names_from = "treatment",
+    values_from = c("slope", "p_value"),
+    names_repair = function(x) {str_remove(x, "slope_")}
+  )
+  
 color_table <- function(df, variable) {
-  filter(df, abs(.data[[variable]]) > 2) %>% 
-  select(matches("^(sg|loc|r_s|carb|light|\\-|\\+)") | all_of(paste0("pval_", variable))) %>%
+  filter(df, abs(.data[[variable]]) > 2) %>%
+  filter(if_any(paste0("p_value_", variable), ~ . <= 0.1)) %>%
+  select(matches("^(sg|loc|r_s|carb|light|\\-|\\+)") |
+    all_of(paste0("p_value_", variable))) %>%
   arrange(desc(.data[[variable]])) %>%
   mutate(across(3:8, ~ cell_spec(., "html", color = "white",
       background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
@@ -844,44 +863,40 @@ color_table <- function(df, variable) {
 
 
 ```{r}
-df_linreg_wide %>% color_table("carbon")
+df_linreg_filtered %>% color_table("carbon")
 ```
 
 ```{r}
-df_linreg_wide %>% color_table("light")
+df_linreg_filtered %>% color_table("light")
+```
+
+
+```{r}
+df_linreg_filtered %>% color_table("+FL")
 ```
 
 ```{r}
-df_linreg_wide %>% color_table("-N")
+df_linreg_filtered %>% color_table("+G")
 ```
 
 ```{r}
-df_linreg_wide %>% color_table("+FL")
-```
-
-```{r}
-df_linreg_wide %>% color_table("+G")
-```
-
-```{r}
-df_linreg_wide %>% color_table("+D")
+df_linreg_filtered %>% color_table("+D")
 ```
 Based on the multiple linear model correlations, we can try to extract a shortlist of the most interesting **hypothetical genes**. These could warrant further investigations.
 
 ```{r}
-list_top_unknown_hits <- df_linreg_wide %>%
+df_unknown_hits <- df_linreg_filtered %>%
   left_join(df_uniprot, by = "locus") %>%
   # filter by name: only unknown proteins
   filter(
     is.na(gene_name_short),
     str_detect(protein, "[a-zA-Z]{3}[0-9]{4} protein|Uncharacterized")) %>%
-  # filter by effect: only correlation > 3
+  # filter by effect: only slope > 3
   filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) > 3)) %>%
-  arrange(desc(r_squared)) %>%
-  pull(locus)
-
-df_linreg_wide %>% filter(locus %in% list_top_unknown_hits) %>%
-  select(!starts_with("pval"), -sgRNA_target) %>%
+  select(-sgRNA_target, -gene_name, -gene_name_short, -protein,
+    -length, -mass, -ec_number)
+  
+df_unknown_hits %>%
   mutate(across(2:7, ~ cell_spec(., "html", color = "white",
       background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
       bold = TRUE))) %>%
@@ -893,24 +908,14 @@ df_linreg_wide %>% filter(locus %in% list_top_unknown_hits) %>%
 ## Extract and analyze interesting gene clusters
 
 The list above shows the genes whose fitness is most significantly correlated with one of the treatments.
-This list of genes (length: `r length(list_top_unknown_hits)`) is extracted and then simply fitness per condition is plotted as a heat map, in order to confirm the trends from fitting the multiple liner regression models. Note that this list of genes was not filtered by fitness p-value, but only derived from multiple linear regression. The fitness p-value is indicated in the figure if `p <= 0.1`.
+This list of genes (length: `r nrow(df_unknown_hits)`) is extracted and then simply fitness per condition is plotted as a line plot, in order to inspect the trends from fitting the multiple liner regression models. Note that this list of genes was derived from multiple linear regression. The obtained p-value used for filtering is differnet from the fitness p-value for the single conditions.
 
 ```{r, fig.width = 5, fig.height = 4.5}
-plot_unknown_genes <- df_gene %>%
-  filter(locus %in% list_top_unknown_hits, time == 0) %>%
-  mutate(sgRNA_target = fct_cluster(sgRNA_target, condition, wmean_fitness)) %>%
-  mutate(condition = fct_cluster(condition, sgRNA_target, wmean_fitness)) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  mutate(p_label = if_else(p_fitness_adj <= 0.1, as.character(round(p_fitness_adj, 2)), "")) %>%
-  ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness, label = p_label)) +
-  geom_tile() + custom_theme() +
-  geom_text(size = 3) +
-  labs(title = "Top unknown genes, fitness.", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
+plot_unknown_genes <- df_main %>%
+  filter(locus %in% unique(df_unknown_hits$locus))# %>%
+  
 
-print(plot_unknown_genes)
+#print(plot_unknown_genes)
 ```
 **Summary**
 
@@ -1085,8 +1090,10 @@ Using [fluctuator](https://github.com/m-jahn/fluctuator), we can import a custom
 
 Fluctuator can be installed using a function from `devtools`:
 
-```{r, eval = FALSE}
-devtools::install_github("m-jahn/fluctuator")
+```{r}
+if (!"fluctuator" %in% rownames(installed.packages())) {
+  devtools::install_github("m-jahn/fluctuator")
+}
 ```
 
 We import the metabolic flux data from the supplemental items of [Nakajima et al., 2014](https://doi.org/10.1093/pcp/pcu091).
