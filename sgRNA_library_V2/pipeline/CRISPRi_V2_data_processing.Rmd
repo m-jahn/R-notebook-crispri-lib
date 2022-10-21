@@ -143,19 +143,20 @@ write_csv(df_cultivation_summary, file = "../data/output/cultivation_summary.csv
 Retrieve gene info from uniprot and merge with main data frame. We need to make a custom function to retrieve and parse the data from uniprot, because of a bug in the security level on Ubuntu 20.04. The fallback option is to load a local copy of uniprot annotation for this organism.
 
 ```{r}
-library(httr)
 uniprot_url <- paste0(
-   "https://www.uniprot.org/uniprot/?query=taxonomy:1111708&format=tab&",
-   "columns=id,genes,genes(PREFERRED),protein_names,length,mass,ec,database(KEGG)")
+  "https://rest.uniprot.org/uniprotkb/stream?fields=accession",
+  "%2Cid%2Cprotein_name%2Cgene_names%2Corganism_name%2Clength",
+  "%2Cgene_oln%2Cgene_primary%2Ccc_pathway%2Cgo_id%2Ccc_subce",
+  "llular_location%2Ccc_interaction%2Cxref_kegg&format=tsv&query=%28prote",
+  "ome%3AUP000001425%29"
+)
 
 get_uniprot <- function(url) {
-  # reset security level, caused by a faulty SSL certificate on server side,
-  # see this thread: https://github.com/Ensembl/ensembl-rest/issues/427
-  httr_config <- config(ssl_cipher_list = "DEFAULT@SECLEVEL=1")
-  res <- with_config(config = httr_config, GET(url))
-  server_error = simpleError("")
-  df_uniprot <- tryCatch(
-    read_tsv(content(res), col_types = cols()),
+  df_uniprot <- tryCatch({
+      read_tsv(uniprot_url,
+        col_types = cols(),
+        name_repair = function(x){str_replace_all(tolower(x), "[ \\.]", "_")})
+    },
     error = function(server_error) {
       message("Uniprot server not available, falling back on local Uniprot DB copy")
       read_tsv("../data/input/uniprot_synechocystis.tsv", col_types = cols())
@@ -164,19 +165,19 @@ get_uniprot <- function(url) {
 }
 
 df_uniprot <- get_uniprot(uniprot_url) %>%
-  rename_with(tolower) %>%
-  rename(locus = `cross-reference (kegg)`, gene_name = `gene names`,
-    gene_name_short = `gene names  (primary )`, ec_number = `ec number`,
-    protein = `protein names`, uniprot_ID = entry
+  rename(locus = `kegg`, gene_name = `gene_names`,
+    gene_name_short = `gene_names_(primary)`, protein = `protein_names`,
+    uniprot_id = `entry`
   ) %>%
-  separate_rows(locus, sep = ";syn:") %>%
-  mutate(locus = str_remove_all(locus, "syn:|;")) %>%
-  filter(!is.na(locus))
+  mutate(locus = str_remove_all(locus, "syn:|;$")) %>%
+  separate_rows(locus, gene_name_short, sep = ";") %>%
+  filter(!is.na(locus), !duplicated(locus))
 
-df_main <- left_join(df_main, filter(df_uniprot, !duplicated(locus)),
+df_main <- left_join(
+  df_main, df_uniprot %>% select(-`gene_names_(ordered_locus)`,
+    -`pathway`, -`gene_ontology_ids`, -`interacts_with`),
   by = "locus")
 ```
-
 
 ## Number of sgRNAs
 
@@ -627,22 +628,19 @@ df_kegg_enrichment %>%
 
 ## Cluster genes by similarity
 
-We can devise a generalized `tidyverse` friendly function to cluster a name variable by a value, grouped by one or more grouping variables. For example, cluster genes (name) by fitness (value) over several conditions (groups). The output is a factor with re-ordered levels.
+We can load a generalized `tidyverse` friendly function to cluster a name variable by a value, grouped by one or more grouping variables. For example, cluster genes (name) by fitness (value) over several conditions (groups). The output is a factor with re-ordered levels.
 
 ```{r}
-fct_cluster <- function(variable, group, value, method = "ward.D2") {
-  df <- tibble(variable = variable, group = group, value = value)
-  df <- pivot_wider(df, names_from = group, values_from = value)
-  mat <- as.matrix(column_to_rownames(df, var = "variable"))
-  cl <- hclust(dist(mat), method = method)
-  ord <- order.dendrogram(as.dendrogram(cl))
-  factor(variable, unique(variable)[ord])
+if (!"Rtools" %in% rownames(installed.packages())) {
+  devtools::install_github("m-jahn/Rtools")
 }
 ```
 
 Heat map of fitness for *all genes and all conditions*.
 
 ```{r, fig.width = 8, fig.height = 2.2}
+library(Rtools)
+
 plot_heatmap_all <- df_gene %>% filter(time == 0, !is.na(locus)) %>%
   mutate(locus = fct_cluster(locus, condition, wmean_fitness)) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
@@ -750,9 +748,10 @@ fit_linreg <- function(y, x1, x2, x3, x4, x5, x6){
 }
 
 # recode categorical to numerical (dummy) variables
-df_linreg <- df_gene %>%
+df_linreg <- df_main %>%
   filter(!is.na(locus)) %>%
-  select(locus, carbon, light, treatment, wmean_fitness) %>% distinct %>%
+  select(locus, carbon, light, treatment, fitness) %>% distinct %>%
+  
   mutate(
     carbon = recode(carbon, `HC` = 1, `LC` = 0),
     light = recode(light, `LL` = 0, `IL` = 0.5, `HL` = 1)) %>%
@@ -761,7 +760,7 @@ df_linreg <- df_gene %>%
   mutate(`+G` = `+G` + `+D, +G`) %>% rename(`+D` = `+D, +G`) %>% select(-`-`) %>%
   # fit model
   group_by(locus) %>%
-  summarize(coefficient = fit_linreg(wmean_fitness, carbon, light, `-N`, `+FL`, `+G`, `+D`),
+  summarize(coefficient = fit_linreg(fitness, carbon, light, `-N`, `+FL`, `+G`, `+D`),
     .groups = "keep") %>%
   mutate(treatment = c(rep(c("intercept", "carbon", "light", "-N", "+FL", "+G", "+D"), 2) %>% 
     paste0(rep(c("", "pval_"), each = 7), .), "r_squared"))
@@ -771,7 +770,7 @@ Reshape the long data frame into a wide format, with slope, intercept and r-squa
 Add gene names and tSNE coordinates.
 
 ```{r}
-df_linreg_wide <- df_linreg %>%
+df_linreg <- df_linreg %>%
   left_join(select(df_gene, locus, sgRNA_target) %>% distinct, by = "locus") %>%
   mutate(coeff_type = case_when(
     treatment == "r_squared" ~ "r_squared",
@@ -786,13 +785,13 @@ df_linreg_wide <- df_linreg %>%
 Now we can overlay the information of the best predictor variable on the cluster map produced by tSNE, for example, and this way identify groups of genes regulated in a similar degree, by similar variables.
 
 ```{r, fig.width = 9, fig.height = 12}
-plot_tsne_linreg <- df_linreg_wide %>%
+plot_tsne_linreg <- df_linreg %>%
   inner_join(df_tsne, by = "locus") %>%
   filter(treatment != "intercept") %>%
   arrange(treatment, abs(slope)) %>%
-  mutate(sgRNA_target = if_else(abs(slope) >= 2 | p_value <= 0.1, sgRNA_target, "")) %>%
+  mutate(sgRNA_target = if_else(p_value <= 0.01, sgRNA_target, "")) %>%
   ggplot(aes(x = V1, y = V2, size = abs(slope),
-    color = cut(p_value, breaks = c(0, 0.01, 0.05, 0.1, 1)), label = sgRNA_target)) +
+    color = cut(p_value, breaks = c(0, 0.001, 0.01, 0.05, 1)), label = sgRNA_target)) +
   geom_point(alpha = 0.7) +
   geom_text_repel(size = 3, max.overlaps = 50, show.legend = FALSE) +
   labs(title = paste0("t-SNE clustering of ", nrow(df_tsne), " genes with absolute fitness score > 4"),
@@ -816,7 +815,6 @@ This strategy reveals a list of interesting condition-specific genes:
     fitness pattern but were not included in figure because of lower significance/FC
 - Mixotrophy:
   - `sll0593` - glk, glucokinase, catalyzes P-ylation of Glc to G6P
-  - `sll1533` - pilT, fimbria assembly, mobility, Glc transport or sensing?
   - `ssl3364` - CP12 small protein, strongly interacts with RbcX, RbcR, Prk. Novel C-metabolism regulator
 - Light:
   - `ssr2142` ycf19, short unknown protein, interacts with psbO and Tat membrane protein insertion system,
@@ -836,10 +834,10 @@ This strategy reveals a list of interesting condition-specific genes:
 The table with linear regression coefficients and p-values is reshaped to wide format for better readability. The `kableExtra` package is used to color cells for easier recognition. Then we subset the table for each treatment in order to spot the most interesting genes.
 
 ```{r}
-df_linreg_filtered <- df_linreg_wide %>% 
-  filter(treatment != "intercept") %>% 
+df_linreg_filtered <- df_linreg %>%
+  filter(treatment != "intercept") %>%
   group_by(locus) %>%
-  filter(any(abs(slope) >= 2 & p_value <= 0.1)) %>%
+  filter(any(abs(slope) >= 2 & p_value <= 0.01)) %>%
   mutate(across(where(is.numeric), ~ round(., 3))) %>%
   pivot_wider(
     names_from = "treatment",
@@ -849,7 +847,7 @@ df_linreg_filtered <- df_linreg_wide %>%
   
 color_table <- function(df, variable) {
   filter(df, abs(.data[[variable]]) > 2) %>%
-  filter(if_any(paste0("p_value_", variable), ~ . <= 0.1)) %>%
+  filter(if_any(paste0("p_value_", variable), ~ . <= 0.01)) %>%
   select(matches("^(sg|loc|r_s|carb|light|\\-|\\+)") |
     all_of(paste0("p_value_", variable))) %>%
   arrange(desc(.data[[variable]])) %>%
@@ -882,6 +880,9 @@ df_linreg_filtered %>% color_table("+G")
 ```{r}
 df_linreg_filtered %>% color_table("+D")
 ```
+
+**Unknown / uncharacterized genes**
+
 Based on the multiple linear model correlations, we can try to extract a shortlist of the most interesting **hypothetical genes**. These could warrant further investigations.
 
 ```{r}
@@ -889,44 +890,56 @@ df_unknown_hits <- df_linreg_filtered %>%
   left_join(df_uniprot, by = "locus") %>%
   # filter by name: only unknown proteins
   filter(
+    !locus %in% c("ssl3364", "sll0218", "sll1734", "slr1302"),
     is.na(gene_name_short),
+    is.na(pathway),
     str_detect(protein, "[a-zA-Z]{3}[0-9]{4} protein|Uncharacterized")) %>%
-  # filter by effect: only slope > 3
-  filter(if_any(matches("^(carb|light|\\-|\\+)"), ~ abs(.) > 3)) %>%
-  select(-sgRNA_target, -gene_name, -gene_name_short, -protein,
-    -length, -mass, -ec_number)
-  
+  select(locus:uniprot_id) %>%
+  rowwise() %>% mutate(min_pval = min(c_across(matches("p_value_")))) %>%
+  arrange(min_pval) %>%
+  ungroup %>% slice(1:10)
+
 df_unknown_hits %>%
-  mutate(across(2:7, ~ cell_spec(., "html", color = "white",
+  mutate(across(3:8, ~ cell_spec(., "html", color = "white",
       background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
       bold = TRUE))) %>%
   kbl(format = "html", escape = F) %>%
   kable_paper("striped", full_width = F)
 ```
 
+The tables above show genes whose fitness is most significantly correlated with one of the treatments.
+The table with unknown genes is further used to plot fitness per condition as a line plot, in order to inspect the trends from fitting the multiple liner regression models. Note that this list of genes was derived from multiple linear regression. Note that the obtained p-value used for filtering is different from the fitness p-value for the experimental conditions.
 
-## Extract and analyze interesting gene clusters
-
-The list above shows the genes whose fitness is most significantly correlated with one of the treatments.
-This list of genes (length: `r nrow(df_unknown_hits)`) is extracted and then simply fitness per condition is plotted as a line plot, in order to inspect the trends from fitting the multiple liner regression models. Note that this list of genes was derived from multiple linear regression. The obtained p-value used for filtering is differnet from the fitness p-value for the single conditions.
-
-```{r, fig.width = 5, fig.height = 4.5}
+```{r, fig.width = 8, fig.height = 8}
 plot_unknown_genes <- df_main %>%
-  filter(locus %in% unique(df_unknown_hits$locus))# %>%
+  filter(locus %in% unique(df_unknown_hits$locus)) %>%
+  mutate(locus = factor(locus, unique(df_unknown_hits$locus))) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_line(size = 1) +
+  custom_theme(legend.position = "top") +
+  labs(
+    title = "sgRNA profile for top 10 unknown genes according to MLR",
+    subtitle = "MLR filter: slope >= 2, p-value <= 0.01. Color encodes sgRNA position") +
+  scale_color_manual(values = custom_range(5)) +
+  facet_grid(locus ~ condition)
   
-
-#print(plot_unknown_genes)
+print(plot_unknown_genes)
 ```
 **Summary**
 
-- `sll0877` - 456 AA. KD has higher fitness _only_ in HC,LL. Mitigates light limitation?
-- `sll0481` - 155 AA. KD has higher fitness in +G conditions and lower fitness in HL. Membrane localization. Negatively regulating glycolysis?
-- `ssr3532` -  80 AA. KD lower fitness on N-limitation and C-limitation (LC-HL combinations). Same operon as glutaminase glsA (slr2079, catalyzes deamination of gln --> glu), regulatory, involved in N metabolism?
-- `slr1102` - 853 AA. KD has lower fitness on all LL conditions. 4 known domains, FHA (forkhead-associated domain is a phosphopeptide recognition domain found in many regulatory proteins), PAS (signaling, often involved in circadian proteins, detect their signal by way of an associated cofactor like heme, flavin), GGDEF (involved in signal transduction, likely to catalyze synthesis or hydrolysis of cyclic diguanylate c-diGMP), EAL (shown to stimulate degradation of a second messenger, cyclic di-GMP, candidate for a diguanylate phosphodiesterase function. Together with the GGDEF domain, EAL might be involved in regulating cell surface adhesiveness in bacteria). Source: InterPro. Embedded in a [tight network](https://string-db.org/network/1148.1651834) of interacting proteins all involved in chromophore biosynthesis/maturation.
-- `sll1378` - 300 AA.  KD has lower fitness on all LL conditions. Membrane associated protein? In STRING, potential interaction with PbsA1 and PbsA2 (Heme oxygenase 1 and 2). Potentially important for chlorophyll or heme biosynthesis --> would explain importance for photosynthesis in LL condition.
-- `slr1505` - 198 AA. Fitness profile as above. No useful information.
-- `sll6055` - 152 AA. Fitness profile as above. Multiubiquitin domain, involved in protein modification/degradation of PS proteins?
-- `slr1990` - 240 AA, 5 TM domains. KD higher fitness in photoheterotrophy, lower fitness in all HC/LL conditions. Something important for photosystems? Something that wastes e- in photoheterotrophic conditions?
+- `sll0062` - small 149 AA membrane protein, phenotype: fitness mainly decreased in LC-LL conditioms, but not mixo/photoherotrophy
+- `sll0148` - large 735 AA membrane protein, phenotype: fitness mainly decreased in LL conditions, regardless of C, but not mixo/photoherotrophy
+- `sll1534` - medium 378 AA putative glycosyltransferase, phenotype: fitness decreased in all conditions, but predominantly mixo/photoherotrophy
+- `slr0483` - small 149 AA membrane protein, potential thylakoid protein, implicated in scaffolding for other thyl. proteins ([1](https://etheses.whiterose.ac.uk/6488/2/Thesis%20with%20corrections.pdf), [2](https://edoc.ub.uni-muenchen.de/16819/1/Shao_Lin.pdf)). Phenotype: fitness decreased in all L conditions, but not HC+HL and mixo/photoherotrophy (supports involvement in photosynthesis)
+- `slr0643` - medium 493 AA transmembrane protein (9 TM helices), phenotype: strong decrease in HC+HL only. Putative metalloprotease, defect in acid acclimation, KO overexpresses NDH and Ci transporters ([1](https://pubmed.ncbi.nlm.nih.gov/22997464/))
+- `slr1818` - medium 201 AA protein, phenotype: fitness decreased specifically in LC+IL and LC+LL+F, so only under light stress. Phenotype similar to the flavodiiron proteins Flv1 and 3
+- `slr2070` - medium 284 AA protein, unknown localization, phenotype: strongly increased fitness in +G conditions only; slightly decreased fitness in LC+IL and LC+LL+F. Suggests that protein is a burden in non-photosynthetic conditions, but required at high L to C ratio. Implicated as thylakoid protein ([1](https://edoc.ub.uni-muenchen.de/28937/))
+- `ssr2062` - small 88 AA protein, localization unknown, phenotype: strongly increased fitness in +G conditions only, as above. Implicated in regulation of light dark adaptation by transcriptome profiling ([1](https://onlinelibrary.wiley.com/doi/full/10.1111/mmi.14768), [2](https://onlinelibrary.wiley.com/doi/full/10.1111/mmi.14129))
+- `slr1315` - medium 202 AA protein, localization unknown, Uma2 restriction endonuclease domain. Phenotype: fitness decreased specifically in LC+IL and LC+LL+F, so predominantly under light stress
+- `sll1915` - small 183 AA membrane protein, phenotype: decreased fitness predominantly in LL or HC conditions (HC,HL and +G)
+
+
+## Extract and analyze interesting gene clusters
 
 **Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
 
@@ -1725,6 +1738,10 @@ df_gene %>%
   write_csv("../data/output/fitness_genes.csv")
 
 df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
+
+df_uniprot %>% write_csv("../data/output/uniprot_annotation.csv")
+
+df_linreg_filtered %>% write_csv("../data/output/linear_regression_result.csv")
 ```
 
 The entire pipeline takes about 25 minutes to run on a standard notebook.
