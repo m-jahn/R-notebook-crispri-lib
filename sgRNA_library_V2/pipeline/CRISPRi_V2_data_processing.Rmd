@@ -900,7 +900,7 @@ df_unknown_hits <- df_linreg_filtered %>%
   ungroup %>% slice(1:10)
 
 df_unknown_hits %>%
-  mutate(across(3:8, ~ cell_spec(., "html", color = "white",
+  mutate(across(4:9, ~ cell_spec(., "html", color = "white",
       background = spec_color(., option = "E", scale = c(-5.5, 5.5)),
       bold = TRUE))) %>%
   kbl(format = "html", escape = F) %>%
@@ -1066,13 +1066,14 @@ plot_gene_fitness <- function(df, pw = NULL, gene = NULL,
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
     geom_text(size = 5, aes(y = mapply(FUN = function(x, y) {
-      if (x < 0) x-y-2
-      else x+y+0.3
+      if (x < 0) x - y - 2
+      else x + y + 0.3
     }, wmean_fitness, sd_fitness))) +
     custom_theme(aspect.ratio = 1,
       legend.position = legend.position, legend.key.size = unit(0.4, "cm")) + 
     labs(title = title, x = "", y = "fitness") +
     theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
+    scale_y_continuous(breaks  = seq(-10, 10, 5)) +
     scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
     scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
     facet_wrap(~ sgRNA_target, ncol = ncol, drop = FALSE)
@@ -1281,8 +1282,9 @@ plot_flv_genes <- df_gene %>% filter(locus %in% c("sll1521", "sll0219", "sll0550
   plot_gene_fitness(ncol = 6, legend.position = 0)
 
 plot_carbon_uptake <- df_gene %>% filter(locus %in% c(
-    "sll0026", "sll0027", "slr1302",
-    "sll1732", "sll1733", "sll1734", "sll1735", "slr0040", "slr0041","slr0043","slr0044"
+    "sll0026", "sll0027", "slr1302", "sll1732",
+    "sll1733", "sll1734", "sll1735", "slr0040",
+    "slr0041", "slr0043", "slr0044"
   )) %>%
   mutate(sgRNA_target = recode(sgRNA_target,
     `nrtC2` = "cmpC", `nrtD3` = "cmpD",
