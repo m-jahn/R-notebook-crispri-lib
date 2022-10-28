@@ -1228,11 +1228,17 @@ plot_centralcarb_minifig <- df_centralcarb %>%
   group_by(pathway) %>% group_split %>%
   lapply(function(df) {
     ggplot(df, aes(x = condition, y = wmean_fitness, 
-      ymin = wmean_fitness-sd_fitness, 
-      ymax = wmean_fitness+sd_fitness, fill = condition, color = condition)) +
+      ymin = wmean_fitness-sd_fitness,
+      ymax = wmean_fitness+sd_fitness,
+      fill = condition, color = condition,
+      label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
     geom_hline(yintercept = c(0, -5, -10), linetype = 3, col = grey(0.6)) +
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    geom_text(size = 6, aes(y = mapply(FUN = function(x, y) {
+      if (x < 0) x - y - 3
+      else x + y + 0.3
+    }, wmean_fitness, sd_fitness))) +
     custom_theme(aspect.ratio = 1, legend.position = 0) + 
     theme(axis.text.x = element_blank(), axis.text.y = element_blank(), 
       axis.ticks = element_blank(), panel.grid.major = element_blank(),
