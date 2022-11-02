@@ -1402,7 +1402,6 @@ Other genes of interest that either did not show any (remarkable) effect on fitn
 - SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`) (rpoD genes 1-4)
 - ccmM (`sll1031`), ccmK2 (`sll1028`), ccmK1 (`sll1029`), ccmN (`sll1032`), ccmO (`slr0436`),
   ccmL (`sll1030`)
-- CP12 (`ssl3364`)
 
 
 ## Genes where knock down leads to increased fitness
@@ -1421,7 +1420,7 @@ Summary:
 - slr1916 same phenotype as pmgA just weaker. We also know this one from before. Must have identical role as pmgA.
 - all PSII genes show increased fitness in photoheterotrophic condition --> PS is a burden here
 - sll0689, pxcA, slr1609 - all increased fitness in HC,HL, first two are Na+/CO2 (?) trnasporters,
-  slr1609 we know from before,   annotated as fatty acid CoA ligase, but probably it's something different
+  slr1609 we know from before, annotated as fatty acid CoA ligase, but probably it's something different
 - sll6055, slr1505, slr1990 - all increased fitness in photoheterotrophic condition, and decreased fitness in HC/LL conditions.
   Not much is known about these genes, probably a role in photosynthesis, as the pattern is similar to psb genes (PSII maturation?)
 - slr0813, slr0907, slr909, slr1299 - all increased fitness in HC/LL. Not clear what connects these genes functionally.
@@ -1729,6 +1728,85 @@ df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
 ```
 
 
+# Experimental validation of targets
+
+## Growth characteristics of WT, CP12, GAP1 and GAP2 mutants
+
+- we found that CP12 protein `ssl3364` shows interesting phenotype for glucose-supplemented growth
+- CP12 KD mutant was more sensitive when grown on +G or +G+D
+- we also found that gap1 (`slr0884`) and gap2 (`sll1342`) KD mutants show different phenotype compared to previous reports
+- Gap1 mutant had no phenotype although it was reported to 
+
+```{r, fig.width = 5.5, fig.height = 4.0}
+df_gene %>% filter(locus %in% c("ssl3364", "slr0884", "sll1342")) %>%
+  mutate(sgRNA_target = recode(sgRNA_target, `ssl3364`= "CP12")) %>%
+  plot_gene_fitness(ncol = 6, legend.position = "bottom") +
+  coord_cartesian(ylim = c(-7.5, 2.9))
+```
+- read in validation data
+- 3 tables with OD measurement of the described strains and conditions´
+
+```{r, message = FALSE}
+df_od <- lapply(
+  list.files("../data/input/validation/", pattern = "\\_OD.csv", full.names = TRUE),
+  function(f) {
+    read_csv(f, show_col_types = FALSE) %>%
+    rename_with(.fn = function(x) str_replace(x, "batchtime_h|hours", "time_h")) %>%
+    pivot_longer(-time_h, names_to = "condition", values_to = "OD720") %>%
+    mutate(condition = str_remove_all(condition, "[\\.0-9]*$")) %>%
+    group_by(condition, time_h) %>% mutate(replicate = seq_along(OD720)) %>% 
+    separate(condition, sep = "\\_", into = c("mutant", "condition"))
+  }
+) %>% setNames(c("ΔCP12", "ΔGAP1", "ΔGAP2")) %>%
+  bind_rows(.id = "comparison") %>%
+  mutate(mutant = recode(mutant, `Δssl3364` = "ΔCP12"))
+```
+
+
+```{r, message = FALSE}
+df_od_summary <- df_od %>%
+  group_by(time_h, comparison, condition, mutant) %>%
+  filter(!is.na(OD720)) %>%
+  summarize(
+    mean_OD720 = mean(OD720),
+    sd_OD720 = sd(OD720),
+    ymin = mean_OD720 - sd_OD720,
+    ymax = mean_OD720 + sd_OD720
+  )
+
+print_od <- function(data, log = FALSE, ylim = NULL) {
+  if (log) {
+    data <- mutate(data, across(matches("mean|ymin|ymax"), ~ log(.x)))
+  }
+  ggplot(data, aes(x = time_h, y = mean_OD720,
+      color = paste0(condition, "  ", mutant),
+      fill = paste0(condition, "  ", mutant),
+      ymin = ymin, ymax = ymax)) +
+    geom_ribbon(alpha = 0.2, linetype = 0) +
+    geom_line(size = 1) +
+    custom_theme(legend.pos = c(0.15, 0.85), legend.key.size = unit(0.15, "cm"),
+      aspect = 1) +
+    labs(x = "time [h]", y = expression("OD"[720])) +
+    coord_cartesian(ylim = ylim) +
+    facet_wrap( ~ comparison) +
+    scale_color_manual(values = custom_colors) +
+    scale_fill_manual(values = custom_colors)
+}
+```
+
+
+```{r, fig.height = 6, fig.width = 9}
+ggarrange(ncol = 3, nrow = 2,
+  print_od(filter(df_od_summary, comparison == "ΔGAP1")),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2")),
+  print_od(filter(df_od_summary, comparison == "ΔCP12")),
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), log = TRUE)
+)
+```
+
+
 # Export summary table of all genes and conditions
 
 Export a summary table of all genes and conditions, so that it's easy for other people to look up single conditions as for example done in [one-by-one fitness comparisons](#fitness-of-all-conditions-vs-each-other). This is best done in wide format (one column per condition).
@@ -1752,7 +1830,7 @@ df_uniprot %>% write_csv("../data/output/uniprot_annotation.csv")
 df_linreg_filtered %>% write_csv("../data/output/linear_regression_result.csv")
 ```
 
-The entire pipeline takes about 25 minutes to run on a standard notebook.
+The entire pipeline takes about 5 minutes to run on a standard notebook.
 To work on single sections, the work space is exported to avoid constant recalculation of result tables.
 
 ```{r, include = FALSE, echo = FALSE, eval = FALSE}
