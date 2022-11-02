@@ -1762,11 +1762,12 @@ df_od <- lapply(
   mutate(mutant = recode(mutant, `Δssl3364` = "ΔCP12"))
 ```
 
+- plot the data using custom function
+- each in its own field, because conditions and mutants are all different
 
 ```{r, message = FALSE}
 df_od_summary <- df_od %>%
   group_by(time_h, comparison, condition, mutant) %>%
-  filter(!is.na(OD720)) %>%
   summarize(
     mean_OD720 = mean(OD720),
     sd_OD720 = sd(OD720),
@@ -1784,26 +1785,121 @@ print_od <- function(data, log = FALSE, ylim = NULL) {
       ymin = ymin, ymax = ymax)) +
     geom_ribbon(alpha = 0.2, linetype = 0) +
     geom_line(size = 1) +
-    custom_theme(legend.pos = c(0.15, 0.85), legend.key.size = unit(0.15, "cm"),
-      aspect = 1) +
+    custom_theme(legend.pos = c(0.35, 0.85), legend.key.size = unit(0.15, "cm")) +
     labs(x = "time [h]", y = expression("OD"[720])) +
     coord_cartesian(ylim = ylim) +
     facet_wrap( ~ comparison) +
-    scale_color_manual(values = custom_colors) +
-    scale_fill_manual(values = custom_colors)
+    scale_y_continuous(labels = function(x) format(x, nsmall = 2)) +
+    scale_color_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889")) +
+    scale_fill_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889"))
 }
 ```
 
+- next, calculate maximum growth rate and a corresponding plot
 
-```{r, fig.height = 6, fig.width = 9}
-ggarrange(ncol = 3, nrow = 2,
-  print_od(filter(df_od_summary, comparison == "ΔGAP1")),
-  print_od(filter(df_od_summary, comparison == "ΔGAP2")),
-  print_od(filter(df_od_summary, comparison == "ΔCP12")),
-  print_od(filter(df_od_summary, comparison == "ΔGAP1"), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔGAP2"), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔCP12"), log = TRUE)
+```{r}
+df_mu <- df_od %>%
+  filter(time_h >= 20 & time_h <= 40) %>%
+  group_by(comparison, condition, mutant, replicate) %>%
+  summarize(mu_max = lm(log(OD720) ~ time_h)$coefficients[2]) %>%
+  summarize(
+    mean_mu_max = mean(mu_max),
+    sd_mu_max = sd(mu_max),
+    ymin = mean_mu_max - sd_mu_max,
+    ymax = mean_mu_max + sd_mu_max
+  )
+
+print_mu <- function(data) {
+  ggplot(data, aes(x = paste0(condition, "  ", mutant), y = mean_mu_max,
+      color = paste0(condition, "  ", mutant),
+      fill = paste0(condition, "  ", mutant),
+      ymin = ymin, ymax = ymax)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    custom_theme(legend.position = 0) +
+    labs(x = "", y = expression("µ [h"^-1*"]")) +
+    theme(axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
+    coord_cartesian(ylim = c(0,0.05)) +
+    facet_wrap( ~ comparison) +
+    scale_color_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889")) +
+    scale_fill_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889"))
+}
+```
+
+- specific plot for small fitness score figures
+- only the 2 selected conditions from growth data
+
+```{r}
+print_fitness <- function(data) {
+  data %>% 
+  select(gene_name, condition, wmean_fitness, sd_fitness) %>%
+    distinct %>%
+  ggplot(aes(x = condition, y = wmean_fitness,
+      color = condition, fill = condition,
+      ymin = wmean_fitness - sd_fitness,
+      ymax = wmean_fitness + sd_fitness)) +
+    geom_col(position = "dodge", width = 0.6) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    custom_theme(legend.position = 0) +
+    labs(x = "", y = "fitness") +
+    theme(plot.margin = unit(c(0.05, 0.02, 0.12, 0.02), "npc"),
+      axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
+    coord_cartesian(ylim = c(-6, 4)) +
+    facet_wrap( ~ gene_name) +
+    scale_color_manual(values = c("#eb97c4", "#b4d889")) +
+    scale_fill_manual(values = c("#eb97c4", "#b4d889"))
+}
+```
+
+- plot everything on a large canvas
+- this will become the validation figure 
+
+```{r, fig.height = 9, fig.width = 9, warning = FALSE}
+ggarrange(ncol = 3, nrow = 3,
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(0, 1.6)),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(0, 1.0)),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(0, 1.0)),
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔGAP1")),
+    print_fitness(filter(df_gene, locus == "slr0884", condition %in% c("HC, LL", "HC, LL, +G")))
+  ),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔGAP2")),
+    print_fitness(filter(df_gene, locus == "sll1342", condition %in% c("LC, IL", "LC, LL, +D, +G")))
+  ),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔCP12")),
+    print_fitness(filter(df_gene, locus == "ssl3364", condition %in% c("LC, LL", "LC, LL, +D, +G")))
+  )
 )
+```
+
+```{r, warning = FALSE, echo = FALSE}
+svg("../figures/figure6.svg", width = 9, height = 9)
+ggarrange(ncol = 3, nrow = 3,
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(0, 1.6)),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(0, 1.0)),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(0, 1.0)),
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔGAP1")),
+    print_fitness(filter(df_gene, locus == "slr0884", condition %in% c("HC, LL", "HC, LL, +G")))
+  ),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔGAP2")),
+    print_fitness(filter(df_gene, locus == "sll1342", condition %in% c("LC, IL", "LC, LL, +D, +G")))
+  ),
+  ggarrange(ncol = 2, widths = c(0.65, 0.35),
+    print_mu(filter(df_mu, comparison == "ΔCP12")),
+    print_fitness(filter(df_gene, locus == "ssl3364", condition %in% c("LC, LL", "LC, LL, +D, +G")))
+  )
+)
+dev.off()
 ```
 
 
