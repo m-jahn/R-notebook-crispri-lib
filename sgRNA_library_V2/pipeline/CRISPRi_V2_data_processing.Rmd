@@ -476,7 +476,6 @@ plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
   scale_color_manual(values = custom_range(10))
 
 print(plot_controls_sgRNAs)
-save_plot(plot_controls_sgRNAs, width = 6.5, height = 5.0)
 ```
 
 # Gene enrichment
@@ -551,17 +550,21 @@ plot_sgRNAs_ps1 <- df_gene %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
+  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
   labs(title = "Photosystem I", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
 
 plot_sgRNAs_ps2 <- df_gene %>%
-  filter(str_detect(sgRNA_target, "psb[A-Z]*"), time == 0) %>%
+  filter(str_detect(sgRNA_target, "psb[A-Z1][23]?$"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
   ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
+  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
   labs(title = "Photosystem II", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
@@ -583,6 +586,23 @@ ggarrange(ncol = 2, widths = c(0.65, 0.35),
 )
 dev.off()
 ```
+
+- The psbK knockdown has a strong fitness penalty in all conditions, suggesting a universal role
+- however it is not very significant in Wilcox rank sum test
+- this is due to only having 3 sgRNAs, they actually all show the same phenotype
+
+```{r, fig.width = 5, fig.height = 5}
+df_main %>%
+  filter(sgRNA_target %in% c("psbK")) %>%
+  mutate(locus = factor(locus)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_line(size = 1) +
+  custom_theme(legend.position = "top") +
+  scale_color_manual(values = custom_range(5)) +
+  facet_wrap( ~ condition)
+```
+
+
 
 ## Gene enrichment analysis (KEGG)
 
@@ -804,6 +824,10 @@ plot_tsne_linreg <- df_linreg %>%
   facet_wrap( ~ treatment, ncol = 2)
 
 print(plot_tsne_linreg)
+```
+
+```{r, echo = FALSE}
+save_plot(pl = plot_tsne_linreg, path = "../figures/", width = 9, height = 12)
 ```
 
 This strategy reveals a list of interesting condition-specific genes:
