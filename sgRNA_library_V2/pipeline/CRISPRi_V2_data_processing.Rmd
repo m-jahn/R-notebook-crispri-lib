@@ -366,9 +366,8 @@ plot_sgRNA_efficiency_hist <- df_main %>%
 ggarrange(plot_sgRNA_efficiency, plot_sgRNA_efficiency_hist, ncol = 2)
 ```
 
-Export draft **Figure 1** for manuscript.
 
-```{r, fig.width = 7, fig.height = 5.5}
+```{r, fig.width = 5, fig.height = 3.5}
 plot_selected_sgRNAs <- df_main %>%
   filter(
     grepl("ctrl[1-5]$|rps10$", sgRNA_target), 
@@ -380,20 +379,14 @@ plot_selected_sgRNAs <- df_main %>%
   ) %>%
   ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
   geom_line(size = 1) + geom_point(size = 2) +
+  labs(x = "time [h]", y = expression("log"[2]*" FC"))+
   facet_grid(sgRNA_target ~ condition) +
   custom_theme(legend.position = 0) +
   coord_cartesian(ylim = c(-4.5, 2.5)) +
   scale_x_continuous(breaks = c(0,2,4,6,8,10)) +
   scale_color_manual(values = custom_range(5))
 
-svg(filename = "../figures/figure1.svg", width = 7, height = 5.5)
-ggarrange(ncol = 2, nrow = 2, widths = c(0.6, 0.4), labels = c("A", "C", "B", "D"), font.label = list_fontpars,
-  plot_sgRNAs_per_gene + theme(plot.margin = unit(c(12,12,12,12), "points")),
-  plot_sgRNA_efficiency + theme(plot.margin = unit(c(26,12,12,12), "points")),
-  plot_selected_sgRNAs + theme(plot.margin = unit(c(12,-4,12,14), "points")),
-  plot_sgRNA_correlation + theme(plot.margin = unit(c(26,12,12,12), "points"))
-)
-dev.off()
+plot_selected_sgRNAs
 ```
 
 Export **supplemental figure with all ribosomal genes** (rps*NN*/rpl*NN*).
@@ -430,13 +423,31 @@ df_gene <- df_main %>%
 
 Global distribution of weighted mean fitness for all genes. Effect of ncRNA repression seems to be much lower than effect of gene repression.
 
-```{r, fig.width = 7, fig.height = 5}
-plot_all_fitness_hist <- df_gene %>% filter(time == 0) %>%
-  ggplot(aes(x = wmean_fitness, fill = sgRNA_type)) +
-  geom_histogram(bins = 100) +
+```{r, fig.width = 8, fig.height = 5}
+df_hist_stats <- df_gene %>%
+  filter(time == 0) %>%
+  mutate(iv = cut(wmean_fitness, breaks = c(-4,-2,2,4))) %>%
+  group_by(condition, iv) %>%
+  count() %>% 
+  mutate(percent = 100*n/length(unique(df_gene$sgRNA_target))) %>%
+  separate(iv, into = c("x1", "x2"), sep = ",") %>%
+  mutate(x1 = as.numeric(str_extract(x1, "\\-?[0-9]")) + 0.2) %>%
+  mutate(x2 = as.numeric(str_extract(x2, "\\-?[0-9]")) - 0.2) %>%
+  filter(!is.na(x1))
+
+plot_all_fitness_hist <- df_gene %>%
+  filter(time == 0) %>% 
+  ggplot(aes(x = wmean_fitness)) +
+  geom_vline(xintercept = c(-2, 2), col = grey(0.5), linetype = 2) +
+  geom_histogram(bins = 100, aes(fill = sgRNA_type)) +
+  geom_bracket(data = df_hist_stats,
+    mapping = aes(xmin = x1, xmax = x2, label = paste0(round(percent, 1), "%")),
+    y.position = 800, color = grey(0.5), 
+    label.size = 3) +
+  labs(x = "fitness", y ="") +
   coord_cartesian(xlim = c(-4, 4), ylim = c(0, 1000)) +
-  facet_wrap( ~ condition, ncol = 4) +
-  custom_theme() +
+  facet_wrap( ~ condition, ncol = 6) +
+  custom_theme(legend.position = "bottom", aspect = 1) +
   scale_fill_manual(values = custom_colors[c(3:4)])
 
 print(plot_all_fitness_hist)
@@ -444,18 +455,17 @@ print(plot_all_fitness_hist)
 
 ## Gene fitness vs significance
 
-```{r, fig.width = 7, fig.height = 3.5}
-plot_all_fitness_volc <- df_gene %>% filter(time == 0,
-    condition %in% c("HC, HL", "LC, LL")) %>%
+```{r, fig.width = 8, fig.height = 5}
+plot_all_fitness_volc <- df_gene %>%
   arrange(sgRNA_type) %>%
   ggplot(aes(x = wmean_fitness, y = -log10(p_fitness_adj), col = sgRNA_type)) +
-  geom_point(alpha = 0.5, size = 0.5) +
+  geom_point(alpha = 1, size = 0.1) +
   geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
     y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
-    aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
+    aes(x = x, y = y, shape = NULL), lty = 2, color = grey(0.5), size = 0.6) +
   coord_cartesian(xlim = c(-7, 7), ylim = c(0, 2.5)) +
-  custom_theme(aspect = 1, legend.position = "left", legend.key.size = unit(0.4, "cm")) +
-  facet_wrap(~ condition) +
+  custom_theme(aspect = 1, legend.position = "bottom", legend.key.size = unit(0.4, "cm")) +
+  facet_wrap(~ condition, ncol = 6) +
   labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
   scale_color_manual(values = custom_colors[3:4]) +
   scale_shape_manual(values=c(1, 19))
@@ -477,6 +487,23 @@ plot_controls_sgRNAs <- df_main %>% filter(grepl("ctrl", sgRNA_target)) %>%
 
 print(plot_controls_sgRNAs)
 ```
+
+Export draft **Figure 1** for manuscript.
+
+```{r, fig.width = 7, fig.height = 8.5}
+svg(filename = "../figures/figure1.svg", width = 7, height = 8.5)
+ggarrange(ncol = 2, nrow = 3,
+  heights = c(c(0.3, 0.3, 0.4)), widths = c(0.6, 0.4),
+  labels = c("A", "C", "B", "D", "E"), font.label = list_fontpars,
+  plot_sgRNAs_per_gene + theme(plot.margin = unit(c(12,12,12,12), "points")),
+  plot_sgRNA_efficiency + theme(plot.margin = unit(c(26,12,12,12), "points")),
+  plot_selected_sgRNAs + theme(plot.margin = unit(c(12,-4,12,14), "points")),
+  plot_sgRNA_correlation + theme(plot.margin = unit(c(26,12,12,12), "points")),
+  plot_all_fitness_hist + theme(plot.margin = unit(c(-36,-190,-48, 12), "points"))
+)
+dev.off()
+```
+
 
 # Gene enrichment
 
@@ -1037,9 +1064,9 @@ list_condition_pairs <- lapply(
 invisible(capture.output(
   lapply(list_condition_pairs, function(pl) {
     pl_name <- paste0("../figures/pairwise_comparisons/plot_", pl$labels$x, "_", pl$labels$y, ".png")
-    png(filename = pl_name, width = 800, height = 800, res = 120)
-    print(pl)
-    dev.off()
+    #png(filename = pl_name, width = 800, height = 800, res = 120)
+    #print(pl)
+    #dev.off()
   })
 ))
 ```
@@ -1819,20 +1846,32 @@ print_od <- function(data, log = FALSE, ylim = NULL) {
 }
 ```
 
-- next, calculate maximum growth rate and a corresponding plot
+- create a summary table with growthrates
+- calculate maximum growth rate and a corresponding plot
 
 ```{r}
 df_mu <- df_od %>%
   filter(time_h >= 20 & time_h <= 40) %>%
   group_by(comparison, condition, mutant, replicate) %>%
   summarize(mu_max = lm(log(OD720) ~ time_h)$coefficients[2]) %>%
+  # calculate t-test p-value
+  group_by(comparison, condition) %>%
+  arrange(comparison, condition, mutant) %>% 
+  mutate(p_value = t.test(x = mu_max[mutant != "WT"], y = mu_max[mutant == "WT"])$p.value) %>%
+  group_by(comparison, condition, mutant) %>%
+  # summary statistics
   summarize(
     mean_mu_max = mean(mu_max),
     sd_mu_max = sd(mu_max),
     ymin = mean_mu_max - sd_mu_max,
-    ymax = mean_mu_max + sd_mu_max
-  )
+    ymax = mean_mu_max + sd_mu_max,
+    p_value = p_value[1]
+  ) %>%
+  mutate(p_value_symbol = if_else(p_value <= 0.01 & mutant != "WT", "*", ""))
+```
 
+
+```{r}
 print_mu <- function(data) {
   ggplot(data, aes(x = paste0(condition, "  ", mutant), y = mean_mu_max,
       color = paste0(condition, "  ", mutant),
@@ -1840,6 +1879,7 @@ print_mu <- function(data) {
       ymin = ymin, ymax = ymax)) +
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
+    geom_text(aes(label = p_value_symbol), size = 8, nudge_y = 0.003) +
     custom_theme(legend.position = 0) +
     labs(x = "", y = expression("µ [h"^-1*"]")) +
     theme(axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
