@@ -568,68 +568,6 @@ plot_median_fitness_kegg <- df_gene %>% filter(time == 0) %>%
 print(plot_median_fitness_kegg)
 ```
 
-Export draft **Figure 2** for manuscript.
-We add photosystem I and II genes as examples for differential depletion. A heatmap.
-
-```{r, fig.width = 7, fig.height = 4}
-plot_sgRNAs_ps1 <- df_gene %>%
-  filter(str_detect(sgRNA_target, "psa[A-Z]*"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
-  geom_tile() + custom_theme() +
-  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
-    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
-  labs(title = "Photosystem I", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
-
-plot_sgRNAs_ps2 <- df_gene %>%
-  filter(str_detect(sgRNA_target, "psb[A-Z1][23]?$"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
-  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
-  geom_tile() + custom_theme() +
-  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
-    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
-  labs(title = "Photosystem II", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
-
-ggarrange(ncol = 2, plot_sgRNAs_ps1, plot_sgRNAs_ps2)
-```
-
-```{r, fig.width = 8, fig.height = 7}
-svg(filename = "../figures/figure2.svg", width = 8, height = 7)
-ggarrange(ncol = 2, widths = c(0.65, 0.35),
-  ggarrange(nrow = 2, heights =  c(0.34, 0.66), labels = LETTERS[1:2], font.label = list_fontpars,
-    plot_all_fitness_volc + theme(plot.margin = unit(c(14,-8,14,40), "points")),
-    plot_median_fitness_kegg + theme(plot.margin = unit(c(6,12,12,12), "points"))),
-  ggarrange(nrow = 2, heights =  c(0.4, 0.6), labels = LETTERS[3:4], font.label = list_fontpars,
-    plot_sgRNAs_ps1 + theme(plot.margin = unit(c(12,0,-14,0), "points")),
-    plot_sgRNAs_ps2 + theme(plot.margin = unit(c(12,0,0,0), "points"))
-  )
-)
-dev.off()
-```
-
-- The psbK knockdown has a strong fitness penalty in all conditions, suggesting a universal role
-- however it is not very significant in Wilcox rank sum test
-- this is due to only having 3 sgRNAs, they actually all show the same phenotype
-
-```{r, fig.width = 5, fig.height = 5}
-df_main %>%
-  filter(sgRNA_target %in% c("psbK")) %>%
-  mutate(locus = factor(locus)) %>%
-  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
-  geom_line(size = 1) +
-  custom_theme(legend.position = "top") +
-  scale_color_manual(values = custom_range(5)) +
-  facet_wrap( ~ condition)
-```
-
-
 
 ## Gene enrichment analysis (KEGG)
 
@@ -990,26 +928,6 @@ print(plot_unknown_genes)
 - `sll1915` - small 183 AA membrane protein, phenotype: decreased fitness predominantly in LL or HC conditions (HC,HL and +G)
 
 
-## Extract and analyze interesting gene clusters
-
-**Apc and cpc repression mutants** encoding phycobilisomes are also enriched in high light
-
-
-```{r, fig.width = 3.5, fig.height = 4.5}
-plot_sgRNAs_phycobil <- df_gene %>%
-  filter(str_detect(gene_name, "[ac]pc"), time == 0) %>%
-  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
-  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
-  geom_tile() + custom_theme() +
-  labs(title = "Apc/Cpc repression mutants", x = "", y = "") +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
-    limits = c(-4, 4))
-
-print(plot_sgRNAs_phycobil)
-```
-
-
 # Direct comparison of gene fitness
 
 ## Fitness of all conditions vs each other
@@ -1319,8 +1237,9 @@ dev.off()
 
 ## Adaptation to light and carbon excess
 
-We will look at three different types of regulatory adaptations:
+We will look at different types of regulatory adaptations:
 
+- photosystem subunits, particularly PSII
 - `apc`/`cpc`antenna proteins (phycobilisomes), known to be among the most expressed and regulated genes in cyanos
 - flavoproteins Flv1 (`sll1521`), Flv2 (`sll0219`), Flv3 (`sll0550`), Flv4 (`sll0217`), `sll0218` (in flv2/4 operon)
 - low affinity/high flux transporters Ci transporters: bicA (`sll0834`), NDH-I4 with ndhF4, D4, cupB (`sll0026`, `sll0027`, `slr1302`)
@@ -1329,6 +1248,11 @@ We will look at three different types of regulatory adaptations:
 
 
 ```{r}
+plot_photosystem2 <- df_gene %>%
+  mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
+  filter(str_detect(sgRNA_target, "psb[BCDEFHIJKLOUVXZ]$"), time == 0) %>%
+  plot_gene_fitness(ncol = 6, legend.position = 0)
+
 plot_phycobilisome <- df_gene %>% filter(str_detect(gene_name, "[ac]pc[ABCDEFG]")) %>%
   plot_gene_fitness(ncol = 6, legend.position = 0)
 
@@ -1353,22 +1277,28 @@ plot_carbon_uptake <- df_gene %>% filter(locus %in% c(
   coord_cartesian(ylim = c(-7.9, 2.4))
 ```
 
-Figure 3 draft:
+Figure 2 draft:
 
-```{r, fig.width = 6.0, fig.height = 8.5}
-ggarrange(nrow = 3, heights =  c(0.47, 0.2, 0.33), labels = LETTERS[1:3], font.label = list_fontpars,
-  plot_phycobilisome,
-  plot_flv_genes,
-  plot_carbon_uptake
+```{r, fig.width = 6.0, fig.height = 10.5}
+ggarrange(nrow = 4, heights =  c(0.32, 0.32, 0.13, 0.23),
+  labels = LETTERS[1:4],
+  font.label = list_fontpars,
+  plot_photosystem2 + theme(plot.margin = unit(c(0, 12, 0, 12),"points")),
+  plot_phycobilisome + theme(plot.margin = unit(c(0, 12, 0, 12),"points")),
+  plot_flv_genes + theme(plot.margin = unit(c(4.7, 12, 4.7, 12),"points")),
+  plot_carbon_uptake + theme(plot.margin = unit(c(4.3, 12, 4.3, 12),"points"))
 )
 ```
 
 ```{r, include = FALSE}
-svg(filename = "../figures/figure3.svg", width = 6.0, height = 8.5)
-ggarrange(nrow = 3, heights =  c(0.47, 0.2, 0.33), labels = LETTERS[1:3], font.label = list_fontpars,
-  plot_phycobilisome,
-  plot_flv_genes,
-  plot_carbon_uptake
+svg(filename = "../figures/figure2.svg", width = 6.0, height = 10.5)
+ggarrange(nrow = 4, heights =  c(0.32, 0.32, 0.13, 0.23),
+  labels = LETTERS[1:4],
+  font.label = list_fontpars,
+  plot_photosystem2 + theme(plot.margin = unit(c(0, 12, 0, 12),"points")),
+  plot_phycobilisome + theme(plot.margin = unit(c(0, 12, 0, 12),"points")),
+  plot_flv_genes + theme(plot.margin = unit(c(4.7, 12, 4.7, 12),"points")),
+  plot_carbon_uptake + theme(plot.margin = unit(c(4.3, 12, 4.3, 12),"points"))
 )
 dev.off()
 ```
@@ -1453,6 +1383,52 @@ Other genes of interest that either did not show any (remarkable) effect on fitn
 - SigB (`sll0306`), SigC (`sll0184`), SigD (`sll2012`), SigE (`sll1689`) (rpoD genes 1-4)
 - ccmM (`sll1031`), ccmK2 (`sll1028`), ccmK1 (`sll1029`), ccmN (`sll1032`), ccmO (`slr0436`),
   ccmL (`sll1030`)
+
+Alternative representation of photosystems gene fitness as heat maps:
+
+```{r, fig.width = 7, fig.height = 4}
+plot_sgRNAs_ps1 <- df_gene %>%
+  filter(str_detect(sgRNA_target, "psa[A-Z]*"), time == 0) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
+  labs(title = "Photosystem I", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+plot_sgRNAs_ps2 <- df_gene %>%
+  filter(str_detect(sgRNA_target, "psb[A-Z1][23]?$"), time == 0) %>%
+  mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
+  mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
+  ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
+  geom_tile() + custom_theme() +
+  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+    aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
+  labs(title = "Photosystem II", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
+    limits = c(-4, 4))
+
+ggarrange(ncol = 2, plot_sgRNAs_ps1, plot_sgRNAs_ps2)
+```
+
+- The psbK knockdown has a strong fitness penalty in all conditions, suggesting a universal role
+- however it is not very significant in Wilcox rank sum test
+- this is due to only having 3 sgRNAs, they actually all show the same phenotype
+
+```{r, fig.width = 5, fig.height = 5}
+df_main %>%
+  filter(sgRNA_target %in% c("psbK")) %>%
+  mutate(locus = factor(locus)) %>%
+  ggplot(aes(x = time, y = log2FoldChange, color = factor(sgRNA_index))) +
+  geom_line(size = 1) +
+  custom_theme(legend.position = "top") +
+  scale_color_manual(values = custom_range(5)) +
+  facet_wrap( ~ condition)
+```
 
 
 ## Genes where knock down leads to increased fitness
