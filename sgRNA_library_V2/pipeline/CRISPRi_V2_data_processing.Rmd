@@ -39,6 +39,7 @@ suppressPackageStartupMessages({
   library(kableExtra)
   library(grid)
   library(ggpubr)
+  library(Rtools)
 })
 ```
 
@@ -1506,34 +1507,32 @@ df_ncRNA <- df_main %>% filter(sgRNA_type == "ncRNA") %>%
   )
 
 df_ncRNA %>% filter(time == 0) %>%
-  group_by(ncRNA_type, condition) %>%
-  select(condition, sgRNA_target, ncRNA_type, comb_score) %>%
-  summarize(.groups = "drop_last",
+  group_by(ncRNA_type, sgRNA_target) %>%
+  summarize(comb_score = any(comb_score >= 4), .groups = "drop_last") %>%
+  summarize(.groups = "drop",
     n_targets = length(unique(sgRNA_target)),
-    sig = sum(comb_score >= 4),
-    non_sig = sum(comb_score < 4)) %>%
-  summarize(n_targets = n_targets[1],
-    `significant (score >= 4)` = mean(sig),
-    `non sign. (score < 4)` = n_targets-`significant (score >= 4)`,
-    `% sign.` = `significant (score >= 4)`/n_targets*100,
-    .groups = "drop")
+    `significant (score >= 4)` = sum(comb_score),
+    `non sign. (score < 4)` = sum(!comb_score),
+    `% sign.` = `significant (score >= 4)`/n_targets*100
+  )
 ```
 
 Looking at the fitness and significance scores for one conditions, it seems as internal transcription start sites are overrepresented in the group that shows an effect. This is not a surprise, given that sgRNAs targeting iTSS basically also repress the native gene as a regular sgRNA. The library contains 1712 ncRNAs each targeted by 1 to 5 sgRNAs. Only very few of those showed an effect on fitness.
 We can filter all ncRNAs that have a "significance" equivalent to a fitness score abs(F) >= 2 and -log10 p-value >= 2 (alpha = 0.01).
 Significance here means effect size (F) multiplied by -log10 p-value, the threshold is indicated by the dashed line.
 
-```{r, fig.width = 6, fig.height = 2.5}
-plot_ncRNA_overview <- df_ncRNA %>% filter(time == 0, condition == "HC, HL") %>%
+```{r, fig.width = 7, fig.height = 4,0}
+plot_ncRNA_overview <- df_ncRNA %>%
+  filter(time == 0) %>%
   mutate(ncRNA_type = factor(ncRNA_type, c("asRNA", "iTSS", "ncRNA"))) %>%
   ggplot(aes(x = wmean_fitness, y = -log10(p_fitness_adj), color = ncRNA_type)) +
-  geom_point(alpha = 0.5, size = 1.5) +
+  geom_point(alpha = 0.5, size = 0.5) +
   geom_line(data = data.frame(x = c(seq(-8, -0.5, 0.1), seq(0.5, 8, 0.1)),
     y = 4/c(seq(8, 0.5, -0.1), seq(0.5, 8, 0.1))),
     aes(x = x, y = y, shape = NULL, col = NULL), lty = 2) +
   coord_cartesian(xlim = c(-7, 7), ylim = c(0, 3)) +
-  custom_theme(aspect = 1, legend.position = "none") +
-  facet_wrap(~ ncRNA_type, ncol = 3) +
+  custom_theme(aspect = 1, legend.position = "bottom") +
+  facet_wrap(~ condition, ncol = 6) +
   labs(x = "fitness", y = expression("-log"[10]*" p-value")) +
   scale_color_manual(values = custom_colors)
 
@@ -1551,63 +1550,47 @@ df_ncRNA_select <- df_ncRNA %>%
   ungroup
 ```
 
-Plot asRNA vs gene fitness.
+Plot asRNAs and iTSSs vs gene fitness.
 
 ```{r}
-plot_asRNA_xy <- df_ncRNA_select %>% filter(ncRNA_type == "asRNA") %>%
-  left_join(by = c("condition", "locus"),
-    select(df_gene, locus, condition, wmean_fitness, sd_fitness) %>% distinct %>%
-    rename(gene_fitness = wmean_fitness, sd_gene_fitness = sd_fitness)) %>%
-  select(locus, condition, wmean_fitness, gene_fitness) %>%
-  mutate(locus = if_else(locus %in% c("sll1773", "slr1609"), locus, "other")) %>%
-  ggplot(aes(x = wmean_fitness, y = gene_fitness, color = locus)) +
-  geom_abline(intercept = 0, slope = 1, lty = 2) +
-  geom_abline(intercept = 4, slope = 1, lty = 2) +
-  geom_abline(intercept = -4, slope = 1, lty = 2) +
-  geom_point(alpha = 0.5, size = 1.5) +
-  ggpubr::stat_cor() +
-  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
-  custom_theme(legend.pos = c(0.8, 0.15), legend.key.size = unit(0.2, "cm")) +
-  labs(x = "asRNA fitness", y = "gene fitness") +
-  scale_color_manual(values = custom_colors[c(5,1:2)])
-```
-
-Plot iTSS fitness versus gene fitness.
-
-```{r}
-plot_iTSS_xy <- df_ncRNA_select %>% filter(ncRNA_type == "iTSS") %>%
-  left_join(by = c("condition", "locus"),
-    select(df_gene, locus, condition, wmean_fitness, sd_fitness) %>% distinct %>%
-    rename(gene_fitness = wmean_fitness, sd_gene_fitness = sd_fitness)) %>%
-  select(locus, condition, wmean_fitness, gene_fitness) %>%
-  mutate(locus = if_else(locus %in% c("sll1406", "slr1415", "sll1542", "sll1558"), locus, "other")) %>%
-  ggplot(aes(x = wmean_fitness, y = gene_fitness, color = locus)) +
-  geom_abline(intercept = 0, slope = 1, lty = 2) +
-  geom_abline(intercept = 4, slope = 1, lty = 2) +
-  geom_abline(intercept = -4, slope = 1, lty = 2) +
-  geom_point(alpha = 0.5, size = 1.5) +
-  ggpubr::stat_cor() +
-  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
-  custom_theme(legend.pos = c(0.8, 0.15), legend.key.size = unit(0.2, "cm")) +
-  labs(x = "iTSS fitness", y = "gene fitness") +
-  scale_color_manual(values = custom_colors[c(5,1:4)])
+plot_ncRNAs_xy <- lapply(c("asRNA", "iTSS"), FUN = function(type) {
+  df_ncRNA_select %>%
+    filter(ncRNA_type == type) %>%
+    left_join(by = c("condition", "locus"),
+      select(df_gene, locus, condition, wmean_fitness, sd_fitness) %>% distinct %>%
+      rename(gene_fitness = wmean_fitness, sd_gene_fitness = sd_fitness)) %>%
+    select(locus, condition, wmean_fitness, gene_fitness, comb_score) %>%
+    ggplot(aes(x = wmean_fitness, y = gene_fitness)) +
+    geom_abline(intercept = 0, slope = 1, lty = 2) +
+    geom_abline(intercept = 4, slope = 1, lty = 2) +
+    geom_abline(intercept = -4, slope = 1, lty = 2) +
+    geom_point(alpha = 0.5, size = 1.5, color = custom_colors[5]) +
+    ggpubr::stat_cor() +
+    coord_cartesian(xlim = c(-8, 5), ylim = c(-8, 5)) +
+    custom_theme(legend.pos = c(0.8, 0.15), legend.key.size = unit(0.2, "cm")) +
+    labs(x = paste0(type, " fitness"), y = "gene fitness")
+})
 ```
 
 
-```{r, fig.width = 5.5, fig.height = 5.5}
-ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars,
-  plot_ncRNA_overview,
+```{r, fig.width = 6.5, fig.height = 6.5, warning = FALSE}
+ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars, heights = c(0.52, 0.48),
+  plot_ncRNA_overview + theme(plot.margin = unit(c(12, 12, -12, 12), "points")),
   ggarrange(ncol = 2, labels = c("B", "C"), font.label = list_fontpars,
-    plot_asRNA_xy, plot_iTSS_xy)
+    plot_ncRNAs_xy[[1]] + theme(plot.margin = unit(c(12, 12, 6, 12), "points")),
+    plot_ncRNAs_xy[[2]] + theme(plot.margin = unit(c(12, 12, 6, 12), "points"))
+  )
 )
 ```
 
 ```{r, include = FALSE, eval = TRUE}
-svg("../figures/figureSX_asRNA_iTSS.svg", width = 5.5, height = 5.5)
-ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars,
-  plot_ncRNA_overview,
+svg("../figures/figureSX_asRNA_iTSS.svg", width = 6.5, height = 6.5)
+ggarrange(nrow = 2, labels = c("A"), font.label = list_fontpars, heights = c(0.52, 0.48),
+  plot_ncRNA_overview + theme(plot.margin = unit(c(12, 12, -12, 12), "points")),
   ggarrange(ncol = 2, labels = c("B", "C"), font.label = list_fontpars,
-    plot_asRNA_xy, plot_iTSS_xy)
+    plot_ncRNAs_xy[[1]] + theme(plot.margin = unit(c(12, 12, 6, 12), "points")),
+    plot_ncRNAs_xy[[2]] + theme(plot.margin = unit(c(12, 12, 6, 12), "points"))
+  )
 )
 dev.off()
 ```
@@ -1681,11 +1664,11 @@ df_ncRNA_comp <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
     select(sgRNA_target, upstream, downstream),
     by = "sgRNA_target") %>%
   left_join(df_gene %>% select(locus, condition, wmean_fitness) %>%
-    distinct %>% rename(upstream = locus, wmean_fitness_us = wmean_fitness),
+    distinct %>% rename(upstream = locus, upstream_gene_fitness = wmean_fitness),
     by = c("condition", "upstream")
   ) %>%
   left_join(df_gene %>% select(locus, condition, wmean_fitness) %>%
-    distinct %>% rename(downstream = locus, wmean_fitness_ds = wmean_fitness),
+    distinct %>% rename(downstream = locus, downstream_gene_fitness = wmean_fitness),
     by = c("condition", "downstream")
   )
 
@@ -1693,8 +1676,8 @@ df_ncRNA_comp <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
 # has NO effect on fitness
 list_ncRNA_hits <- df_ncRNA_comp %>%
   filter(
-    abs(wmean_fitness - wmean_fitness_us) >= 4 &
-    abs(wmean_fitness - wmean_fitness_ds) >= 4
+    abs(wmean_fitness - upstream_gene_fitness) >= 4 &
+    abs(wmean_fitness - downstream_gene_fitness) >= 4
   ) %>% group_by(sgRNA_target) %>% count %>%
   filter(n > 1) %>%
   pull(sgRNA_target)
@@ -1707,41 +1690,31 @@ plot_ncRNA_heat <- df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   mutate(sgRNA_target = fct_cluster(sgRNA_target, condition, wmean_fitness)) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = condition, y = sgRNA_target, fill = wmean_fitness)) +
-  geom_tile() + custom_theme(legend.pos = "bottom", legend.key.size = unit(0.4, "cm"), legend.margin = unit(0, "cm")) +
+  geom_tile() +
+  custom_theme(legend.pos = "bottom",
+    legend.key.size = unit(0.4, "cm"), legend.margin = unit(0, "cm")) +
   labs(x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
 
-# check correlation of ncRNA fitness with upstream lying genes
-plot_ncRNA_upstream <- df_ncRNA_comp %>%
-  mutate(sgRNA_target = if_else(locus %in% list_ncRNA_hits, sgRNA_target, "other")) %>%
-  arrange(desc(sgRNA_target)) %>%
-  ggplot(aes(x = wmean_fitness, y = wmean_fitness_us, color = sgRNA_target)) +
-  geom_abline(intercept = 0, slope = 1, lty = 2) +
-  geom_abline(intercept = 4, slope = 1, lty = 2) +
-  geom_abline(intercept = -4, slope = 1, lty = 2) +
-  geom_point(alpha = 0.5, size = 1.5) +
-  ggpubr::stat_cor() +
-  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
-  custom_theme(legend.pos = c(0.8, 0.2), legend.key.size = unit(0.2, "cm")) +
-  labs(x = "ncRNA fitness", y = "upstream gene fitness") +
-  scale_color_manual(values = custom_colors[c(1:2,5)])
-
-# check correlation of ncRNA fitness with downstream lying genes
-plot_ncRNA_downstream <- df_ncRNA_comp %>%
-  mutate(sgRNA_target = if_else(locus %in% list_ncRNA_hits, sgRNA_target, "other")) %>%
-  arrange(desc(sgRNA_target)) %>%
-  ggplot(aes(x = wmean_fitness, y = wmean_fitness_ds, color = sgRNA_target)) +
-  geom_abline(intercept = 0, slope = 1, lty = 2) +
-  geom_abline(intercept = 4, slope = 1, lty = 2) +
-  geom_abline(intercept = -4, slope = 1, lty = 2) +
-  geom_point(alpha = 0.5, size = 1.5) +
-  ggpubr::stat_cor() +
-  coord_cartesian(xlim = c(-9, 5), ylim = c(-9, 5)) +
-  custom_theme(legend.pos = c(0.8, 0.2), legend.key.size = unit(0.2, "cm")) +
-  labs(x = "ncRNA fitness", y = "downstream gene fitness") +
-  scale_color_manual(values = custom_colors[c(1:2,5)])
+# check correlation of ncRNA fitness with upstream and downstream lying genes
+plot_ncRNA_upstream <- 
+  lapply(c("upstream_gene_fitness", "downstream_gene_fitness"), FUN = function(var){
+    df_ncRNA_comp %>%
+    mutate(sgRNA_target = if_else(locus %in% list_ncRNA_hits, sgRNA_target, "other")) %>%
+    arrange(desc(sgRNA_target), wmean_fitness) %>% 
+    ggplot(aes(x = wmean_fitness, y = get(var), color = sgRNA_target)) +
+    geom_abline(intercept = 0, slope = 1, lty = 2) +
+    geom_abline(intercept = 4, slope = 1, lty = 2) +
+    geom_abline(intercept = -4, slope = 1, lty = 2) +
+    geom_point(alpha = 0.5, size = 1.5) +
+    ggpubr::stat_cor(aes(x = wmean_fitness, y = get(var), color = NULL)) +
+    coord_cartesian(xlim = c(-8, 5), ylim = c(-8, 5)) +
+    custom_theme(legend.pos = c(0.8, 0.2), legend.key.size = unit(0.2, "cm")) +
+    labs(x = "ncRNA fitness", y = str_replace_all(var, "_", " ")) +
+    scale_color_manual(values = custom_colors[c(3,4,5)])
+  })
 ```
 
 
@@ -1752,20 +1725,20 @@ ggarrange(ncol = 2, labels = c("A", "B"), font.label = list_fontpars,
   plot_ncRNA_heat + theme(plot.margin = unit(c(12, 12, -20, 12), "points")),
   ggarrange(nrow = 3, heights = c(0.43, 0.43, 0.14),
     labels = c("", "C", ""), font.label = list_fontpars,
-    plot_ncRNA_upstream,
-    plot_ncRNA_downstream
+    plot_ncRNA_upstream[[1]],
+    plot_ncRNA_upstream[[2]]
   )
 )
 ```
 
 ```{r, include = FALSE, eval = TRUE}
-svg("../figures/figure5.svg", width = 5.5, height = 6.5)
+svg("../figures/figure4.svg", width = 5.5, height = 6.5)
 ggarrange(ncol = 2, labels = c("A", "B"), font.label = list_fontpars,
   plot_ncRNA_heat + theme(plot.margin = unit(c(12, 12, -20, 12), "points")),
   ggarrange(nrow = 3, heights = c(0.43, 0.43, 0.14),
     labels = c("", "C", ""), font.label = list_fontpars,
-    plot_ncRNA_upstream,
-    plot_ncRNA_downstream
+    plot_ncRNA_upstream[[1]],
+    plot_ncRNA_upstream[[2]]
   )
 )
 dev.off()
