@@ -545,7 +545,7 @@ Sometimes even small effects in fitness can be relevant if several genes of the 
 
 Before we test for enrichment of associated pathways/GO terms, we can have a look at the general depletion/enrichment per KEGG pathway. The fitness distribution per pathway can be visualized using a violin- or scatter plot.
 
-```{r, fig.width = 5.5, fig.height = 5.5}
+```{r, fig.width = 7.0, fig.height = 2.8}
 plot_median_fitness_kegg <- df_gene %>% filter(time == 0) %>%
   inner_join(df_kegg, by = "locus") %>%
   group_by(kegg_pathway, condition) %>%
@@ -553,19 +553,33 @@ plot_median_fitness_kegg <- df_gene %>% filter(time == 0) %>%
     fitness = median(wmean_fitness),
     n_genes = n()
   ) %>% filter(n_genes >= 20) %>%
-  mutate(kegg_pathway = paste0(str_sub(kegg_pathway, 1, 25), "..")) %>%
-  mutate(kegg_pathway = fct_reorder(kegg_pathway, fitness, .desc = TRUE)) %>%
+  mutate(
+    kegg_pathway = str_remove_all(kegg_pathway, " [Mm]etabolism|Biosynthesis of "),
+    kegg_pathway = sapply(kegg_pathway, function(x) {
+      if (str_length(x) <= 15) tolower(x)
+      else paste0(tolower(substr(x, 1, 15)), "..")
+    }),
+    kegg_pathway = fct_reorder(kegg_pathway, fitness, .desc = TRUE)
+  ) %>%
   
-  ggplot(aes(x = fitness, y = kegg_pathway)) +
+  ggplot(aes(x = kegg_pathway, y = fitness)) +
   geom_boxplot(outlier.shape = NULL, color = grey(0.5), fill = grey(0.9)) +
   geom_point(aes(color = condition)) +
-  geom_vline(xintercept = 0, lty = 2, color = grey(0.5)) +
-  labs(x = "median fitness", y = "") +
-  custom_theme(legend.position = c(0.25, 0.25), legend.key.size = unit(0.4, "cm")) +
+  geom_hline(yintercept = 0, lty = 2, color = grey(0.5)) +
+  labs(x = "", y = "median fitness") +
+  custom_theme(legend.position = c(0.15, 0.15), legend.key.size = unit(0.1, "cm")) +
+  theme(axis.text.x = element_text(angle = 35, vjust = 1.05, hjust = 1)) +
   scale_fill_manual(values = colorRampPalette(custom_colors[1:5])(11)) +
   scale_color_manual(values = colorRampPalette(custom_colors[1:5])(11))
 
 print(plot_median_fitness_kegg)
+```
+```{r}
+svg(filename = "../figures/plot_median_fitness_kegg.svg", width = 7, height = 2.8)
+ggarrange(ncol = 1, nrow = 1, labels = "F", font.label = list_fontpars,
+  plot_median_fitness_kegg + theme(plot.margin = unit(c(12,12,12,25), "points"))
+)
+dev.off()
 ```
 
 
@@ -1147,13 +1161,13 @@ Now we plot fitness of central carbon metabolism genes for two or three selected
 df_centralcarb <- tibble(
   locus = c(
     # EMP
-    "sll0593", "slr0329", "sll0329", "slr0952", "slr2094",
+    "sll0593", "slr0329", "slr1349", "slr0952", "slr2094",
     "sll0018", "slr0943", "slr0783", "slr0884", "sll1342",
     "slr0394", "slr1945", "slr0752", "sll1275", "sll0587",
     # PPP + CBB
-    "slr1843", "sll1479", "slr1349", "slr1793", "sll1070",
+    "slr1843", "sll1479", "sll0329", "slr1793", "sll1070",
     "sll0807", "slr0194", "ssl2153", "sll1525", "slr0012",
-    "slr0009",
+    "slr0009", "ssl3364",
     # Pyruvate metabolism
     "sll1841", "sll1721", "slr1096", "slr1934", "sll0401",
     "slr0721", "sll0920",
@@ -1169,7 +1183,7 @@ df_centralcarb <- tibble(
     # PPP + CBB
     "G6PDH", "PGL", "GND", "TAL", "TKT",
     "RPE", "RPI", "RPI", "PRUK", "RUBISCO",
-    "RUBISCO", 
+    "RUBISCO", "CP12",
     # Pyruvate metabolism
     "PDH", "PDH", "PDH", "PDH", "CS", 
     "ME", "PPC",
@@ -1183,16 +1197,15 @@ df_centralcarb <- df_gene %>% filter(
     time == 0,
     condition %in% c("LC, LL", "LC, LL, +G", "LC, LL, +D, +G")) %>%
   inner_join(df_centralcarb, ., by = "locus") %>%
-  mutate(sgRNA_target = paste0(reaction, " (", sgRNA_target, ")") %>%
-    fct_inorder) %>%
+  mutate(sgRNA_target = sgRNA_target %>% fct_inorder) %>%
   mutate(condition = recode(condition, `LC, LL` = "Phototrophy", `LC, LL, +G` = "Mixotrophy",
     `LC, LL, +D, +G` = "Photoheterotrophy") %>% factor(., unique(.)[c(1,3,2)])) %>%
-  mutate(pathway = rep(c("EMP", "PPP + CBB", "Pyruvate", "TCA"), c(45,33,21,33)))
+  mutate(pathway = rep(c("EMP", "PPP + CBB", "Pyruvate", "TCA"), c(45,36,21,33)))
 ```
 
 
 
-```{r, fig.width = 7.3, fig.height = 7}
+```{r, fig.width = 4.0, fig.height = 7}
 plot_centralcarb_minifig <- df_centralcarb %>%
   group_by(pathway) %>% group_split %>%
   lapply(function(df) {
@@ -1202,8 +1215,9 @@ plot_centralcarb_minifig <- df_centralcarb %>%
       fill = condition, color = condition,
       label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
     geom_hline(yintercept = c(0, -5, -10), linetype = 3, col = grey(0.6)) +
+    geom_errorbar(position = "dodge", width = 0.6, size = 1, alpha = 0.7) +
+    geom_col(position = "dodge", width = 0.6, fill = "white", color = "white") +
     geom_col(position = "dodge", width = 0.6) +
-    geom_errorbar(position = "dodge", width = 0.6, size = 1) +
     geom_text(size = 6, aes(y = mapply(FUN = function(x, y) {
       if (x < 0) x - y - 3
       else x + y + 0.3
@@ -1211,25 +1225,35 @@ plot_centralcarb_minifig <- df_centralcarb %>%
     custom_theme(aspect.ratio = 1, legend.position = 0) + 
     theme(axis.text.x = element_blank(), axis.text.y = element_blank(), 
       axis.ticks = element_blank(), panel.grid.major = element_blank(),
-      strip.text = element_text(size = 8)) +
+      strip.text = element_text(size = 8, color = "white", margin = margin(1, 1, 1, 1, "pt")),
+      panel.border = element_rect(linetype = "solid", colour = grey(0.6), fill = NA, size = 1.0),
+      panel.background = element_rect(fill = grey(0.95), color = NA),
+      strip.background = element_rect(fill = grey(0.6), color = grey(0.6))
+    ) +
     labs(x = "", y = "") +
     coord_cartesian(ylim = c(-11, 1)) +
-    scale_fill_manual(values = custom_colors[c(5,2,3)]) +
-    scale_color_manual(values = custom_colors[c(5,2,3)]) +
-    facet_wrap(~ sgRNA_target, ncol = 11)
+    scale_fill_manual(values = alpha(custom_colors[c(2,3,1)], 0.7)) +
+    scale_color_manual(values = alpha(custom_colors[c(2,3,1)], 0.7)) +
+    facet_wrap(~ sgRNA_target, ncol = 6)
   })
 
-ggarrange(nrow = 4, heights =  c(0.4, 0.2, 0.185, 0.2),
-  plot_centralcarb_minifig[[1]], plot_centralcarb_minifig[[2]],
-  plot_centralcarb_minifig[[3]], plot_centralcarb_minifig[[4]]
+ggarrange(nrow = 4, heights =  c(0.33, 0.224, 0.224, 0.224),
+  labels = LETTERS[1:4], font.label = list_fontpars,
+  plot_centralcarb_minifig[[1]] + theme(plot.margin = unit(c(0, 0,-5,0), "points")),
+  plot_centralcarb_minifig[[2]] + theme(plot.margin = unit(c(0 ,0,-5,0), "points")),
+  plot_centralcarb_minifig[[3]] + theme(plot.margin = unit(c(0, 0,-5,0), "points")),
+  plot_centralcarb_minifig[[4]] + theme(plot.margin = unit(c(0, 0,-5,0), "points"))
 )
 ```
 
 ```{r, include = FALSE}
-svg(filename = "../figures/figure4.svg", width = 7.3, height = 7)
-ggarrange(nrow = 4, heights =  c(0.4, 0.2, 0.185, 0.2),
-  plot_centralcarb_minifig[[1]], plot_centralcarb_minifig[[2]],
-  plot_centralcarb_minifig[[3]], plot_centralcarb_minifig[[4]]
+svg(filename = "../figures/figure3.svg", width = 4.0, height = 7.0)
+ggarrange(nrow = 4, heights =  c(0.33, 0.224, 0.224, 0.224),
+  labels = LETTERS[1:4], font.label = list_fontpars,
+  plot_centralcarb_minifig[[1]] + theme(plot.margin = unit(c(0, 0,-5,0), "points")),
+  plot_centralcarb_minifig[[2]] + theme(plot.margin = unit(c(0 ,0,-5,0), "points")),
+  plot_centralcarb_minifig[[3]] + theme(plot.margin = unit(c(0, 0,-5,0), "points")),
+  plot_centralcarb_minifig[[4]] + theme(plot.margin = unit(c(0, 0,-5,0), "points"))
 )
 dev.off()
 ```
@@ -1787,6 +1811,14 @@ df_od <- lapply(
 ) %>% setNames(c("ΔCP12", "ΔGAP1", "ΔGAP2")) %>%
   bind_rows(.id = "comparison") %>%
   mutate(mutant = recode(mutant, `Δssl3364` = "ΔCP12"))
+
+# optionally simplify names of conditions
+df_od <- df_od %>%
+  mutate(condition = case_when(
+    str_detect(condition, "\\+G, \\+D$") ~ "hetero",
+    str_detect(condition, "\\+G$") ~ "mixo",
+    str_detect(condition, "[IHL]{2}$") ~ "photo"
+  ))
 ```
 
 - plot the data using custom function
@@ -1806,9 +1838,14 @@ print_od <- function(data, log = FALSE, ylim = NULL) {
   if (log) {
     data <- mutate(data, across(matches("mean|ymin|ymax"), ~ log(.x)))
   }
-  ggplot(data, aes(x = time_h, y = mean_OD720,
-      color = paste0(condition, "  ", mutant),
-      fill = paste0(condition, "  ", mutant),
+  data %>% ungroup %>%
+    mutate(
+      condition = paste0(condition, "  ", mutant),
+      condition = factor(condition, unique(condition)[c(3,4,1,2)])
+    ) %>%
+    ggplot(aes(x = time_h, y = mean_OD720,
+      color = condition,
+      fill = condition,
       ymin = ymin, ymax = ymax)) +
     geom_ribbon(alpha = 0.2, linetype = 0) +
     geom_line(size = 1) +
@@ -1817,8 +1854,8 @@ print_od <- function(data, log = FALSE, ylim = NULL) {
     coord_cartesian(ylim = ylim) +
     facet_wrap( ~ comparison) +
     scale_y_continuous(labels = function(x) format(x, nsmall = 2)) +
-    scale_color_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889")) +
-    scale_fill_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889"))
+    scale_color_manual(values = c("#66A61E", "#b4d889", "#E7298A", "#eb97c4")) +
+    scale_fill_manual(values = c( "#66A61E", "#b4d889", "#E7298A", "#eb97c4"))
 }
 ```
 
@@ -1849,9 +1886,14 @@ df_mu <- df_od %>%
 
 ```{r}
 print_mu <- function(data) {
-  ggplot(data, aes(x = paste0(condition, "  ", mutant), y = mean_mu_max,
-      color = paste0(condition, "  ", mutant),
-      fill = paste0(condition, "  ", mutant),
+  data %>% ungroup %>%
+    mutate(
+      condition = paste0(condition, "  ", mutant),
+      condition = factor(condition, unique(condition)[c(3,4,1,2)])
+    ) %>%
+    ggplot(aes(x = condition, y = mean_mu_max,
+      color = condition,
+      fill = condition,
       ymin = ymin, ymax = ymax)) +
     geom_col(position = "dodge", width = 0.6) +
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
@@ -1861,8 +1903,8 @@ print_mu <- function(data) {
     theme(axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
     coord_cartesian(ylim = c(0,0.05)) +
     facet_wrap( ~ comparison) +
-    scale_color_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889")) +
-    scale_fill_manual(values = c("#E7298A", "#eb97c4", "#66A61E", "#b4d889"))
+    scale_color_manual(values = c("#66A61E", "#b4d889", "#E7298A", "#eb97c4")) +
+    scale_fill_manual(values = c("#66A61E", "#b4d889", "#E7298A", "#eb97c4"))
 }
 ```
 
@@ -1882,12 +1924,11 @@ print_fitness <- function(data) {
     geom_errorbar(position = "dodge", width = 0.6, size = 1) +
     custom_theme(legend.position = 0) +
     labs(x = "", y = "fitness") +
-    theme(plot.margin = unit(c(0.05, 0.02, 0.12, 0.02), "npc"),
-      axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
+    theme(axis.text.x = element_text(angle = 35, vjust = 1, hjust = 1)) +
     coord_cartesian(ylim = c(-6, 4)) +
     facet_wrap( ~ gene_name) +
-    scale_color_manual(values = c("#eb97c4", "#b4d889")) +
-    scale_fill_manual(values = c("#eb97c4", "#b4d889"))
+    scale_color_manual(values = c("#b4d889", "#eb97c4")) +
+    scale_fill_manual(values = c("#b4d889", "#eb97c4"))
 }
 ```
 
@@ -1899,44 +1940,60 @@ ggarrange(ncol = 3, nrow = 3,
   print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(0, 1.6)),
   print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(0, 1.0)),
   print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(0, 1.0)),
-  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
     print_mu(filter(df_mu, comparison == "ΔGAP1")),
     print_fitness(filter(df_gene, locus == "slr0884", condition %in% c("HC, LL", "HC, LL, +G")))
+      + theme(plot.margin = unit(c(12, 12, 19, -4),"points"))
   ),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
-    print_mu(filter(df_mu, comparison == "ΔGAP2")),
+    print_mu(filter(df_mu, comparison == "ΔGAP2"))
+      + theme(plot.margin = unit(c(12, 12, 10, 12),"points")),
     print_fitness(filter(df_gene, locus == "sll1342", condition %in% c("LC, IL", "LC, LL, +D, +G")))
+      + theme(plot.margin = unit(c(12, 12, 10, -4),"points"))
   ),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
-    print_mu(filter(df_mu, comparison == "ΔCP12")),
+    print_mu(filter(df_mu, comparison == "ΔCP12"))
+      + theme(plot.margin = unit(c(12, 12, 11, 8),"points")),
     print_fitness(filter(df_gene, locus == "ssl3364", condition %in% c("LC, LL", "LC, LL, +D, +G")))
+      + theme(plot.margin = unit(c(12, 12, 10, -4),"points"))
   )
 )
 ```
 
 ```{r, warning = FALSE, echo = FALSE}
-svg("../figures/figure6.svg", width = 9, height = 9)
+svg("../figures/figure3_validation.svg", width = 9, height = 9)
 ggarrange(ncol = 3, nrow = 3,
   print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(0, 1.6)),
   print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(0, 1.0)),
   print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(0, 1.0)),
-  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE),
-  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE),
+  print_od(filter(df_od_summary, comparison == "ΔGAP1"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
+  print_od(filter(df_od_summary, comparison == "ΔGAP2"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
+  print_od(filter(df_od_summary, comparison == "ΔCP12"), ylim = c(-2.5, 0.5), log = TRUE)
+    + theme(plot.margin = unit(c(12, 12, 12, 8),"points")),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
     print_mu(filter(df_mu, comparison == "ΔGAP1")),
     print_fitness(filter(df_gene, locus == "slr0884", condition %in% c("HC, LL", "HC, LL, +G")))
+      + theme(plot.margin = unit(c(12, 12, 19, -4),"points"))
   ),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
-    print_mu(filter(df_mu, comparison == "ΔGAP2")),
+    print_mu(filter(df_mu, comparison == "ΔGAP2"))
+      + theme(plot.margin = unit(c(12, 12, 10, 12),"points")),
     print_fitness(filter(df_gene, locus == "sll1342", condition %in% c("LC, IL", "LC, LL, +D, +G")))
+      + theme(plot.margin = unit(c(12, 12, 10, -4),"points"))
   ),
   ggarrange(ncol = 2, widths = c(0.65, 0.35),
-    print_mu(filter(df_mu, comparison == "ΔCP12")),
+    print_mu(filter(df_mu, comparison == "ΔCP12"))
+      + theme(plot.margin = unit(c(12, 12, 11, 8),"points")),
     print_fitness(filter(df_gene, locus == "ssl3364", condition %in% c("LC, LL", "LC, LL, +D, +G")))
+      + theme(plot.margin = unit(c(12, 12, 10, -4),"points"))
   )
 )
 dev.off()
