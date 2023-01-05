@@ -1345,7 +1345,7 @@ plot_carbon_uptake_2
 ```
 
 ```{r, include = FALSE}
-svg(filename = "../figures/figureS2.svg", width = 6.0, height = 2.75)
+svg(filename = "../figures/figureS3_carbon_transport.svg", width = 6.0, height = 2.75)
 print(plot_carbon_uptake_2)
 dev.off()
 ```
@@ -1411,13 +1411,13 @@ Other genes of interest that either did not show any (remarkable) effect on fitn
 
 Alternative representation of photosystems gene fitness as heat maps:
 
-```{r, fig.width = 7, fig.height = 4}
+```{r, fig.width = 7, fig.height = 5.2}
 plot_sgRNAs_ps1 <- df_gene %>%
   filter(str_detect(sgRNA_target, "psa[A-Z]*"), time == 0) %>%
   mutate(wmean_fitness = wmean_fitness %>% replace(., . > 4, 4) %>% replace(., . < -4, -4)) %>%
   ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+  geom_text(size = 4, nudge_y = -0.2, color = grey(0.4),
     aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
   labs(title = "Photosystem I", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
@@ -1430,14 +1430,26 @@ plot_sgRNAs_ps2 <- df_gene %>%
   mutate(sgRNA_target = str_replace(sgRNA_target, "psb13", "psbW")) %>%
   ggplot(aes(x = condition, y = fct_rev(sgRNA_target), fill = wmean_fitness)) +
   geom_tile() + custom_theme() +
-  geom_text(size = 4, nudge_y = -0.4, color = grey(0.4),
+  geom_text(size = 4, nudge_y = -0.2, color = grey(0.4),
     aes(label = if_else(p_fitness_adj <= 0.01, "*", ""))) +
   labs(title = "Photosystem II", x = "", y = "") +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   scale_fill_gradientn(colours = c(custom_colors[1], grey(0.9), custom_colors[2]),
     limits = c(-4, 4))
 
-ggarrange(ncol = 2, plot_sgRNAs_ps1, plot_sgRNAs_ps2)
+ggarrange(ncol = 2, labels = c("A", "B"), font.label = list_fontpars,
+  plot_sgRNAs_ps1 + theme(plot.margin = unit(c(12, 12, 120, 12),"points")),
+  plot_sgRNAs_ps2
+)
+```
+
+```{r, include = FALSE, eval = TRUE}
+svg("../figures/figureSX_photosystems.svg", width = 7.0, height = 5.2)
+ggarrange(ncol = 2, labels = c("A", "B"), font.label = list_fontpars,
+  plot_sgRNAs_ps1 + theme(plot.margin = unit(c(12, 12, 120, 12),"points")),
+  plot_sgRNAs_ps2
+)
+dev.off()
 ```
 
 - The psbK knockdown has a strong fitness penalty in all conditions, suggesting a universal role
