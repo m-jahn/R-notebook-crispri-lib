@@ -53,7 +53,7 @@ All care was taken to guarantee scientific accuracy and adhere to good scientifi
   - [_Synechocystis_ CRISPRi library enrichment analysis](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_enrichment_analysis.nb.html)
   - [_Synechocystis_ CRISPRi library additional tests](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_library_additional_tests.nb.html)
   - [_Synechocystis_ CRISPRi library V2 data processing](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_data_processing.nb.html)
-  - [_Synechocystis_ CRISPRi library V2 machine learning](https://m-jahn.github.io/R-notebook-crispri-lib/CRISPRi_V2_machine_learning.nb.html)
+  - [_Synechocystis_ CRISPRi library V2 sgRNA features](https://m-jahn.github.io/R-notebook-crispri-lib/sgRNA_ML_analysis.html)
 - `sgRNA_library` - *Synechocystis* CRISPRi library Version 1 ([Yao et al., 2020](https://www.nature.com/articles/s41467-020-15491-7))
   - `figures` - exported figures from pipelines
   - `pipeline` - data processing pipelines, R markdown format (`.Rmd`)
