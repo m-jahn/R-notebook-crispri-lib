@@ -366,7 +366,27 @@ plot_sgRNA_efficiency_hist <- df_main %>%
 
 ggarrange(plot_sgRNA_efficiency, plot_sgRNA_efficiency_hist, ncol = 2)
 ```
+Third, the target strand (template or coding) could be correlated to sgRNA efficiency. To analyze this in detail, we need to import a table with a subset of ~6000 sgRNAs that target genes where an effect was visible. For this set, we compare if the strand that an sgRNA is targeting is significantly correlated with sgRNA efficiency. As a result, there seems to be no significant effect.
 
+```{r, fig.width = 4.5, fig.height = 3}
+df_features_ml <- read_csv("../data/output/table_ml_features.csv", show_col_types = FALSE)
+df_features_ml %>%
+  mutate(strand = ifelse(strand == 0, "coding\nstrand", "template\nstrand")) %>%
+  ggplot(aes(x = factor(strand), y = sgRNA_efficiency)) +
+  facet_wrap(~ efficiency_binned, ncol = 2) +
+  geom_violin(color = NA, fill = grey(0.9)) +
+  geom_boxplot(notch = FALSE, outlier.shape = ".", fill = NA) +
+  labs(x = "", y = "repression efficiency") +
+  coord_cartesian(ylim = c(-0.15, 1.15)) +
+  stat_summary(fun.data = function(x) c(y = median(x)+0.07,
+    label = round(median(x), 2)), geom = "text", size = 3) +
+  stat_summary(fun.data = function(x) c(y = 1.1,
+    label = length(x)), geom = "text", color = grey(0.5), size = 3) +
+  custom_theme()
+```
+
+
+Figure with log2 FC over generations for 2 examples, 5 random control guides and 5 guides targeting an essential ribosomal gene.
 
 ```{r, fig.width = 5, fig.height = 3.5}
 plot_selected_sgRNAs <- df_main %>%
@@ -807,7 +827,7 @@ print(plot_tsne_linreg)
 ```
 
 ```{r, echo = FALSE}
-save_plot(pl = plot_tsne_linreg, path = "../figures/", width = 9, height = 12)
+save_plot(pl = plot_tsne_linreg, path = "../figures/", width = 8, height = 10)
 ```
 
 This strategy reveals a list of interesting condition-specific genes:
@@ -2033,6 +2053,18 @@ CRISPRi_library_2022 %>% select(
   time, log2FoldChange, fitness, sgRNA_index, sgRNA_type, locus,
   sgRNA_correlation, sgRNA_efficiency) %>%
   write_csv(file = "../data/output/fitness_sgRNA.csv")
+
+# save summary table as supplemental file
+df_gene %>%
+  filter(sgRNA_type == "gene") %>%
+  select(gene_name, locus, condition, wmean_fitness, p_fitness_adj) %>%
+  distinct %>%
+  group_by(locus) %>%
+  filter(any(p_fitness_adj <= 0.01)) %>%
+  rename(fitness = wmean_fitness, padj = p_fitness_adj) %>%
+  pivot_wider(names_from = condition, values_from = c("fitness", "padj")) %>%
+  arrange(locus) %>%
+  write_csv("../data/output/Supplemental_Data_Set_2.csv")
 ```
 
 
