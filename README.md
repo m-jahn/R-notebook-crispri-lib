@@ -1,5 +1,11 @@
 # R-notebook-crispri-lib
 
+![Last commit](https://img.shields.io/github/last-commit/m-jahn/r-notebook-microswitches/main)
+[![Published](https://img.shields.io/badge/Accepted-The.Plant.Cell.2023-green.svg)](https://github.com/m-jahn)
+[![DOI](https://zenodo.org/badge/203832697.svg)](https://zenodo.org/badge/latestdoi/203832697)
+
+A collection of data analysis notebooks for CRISPR interference libaries.
+
 <!-- header image -->
 ![Principle of a CRISPRi repression library](CRISPRi_lib_principle.png)
 
