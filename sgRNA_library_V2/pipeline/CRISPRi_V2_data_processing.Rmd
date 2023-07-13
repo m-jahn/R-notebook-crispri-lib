@@ -40,6 +40,8 @@ suppressPackageStartupMessages({
   library(grid)
   library(ggpubr)
   library(Rtools)
+  library(ggridges)
+  library(devtools)
 })
 ```
 
@@ -223,7 +225,6 @@ df_main %>% filter(time == 0, sgRNA_index == 1) %>%
 Another way to look at the result of the normalization is to compare the global distribution of log2 FC values, as a density plot.
 
 ```{r, fig.width = 5, fig.height = 6, warning = FALSE}
-library(ggridges)
 df_main %>% filter(time == 10) %>%
   select(sgRNA, condition, log2FoldChange) %>%
   distinct %>%
@@ -535,19 +536,12 @@ To plot gene fitness for the enzymes of central carbon metabolism, we need a com
 # get mapping of pathways for each gene
 df_kegg <- keggLink("pathway", "syn") %>%
   enframe(name = "locus", value = "kegg_pathway_id") %>%
+  mutate(kegg_pathway_id = str_remove(kegg_pathway_id, "path:| ")) %>%
   
   # get list of pathways with name/ID pairs
   left_join(by = "kegg_pathway_id",
     keggList("pathway", "syn") %>%
     enframe(name = "kegg_pathway_id", value = "kegg_pathway")
-  ) %>%
-  
-  # get list of gene/enzyme names
-  left_join(by = "locus",
-    keggList("syn") %>%
-    enframe(name = "locus", value = "kegg_gene") %>%
-    mutate(kegg_gene_short = str_extract(kegg_gene, "^[a-zA-Z0-9]*;") %>% 
-      str_remove(";"))
   ) %>%
   
   # trim useless prefixes
@@ -573,7 +567,8 @@ plot_median_fitness_kegg <- df_gene %>% filter(time == 0) %>%
   summarize(.groups = "drop",
     fitness = median(wmean_fitness),
     n_genes = n()
-  ) %>% filter(n_genes >= 20) %>%
+  ) %>%
+  filter(n_genes >= 20) %>%
   mutate(
     kegg_pathway = str_remove_all(kegg_pathway, " [Mm]etabolism|Biosynthesis of "),
     kegg_pathway = sapply(kegg_pathway, function(x) {
@@ -1781,6 +1776,17 @@ dev.off()
 df_ncRNA_select %>% filter(ncRNA_type == "ncRNA") %>%
   select(!matches("time|log2Fold")) %>%
   write_csv("../data/output/fitness_ncRNA.csv")
+
+df_ncRNA_comp %>%
+  select(sgRNA_target, condition, wmean_fitness, sd_fitness,
+    p_fitness_adj, length, direction, upstream, downstream,
+    upstream_gene_fitness, downstream_gene_fitness) %>%
+  write_csv("../data/output/fitness_ncRNA_SI.csv")
+
+lapply(c("upstream_gene_fitness", "downstream_gene_fitness"), FUN = function(var){
+  lm(get(var) ~ wmean_fitness, df_ncRNA_comp) %>%
+    summary
+})
 ```
 
 
@@ -2026,6 +2032,10 @@ df_kegg %>% write_csv("../data/output/kegg_annotation.csv")
 df_uniprot %>% write_csv("../data/output/uniprot_annotation.csv")
 
 df_linreg_filtered %>% write_csv("../data/output/linear_regression_result.csv")
+
+df_mu %>%
+  mutate(statistical_test = "t-test, 2-sided, unpaired") %>%
+  write.csv("../data/output/growth_selected_mutants.csv")
 ```
 
 The entire pipeline takes about 5 minutes to run on a standard notebook.
