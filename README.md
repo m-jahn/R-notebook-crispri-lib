@@ -1,7 +1,7 @@
 # R-notebook-crispri-lib
 
 ![Last commit](https://img.shields.io/github/last-commit/m-jahn/r-notebook-microswitches/main)
-[![Published](https://img.shields.io/badge/Accepted-The.Plant.Cell.2023-green.svg)](https://github.com/m-jahn)
+[![Published](https://img.shields.io/badge/Accepted-The.Plant.Cell.2023-green.svg)](https://doi.org/10.1093/plcell/koad208)
 [![DOI](https://zenodo.org/badge/203832697.svg)](https://zenodo.org/badge/latestdoi/203832697)
 
 A collection of data analysis notebooks for CRISPR interference libaries.
@@ -10,6 +10,12 @@ A collection of data analysis notebooks for CRISPR interference libaries.
 ![Principle of a CRISPRi repression library](CRISPRi_lib_principle.png)
 
 ### News
+
+**2023-09-22 | New CRISPRi library paper published in The Plant Cell**
+
+A new CRISPRi library for the cyanobacterium Synechocystis was previously constructed. This library has 5 guide RNAs targeting each gene.
+The characterization of the library and the results of our comprehensive fitness screening were now published in the [The Plant Cell](https://pubmed.ncbi.nlm.nih.gov/37494719/) from Oxford University Press. The preprint is available on [BioRxive.org](https://www.biorxiv.org/content/10.1101/2023.02.13.528328v1).
+Briefly, the paper reveals trade-offs between growth rate and robustness against environmental changes. In other words, important genes in photosynthesis or carbon fixation/transport can be advantageous in many conditions but reduce fitness in others. This fitness cost can be attributed to the protein and energy cost for these non-utilized genes.
 
 **2022-05-06 | New Nextflow pipeline for CRISPRi library data**
 
